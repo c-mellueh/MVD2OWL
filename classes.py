@@ -1,8 +1,8 @@
 import random
-
+import uuid
 from lxml import etree
 from owlready2 import *
-import uuid
+
 onto = get_ontology("http:/mvdxml/onto.owl")
 
 with onto:
@@ -63,16 +63,12 @@ with onto:
             attribute = xml_object.attrib.get(name)
             attribute = property.range[0](attribute)
 
-
-
             if attribute is None:
                 if is_mandatory:
                     raise AttributeError(name + " needs to exist!")
 
             else:
-                setattr(self, property_name,attribute)
-
-
+                setattr(self, property_name, attribute)
 
 
     class IdentityObject(Base):
@@ -135,30 +131,29 @@ with onto:
             self.import_attribute(xml_object, has_for_applicable_entity, "applicableEntity", False)
             self.import_attribute(xml_object, is_partial, "isPartial", False)
 
-            self.name = self.has_for_name+" [Concept Template] "+self.name
+            self.name = self.has_for_name + " [Concept Template] " + self.name
 
             pass
 
         pass
 
-        def find_rule_id(self, ruleid:str,path: list=[],prefix = ""):
-            path = path[:]                  # else python will change the value of input
-
+        def find_rule_id(self, ruleid: str, path: list = [], prefix=""):
+            path = path[:]  # else python will change the value of input
 
             for concept_template in self.has_sub_templates:
-                help_path = path+[concept_template]
-                value,new_path =  concept_template.find_rule_id(ruleid,path = help_path,prefix = prefix)
+                help_path = path + [concept_template]
+                value, new_path = concept_template.find_rule_id(ruleid, path=help_path, prefix=prefix)
                 if value is not None:
-                    return value,new_path
+                    return value, new_path
 
             if has_attribute_rules in self.get_properties():
                 for attribute_rule in self.has_attribute_rules:
 
-                    value,new_path =  attribute_rule.find_rule_id(ruleid,path = path,prefix = prefix)
+                    value, new_path = attribute_rule.find_rule_id(ruleid, path=path, prefix=prefix)
                     if value is not None:
-                        return value,new_path
+                        return value, new_path
 
-            return None,None
+            return None, None
             pass
 
 
@@ -199,7 +194,7 @@ with onto:
 
         def import_concent(self, xml_object):
             content = xml_object.text
-            self.has_for_content=content
+            self.has_for_content = content
 
         pass
 
@@ -217,7 +212,7 @@ with onto:
 
         def import_content(self, xml_object):
             content = xml_object.text
-            self.has_for_content=content
+            self.has_for_content = content
 
         pass
 
@@ -233,29 +228,29 @@ with onto:
             self.import_attribute(xml_object, has_for_rule_id, "RuleID", is_mandatory=False)
             self.import_attribute(xml_object, has_for_description, "Description", is_mandatory=False)
 
-            self.name = self.has_for_attribute_name+" [Attribute Rule]"+self.name
+            self.name = self.has_for_attribute_name + " [Attribute Rule]" + self.name
 
             pass
 
         pass
 
-        def find_rule_id(self, ruleid:str,path: list=[],prefix = ""):
+        def find_rule_id(self, ruleid: str, path: list = [], prefix=""):
             path = path[:]
             path.append(self)
 
-            if prefix+self.has_for_rule_id == ruleid:
-                #return self,path
+            if prefix + self.has_for_rule_id == ruleid:
+                # return self,path
                 print(str(path))
-                return None,None
+                return None, None
 
             else:
 
                 for entity_rule in self.has_entity_rules:
-                    value,new_path = entity_rule.find_rule_id(ruleid,path = path,prefix = prefix)
+                    value, new_path = entity_rule.find_rule_id(ruleid, path=path, prefix=prefix)
                     if value is not None:
-                        return value,new_path
+                        return value, new_path
 
-                return None,None
+                return None, None
 
 
     class Constraint(Base):
@@ -271,7 +266,6 @@ with onto:
 
             # Reference needs to be established later with reference_templates, because of nesting
 
-
             self.import_items(xml_object, AttributeRule, has_attribute_rules, "AttributeRules")
             self.import_items(xml_object, Constraint, has_constraints, "Constraints")
 
@@ -281,12 +275,11 @@ with onto:
             self.import_attribute(xml_object, has_for_rule_id, "RuleID", is_mandatory=False)
             self.import_attribute(xml_object, has_for_description, "Description", is_mandatory=False)
 
-            self.name = self.has_for_entity_name+" [Entity Rule]"+self.name
+            self.name = self.has_for_entity_name + " [Entity Rule]" + self.name
 
             pass
 
-
-        def import_reference(self,xml_object):
+        def import_reference(self, xml_object):
             references = xml_object.find("References", namespaces=xml_object.nsmap)
             self._reference = []
             if references is not None:
@@ -295,7 +288,6 @@ with onto:
                 id_prefix = references.attrib.get("IdPrefix")
                 if id_prefix is not None:
                     self.has_for_id_prefix = id_prefix
-
 
         def reference_templates(self):
 
@@ -308,7 +300,7 @@ with onto:
 
             pass
 
-        def find_rule_id(self, ruleid: str, path: list = [],prefix = ""):
+        def find_rule_id(self, ruleid: str, path: list = [], prefix=""):
             path = path[:]
             path.append(self)
 
@@ -316,23 +308,21 @@ with onto:
             if pref is not None:
                 prefix += pref
 
-            if prefix+self.has_for_rule_id == ruleid:
-                return self,path
+            if prefix + self.has_for_rule_id == ruleid:
+                return self, path
             else:
                 for attribute_rule in self.has_attribute_rules:
-                    value,new_path = attribute_rule.find_rule_id(ruleid,path = path,prefix = prefix)
+                    value, new_path = attribute_rule.find_rule_id(ruleid, path=path, prefix=prefix)
                     if value is not None:
-                        return value,new_path
-
-
-
+                        return value, new_path
 
                 if self.refers_to is not None:
-                    value,new_path =  self.refers_to.find_rule_id(ruleid,path = path,prefix = prefix)
+                    value, new_path = self.refers_to.find_rule_id(ruleid, path=path, prefix=prefix)
                     if value is not None:
-                        return value,new_path
+                        return value, new_path
 
                 return None, None
+
 
     class BaseView(Base):
         def initialize(self, xml_object):
@@ -407,8 +397,6 @@ with onto:
             template = xml_object.find("Template", namespaces=xml_object.nsmap)
             uuid = template.attrib.get("ref")
 
-
-
             for concept_template in ConceptTemplate.instances():
 
                 if uuid == concept_template.has_for_uuid:
@@ -428,7 +416,7 @@ with onto:
 
         pass
 
-        def import_parameter(self,text):
+        def import_parameter(self, text):
             self.has_for_plain_text = text
             split_list = " AND | OR | NOR | NAND | NOR | XOR | NXOR "
 
@@ -440,7 +428,6 @@ with onto:
                 self.has_for_parameters.append(parameter)
 
             pass
-
 
         def get_linked_rules(self):
 
@@ -467,8 +454,6 @@ with onto:
                 return parent
             elif parent is not None:
                 return parent.get_parent()
-
-
 
 
     class TemplateRules(Base):
@@ -517,6 +502,7 @@ class Requirement(Base):
 
     pass
 
+
 class Parameter(Base):
 
     def initialize(self, text):
@@ -524,12 +510,10 @@ class Parameter(Base):
         self.deconstruct_parameter(text)
         pass
 
-
-    def import_raw_string(self,text):
+    def import_raw_string(self, text):
         self.has_for_text = text
 
-
-    def deconstruct_parameter(self,text):
+    def deconstruct_parameter(self, text):
 
         pattern = re.compile("(.+)\\[(\D+)\\]=(.+)")
         text = re.search(pattern, text)
@@ -538,29 +522,27 @@ class Parameter(Base):
 
             self.import_parameter(text.group(1))
             self.import_metric(text.group(2))
-            self.import_value (text.group(3))
+            self.import_value(text.group(3))
 
         else:
-            raise AttributeError("parameter is not correctly defined: "+str(text))
+            raise AttributeError("parameter is not correctly defined: " + str(text))
 
+    def import_parameter(self, text):
 
-    def import_parameter(self,text):
-
-        self.has_for_parameter_text= text
+        self.has_for_parameter_text = text
 
         pass
 
+    def import_metric(self, text):
 
-    def import_metric(self,text):
-
-        possible_expressions = ['Value','Size','Type','Unique','Exists']
+        possible_expressions = ['Value', 'Size', 'Type', 'Unique', 'Exists']
 
         if text not in possible_expressions:
             raise AttributeError("metric is not in authorized list")
 
-        self.has_for_metric= text
+        self.has_for_metric = text
 
-    def import_value(self,text):
+    def import_value(self, text):
         value = None
 
         if self.has_for_metric == "Value":
@@ -573,32 +555,25 @@ class Parameter(Base):
         if self.has_for_metric == "Type":
             value = text
 
-        if self.has_for_metric == "Unique" or self.has_for_metric == "Exists" :
+        if self.has_for_metric == "Unique" or self.has_for_metric == "Exists":
 
             if text.lower() in ["true"]:
                 value = True
             elif text.lower() in ["false"]:
                 value = False
 
-            elif text.lower()in ["unknown"]:
+            elif text.lower() in ["unknown"]:
                 value = "UNKNOWN"
 
             else:
                 value = None
 
         if value is None:
-            raise AttributeError("value is not correctly defined in MVDxml: "+str(text))
+            raise AttributeError("value is not correctly defined in MVDxml: " + str(text))
 
-
-        self.has_for_parameter_value =value
-
-
-
+        self.has_for_parameter_value = value
 
         pass
-
-
-
 
     def split_parameter(self):
 
@@ -625,11 +600,6 @@ class Parameter(Base):
 
         return param_list
 
-
-
-
-
-
     pass
 
 
@@ -640,7 +610,7 @@ with onto:
         pass
 
 
-    class is_concept_template_of(ObjectProperty,FunctionalProperty):
+    class is_concept_template_of(ObjectProperty, FunctionalProperty):
         domain = [ConceptTemplate]
         range = [MvdXml]
         inverse_property = has_concept_templates
@@ -660,13 +630,13 @@ with onto:
         pass
 
 
-    class has_sub_templates(ObjectProperty,InverseFunctionalProperty):
+    class has_sub_templates(ObjectProperty, InverseFunctionalProperty):
         domain = [ConceptTemplate]
         range = [ConceptTemplate]
         pass
 
 
-    class is_sub_template_of(ObjectProperty,FunctionalProperty):
+    class is_sub_template_of(ObjectProperty, FunctionalProperty):
         domain = [ConceptTemplate]
         range = [ConceptTemplate]
         inverse_property = has_sub_templates
@@ -873,198 +843,203 @@ with onto:
 
 
     ## Identity Objects
-    class has_for_uuid(DataProperty,FunctionalProperty):
-
+    class has_for_uuid(DataProperty, FunctionalProperty):
         domain = [IdentityObject]
         range = [str]
 
         pass
 
 
-    class has_for_name(DataProperty,FunctionalProperty):
+    class has_for_name(DataProperty, FunctionalProperty):
         domain = [IdentityObject]
         range = [str]
         pass
 
 
-    class has_for_code(DataProperty,FunctionalProperty):
+    class has_for_code(DataProperty, FunctionalProperty):
         domain = [IdentityObject]
         range = [str]
         pass
 
 
-    class has_for_version(DataProperty,FunctionalProperty):
+    class has_for_version(DataProperty, FunctionalProperty):
         domain = [IdentityObject]
         range = [str]
         pass
 
 
-    class has_for_status(DataProperty,FunctionalProperty):
+    class has_for_status(DataProperty, FunctionalProperty):
         domain = [IdentityObject]
         range = [str]
         pass
 
 
-    class has_for_author(DataProperty,FunctionalProperty):
+    class has_for_author(DataProperty, FunctionalProperty):
         domain = [IdentityObject]
         range = [str]
         pass
 
 
-    class has_for_owner(DataProperty,FunctionalProperty):
+    class has_for_owner(DataProperty, FunctionalProperty):
         domain = [IdentityObject]
         range = [str]
         pass
 
 
-    class has_for_copyright(DataProperty,FunctionalProperty):
+    class has_for_copyright(DataProperty, FunctionalProperty):
         domain = [IdentityObject]
         range = [str]
         pass
 
 
-    class has_for_applicable_schema(DataProperty,FunctionalProperty):
+    class has_for_applicable_schema(DataProperty, FunctionalProperty):
         domain = [ConceptTemplate | ModelView]
         range = [str]
         pass
 
 
-    class has_for_applicable_entity(DataProperty,FunctionalProperty):
+    class has_for_applicable_entity(DataProperty, FunctionalProperty):
         domain = [ConceptTemplate]
         range = [str]
         pass
 
 
-    class is_partial(DataProperty,FunctionalProperty):
+    class is_partial(DataProperty, FunctionalProperty):
         domain = [ConceptTemplate]
         range = [bool]
         pass
 
 
-    class has_for_attribute_name(DataProperty,FunctionalProperty):
+    class has_for_attribute_name(DataProperty, FunctionalProperty):
         domain = [AttributeRule]
-        range =[str]
-        pass
-
-
-    class has_for_rule_id(DataProperty,FunctionalProperty):
-        domain = [ AttributeRule | EntityRule ]
         range = [str]
         pass
 
 
-    class has_for_description(DataProperty,FunctionalProperty):
-        domain = [AttributeRule| EntityRule]
+    class has_for_rule_id(DataProperty, FunctionalProperty):
+        domain = [AttributeRule | EntityRule]
         range = [str]
         pass
 
 
-    class has_for_entity_name(DataProperty,FunctionalProperty):
+    class has_for_description(DataProperty, FunctionalProperty):
+        domain = [AttributeRule | EntityRule]
+        range = [str]
+        pass
+
+
+    class has_for_entity_name(DataProperty, FunctionalProperty):
         domain = [EntityRule]
         range = [str]
         pass
 
 
-    class has_for_expression(DataProperty,FunctionalProperty):
+    class has_for_expression(DataProperty, FunctionalProperty):
         domain = [Constraint]
         range = [str]
         pass
 
 
-    class has_for_applicability(DataProperty,FunctionalProperty):
+    class has_for_applicability(DataProperty, FunctionalProperty):
         domain = [Requirement | ExchangeRequirement]
         range = [str]
         pass
 
 
-    class has_for_applicable_root_entity(DataProperty,FunctionalProperty):
+    class has_for_applicable_root_entity(DataProperty, FunctionalProperty):
         domain = [ConceptRoot]
         range = [str]
         pass
 
 
-    class has_for_base_concept(DataProperty,FunctionalProperty):
+    class has_for_base_concept(DataProperty, FunctionalProperty):
         domain = [Concept]
         range = [str]
         pass
 
 
-    class has_for_override(DataProperty,FunctionalProperty):
+    class has_for_override(DataProperty, FunctionalProperty):
         domain = [Concept]
         range = [bool]
         pass
 
 
-    class has_for_requirement(DataProperty,FunctionalProperty):
+    class has_for_requirement(DataProperty, FunctionalProperty):
         domain = [Requirement]
         range = [str]
         pass
 
 
-    class has_for_operator(DataProperty,FunctionalProperty):
+    class has_for_operator(DataProperty, FunctionalProperty):
         domain = [TemplateRules]
         range = [str]
 
 
-    class has_for_parameters(ObjectProperty,InverseFunctionalProperty):
+    class has_for_parameters(ObjectProperty, InverseFunctionalProperty):
         domain = [TemplateRule]
         range = [Parameter]
 
-    class is_parameter_of(ObjectProperty,FunctionalProperty):
-        domain= [Parameter]
+
+    class is_parameter_of(ObjectProperty, FunctionalProperty):
+        domain = [Parameter]
         range = [TemplateRule]
 
 
-    class has_for_lang(DataProperty,FunctionalProperty):
+    class has_for_lang(DataProperty, FunctionalProperty):
         domain = [Body | Link]
         range = [str]
 
 
-    class has_for_tags(DataProperty,FunctionalProperty):
+    class has_for_tags(DataProperty, FunctionalProperty):
         domain = [Body]
         range = [str]
 
 
-    class has_for_content(DataProperty,FunctionalProperty):
+    class has_for_content(DataProperty, FunctionalProperty):
         domain = [Body | Link]
         range = [str]
 
 
-    class has_for_title(DataProperty,FunctionalProperty):
+    class has_for_title(DataProperty, FunctionalProperty):
         domain = [Link]
         range = [str]
 
 
-    class has_for_category(DataProperty,FunctionalProperty):
+    class has_for_category(DataProperty, FunctionalProperty):
         domain = [Link]
         range = [str]
 
 
-    class has_for_href(DataProperty,FunctionalProperty):
+    class has_for_href(DataProperty, FunctionalProperty):
         domain = [Link]
         range = [str]
 
-    class has_for_metric(DataProperty,FunctionalProperty):
+
+    class has_for_metric(DataProperty, FunctionalProperty):
         domain = [Parameter]
         range = [str]
 
-    class has_for_parameter_value(DataProperty,FunctionalProperty):
+
+    class has_for_parameter_value(DataProperty, FunctionalProperty):
         domain = [Parameter]
-        range =[str , bool , int]
+        range = [str, bool, int]
 
 
-    class has_for_text(DataProperty,FunctionalProperty):
+    class has_for_text(DataProperty, FunctionalProperty):
         domain = [Parameter]
         range = [str]
 
-    class has_for_parameter_text(DataProperty,FunctionalProperty):
-        domain =[Parameter]
+
+    class has_for_parameter_text(DataProperty, FunctionalProperty):
+        domain = [Parameter]
         range = [str]
 
-    class has_for_plain_text(DataProperty,FunctionalProperty):
+
+    class has_for_plain_text(DataProperty, FunctionalProperty):
         domain = [TemplateRule]
-        range=[str]
+        range = [str]
 
-    class has_for_id_prefix(DataProperty,FunctionalProperty):
+
+    class has_for_id_prefix(DataProperty, FunctionalProperty):
         domain = [EntityRule]
         range = [str]
