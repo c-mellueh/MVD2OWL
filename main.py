@@ -1,7 +1,7 @@
 from lxml import etree
 from owlready2 import *
 from classes import *
-from properties import *
+
 import re
 
 
@@ -19,13 +19,11 @@ import re
 def main():
     doc = "mvdXML_V1.1.xsd"
     # #file = "Prüfregeln.mvdxml"
-    file = "Prüfregeln.mvdxml"
-    file2 = "mvdXML_V1-1-Final-Documentation.xml"
-    file3 = "pruefregel_dominik.mvdxml"
+    file = "mvdXML_V1-1-Final-Documentation.xml"
     mvd = MvdXml()
     #
     #
-    mvd.import_xml(file=file2, doc=doc, validation=False)
+    mvd.import_xml(file=file, doc=doc, validation=False)
 
 
     print("START")
