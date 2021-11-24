@@ -1,0 +1,355 @@
+<mvdXML uuid="5065a878-c99e-43d5-b0c2-862deb053f13" name="">
+  <Templates>
+    <ConceptTemplate uuid="5098cd13-bf4b-473a-a846-a60f69e9b738" name="Aggregationen" status="sample" applicableSchema="IFC4" applicableEntity="IfcObjectDefinition">
+      <SubTemplates>
+			<ConceptTemplate uuid="AggregationIsDecomposedOhneAE" name="Bestandsteile" applicableSchema="IFC4" applicableEntity="IfcElement">
+              <Rules>
+                <AttributeRule RuleID="IsDecomposedBy" AttributeName="IsDecomposedBy">
+                  <EntityRules>
+                    <EntityRule EntityName="IfcRelAggregates">
+                      <AttributeRules>
+                        <AttributeRule RuleID="RelatedObjects" AttributeName="RelatedObjects">
+                          <EntityRules>
+                            <EntityRule EntityName="IfcElement">
+                              <AttributeRules>
+                                <AttributeRule RuleID="ObjectType" AttributeName="ObjectType">
+                                  <EntityRules>
+                                    <EntityRule EntityName="IfcLabel"/>
+                                  </EntityRules>
+                                </AttributeRule>
+                              </AttributeRules>
+                            </EntityRule>
+                          </EntityRules>
+                        </AttributeRule>
+                      </AttributeRules>
+                    </EntityRule>
+                  </EntityRules>
+                </AttributeRule>
+              </Rules>
+            </ConceptTemplate>
+			<ConceptTemplate uuid="AggregationDecomposesOhneAE" name="IstBestandteil" applicableSchema="IFC4" applicableEntity="IfcElement">
+              <Rules>
+                <AttributeRule RuleID="Decomposes" AttributeName="Decomposes">
+                  <EntityRules>
+                    <EntityRule EntityName="IfcRelAggregates">
+                      <AttributeRules>
+                        <AttributeRule RuleID="RelatingObject" AttributeName="RelatingObject">
+                          <EntityRules>
+                            <EntityRule EntityName="IfcElement">
+                              <AttributeRules>
+                                <AttributeRule RuleID="IstTeilVon" AttributeName="ObjectType">
+                                  <EntityRules>
+                                    <EntityRule EntityName="IfcLabel"/>
+                                  </EntityRules>
+                                </AttributeRule>
+                              </AttributeRules>
+                            </EntityRule>
+                          </EntityRules>
+                        </AttributeRule>
+                      </AttributeRules>
+                    </EntityRule>
+                  </EntityRules>
+                </AttributeRule>
+              </Rules>
+            </ConceptTemplate>
+			<ConceptTemplate uuid="AggregationDecomposesmitAE" name="Ist Bestandteil AE" applicableSchema="IFC4" applicableEntity="IfcElement">
+              <Rules>
+                <AttributeRule RuleID="Decomposes" AttributeName="Decomposes">
+                  <EntityRules>
+                    <EntityRule EntityName="IfcRelAggregates">
+                      <AttributeRules>
+                        <AttributeRule RuleID="RelatingObject" AttributeName="RelatingObject">
+                          <EntityRules>
+                            <EntityRule EntityName="IfcElement">
+                              <AttributeRules>
+                                <AttributeRule RuleID="IsDefinedBy" AttributeName="IsDefinedBy">
+                                  <EntityRules>
+									<EntityRule EntityName="IfcRelDefinesByProperties">
+									  <AttributeRules>
+										<AttributeRule AttributeName="RelatingPropertyDefinition">
+										  <EntityRules>
+											<EntityRule EntityName="IfcPropertySet">
+											  <AttributeRules>
+												<AttributeRule RuleID="PSetName" AttributeName="Name">
+												  <EntityRules>
+													<EntityRule EntityName="IfcLabel" />
+												  </EntityRules>
+												</AttributeRule>
+												<AttributeRule AttributeName="HasProperties">
+												  <EntityRules>
+													<EntityRule EntityName="IfcPropertySingleValue">
+													  <AttributeRules>
+														<AttributeRule RuleID="PropertyName" AttributeName="Name">
+														  <EntityRules>
+															<EntityRule EntityName="IfcIdentifier" />
+														  </EntityRules>
+														</AttributeRule>
+														<AttributeRule RuleID="AttributWert" AttributeName="NominalValue">
+														  <EntityRules>
+															<EntityRule EntityName="IfcText" />
+														  </EntityRules>
+														</AttributeRule>
+													  </AttributeRules>
+													</EntityRule>
+												  </EntityRules>
+												</AttributeRule>                         
+											  </AttributeRules>
+											</EntityRule>
+										  </EntityRules>
+										</AttributeRule>
+									  </AttributeRules>
+									</EntityRule>
+								  </EntityRules>
+                                </AttributeRule>
+                              </AttributeRules>
+                            </EntityRule>
+                          </EntityRules>
+                        </AttributeRule>
+                      </AttributeRules>
+                    </EntityRule>
+                  </EntityRules>
+                </AttributeRule>
+              </Rules>
+            </ConceptTemplate>
+			<ConceptTemplate uuid="AggregationIsDecomposedMitAE" name="Bestandteile mit AE" applicableSchema="IFC4" applicableEntity="IfcElement">
+              <Rules>
+                <AttributeRule RuleID="IsDecomposedBy" AttributeName="IsDecomposedBy">
+                  <EntityRules>
+                    <EntityRule EntityName="IfcRelAggregates">
+                      <AttributeRules>
+                        <AttributeRule RuleID="RelatedObjects" AttributeName="RelatedObjects">
+                          <EntityRules>
+                            <EntityRule EntityName="IfcElement">
+                              <AttributeRules>
+                                <AttributeRule RuleID="IsDefinedBy" AttributeName="IsDefinedBy">
+                                  <EntityRules>
+									<EntityRule EntityName="IfcRelDefinesByProperties">
+									  <AttributeRules>
+										<AttributeRule AttributeName="RelatingPropertyDefinition">
+										  <EntityRules>
+											<EntityRule EntityName="IfcPropertySet">
+											  <AttributeRules>
+												<AttributeRule RuleID="PSetName" AttributeName="Name">
+												  <EntityRules>
+													<EntityRule EntityName="IfcLabel" />
+												  </EntityRules>
+												</AttributeRule>
+												<AttributeRule AttributeName="HasProperties">
+												  <EntityRules>
+													<EntityRule EntityName="IfcPropertySingleValue">
+													  <AttributeRules>
+														<AttributeRule RuleID="PropertyName" AttributeName="Name">
+														  <EntityRules>
+															<EntityRule EntityName="IfcIdentifier" />
+														  </EntityRules>
+														</AttributeRule>
+														<AttributeRule RuleID="AttributWert" AttributeName="NominalValue">
+														  <EntityRules>
+															<EntityRule EntityName="IfcText" />
+														  </EntityRules>
+														</AttributeRule>
+													  </AttributeRules>
+													</EntityRule>
+												  </EntityRules>
+												</AttributeRule>                         
+											  </AttributeRules>
+											</EntityRule>
+										  </EntityRules>
+										</AttributeRule>
+									  </AttributeRules>
+									</EntityRule>
+								  </EntityRules>
+                                </AttributeRule>
+                              </AttributeRules>
+                            </EntityRule>
+                          </EntityRules>
+                        </AttributeRule>
+                      </AttributeRules>
+                    </EntityRule>
+                  </EntityRules>
+                </AttributeRule>
+              </Rules>
+            </ConceptTemplate>
+          </SubTemplates>
+    </ConceptTemplate>
+	<ConceptTemplate uuid="69cb72cb-fd55-4e49-bef4-14ca32cd568b" name="Klassifikationsattribut" applicableSchema="IFC4" applicableEntity="IfcObject">
+      <Rules>
+        <AttributeRule RuleID="IsDefinedBy" AttributeName="IsDefinedBy">
+          <EntityRules>
+            <EntityRule EntityName="IfcRelDefinesByProperties">
+              <AttributeRules>
+                <AttributeRule RuleID="RelatingPropertyDefinition" AttributeName="RelatingPropertyDefinition">
+                  <EntityRules>
+                    <EntityRule EntityName="IfcPropertySet">
+                      <AttributeRules>
+						<AttributeRule RuleID="PsetName" AttributeName="Name">
+                          <EntityRules>
+                            <EntityRule EntityName="IfcLabel" />
+                          </EntityRules>
+                        </AttributeRule>
+                        <AttributeRule RuleID="HasProperties" AttributeName="HasProperties">
+                          <EntityRules>
+                            <EntityRule EntityName="IfcPropertySingleValue">
+                              <AttributeRules>
+                                <AttributeRule RuleID="AttributName" AttributeName="Name">
+                                  <EntityRules>
+                                    <EntityRule EntityName="IfcIdentifier" />
+                                  </EntityRules>
+                                </AttributeRule>
+								<AttributeRule RuleID="Wert" AttributeName="NominalValue">
+                                  <EntityRules>
+                                    <EntityRule EntityName="IfcSingleValue" />
+                                  </EntityRules>
+                                </AttributeRule>
+                              </AttributeRules>
+                            </EntityRule>
+                          </EntityRules>
+                        </AttributeRule>
+                      </AttributeRules>
+                    </EntityRule>
+                  </EntityRules>
+                </AttributeRule>
+              </AttributeRules>
+            </EntityRule>
+          </EntityRules>
+        </AttributeRule>
+      </Rules>
+    </ConceptTemplate>
+    <ConceptTemplate uuid="00000000-0000-0000-0000-000000000000" name="_Realtionsprüfung" code="182f7189-c63f-4dce-98c8-c02be69df025" status="sample" applicableSchema="IFC4">
+      <SubTemplates>
+        <ConceptTemplate uuid="6cb91ac0-32eb-4d68-a905-c4b4d7dfb1ce" status="sample" applicableSchema="IFC4" applicableEntity="IfcBuildingElementProxy" />
+        <ConceptTemplate uuid="7a5bdb56-fe4e-4561-9864-22e6979dec2e" status="sample" applicableSchema="IFC4" applicableEntity="IfcObject" />
+      </SubTemplates>
+    </ConceptTemplate>
+  </Templates>
+  <Views><ModelView uuid="00000036-0936-0000-0000-000000000000" name="neue Richtlinie 4gl_HDWB - 20210312" applicableSchema="IFC4">
+      <ExchangeRequirements>
+        <ExchangeRequirement uuid="EinfacheAggregation" name="EinfacheAggregation" applicability="export"></ExchangeRequirement>
+		<ExchangeRequirement uuid="SOMkonformeAggregation" name="SOMkonformeAggregation" applicability="export"></ExchangeRequirement>
+      </ExchangeRequirements>
+      <Roots>
+        <ConceptRoot uuid="00000036-0936-0936-0000-000002907057" name="br.ub.10 Widerlager" applicableRootEntity="IfcBuildingElementProxy">
+          <Applicability>
+            <Template ref="69cb72cb-fd55-4e49-bef4-14ca32cd568b"/>
+            <TemplateRules operator="and">
+                <TemplateRule Parameters="PsetName[Value]='Allgemeine_Eigenschaften' AND AttributName[Value]='bauteilKlassifikation' AND Wert[Value]='br.ub.10'"/>
+            </TemplateRules>
+          </Applicability>
+          <Concepts>
+            <Concept uuid="00000036-0936-0936-0000-000002907145" name="Bestandteile ohne AE" code="">
+              <Template ref="AggregationIsDecomposedOhneAE"/>
+              <Requirements>
+                <Requirement applicability="export" exchangeRequirement="EinfacheAggregation" requirement="mandatory"/>
+              </Requirements>
+              <TemplateRules operator="and">
+                      <TemplateRule Parameters="IsDecomposedBy[Exists]=TRUE AND RelatedObjects[Exists]=TRUE AND ObjectType[Value]='br.ub.11'"/>
+					  <TemplateRule Parameters="IsDecomposedBy[Exists]=TRUE AND RelatedObjects[Exists]=TRUE AND ObjectType[Value]='br.ub.12'"/>
+					  <TemplateRule Parameters="IsDecomposedBy[Exists]=TRUE AND RelatedObjects[Exists]=TRUE AND ObjectType[Value]='br.ub.13'"/>
+              </TemplateRules>
+            </Concept>
+			<Concept uuid="00000036-0936-0936-0000-000002907MMM" name="Bestandteile mit AE" code="">
+              <Template ref="AggregationIsDecomposedMitAE"/>
+              <Requirements>
+                <Requirement applicability="export" exchangeRequirement="SOMkonformeAggregation" requirement="mandatory"/>
+              </Requirements>
+              <TemplateRules operator="and">
+                  <TemplateRule Parameters="IsDecomposedBy[Exists]=TRUE AND RelatedObjects[Exists]=TRUE AND IsDefinedBy[Exists]=TRUE AND PSetName[Value]='Allgemeine_Eigenschaften' 
+											AND PropertyName[Value]='bauteilKlassifikation' AND AttributWert[Value]='br.ub.11'"/>
+				  <TemplateRule Parameters="IsDecomposedBy[Exists]=TRUE AND RelatedObjects[Exists]=TRUE AND IsDefinedBy[Exists]=TRUE AND PSetName[Value]='Allgemeine_Eigenschaften' 
+											AND PropertyName[Value]='bauteilKlassifikation' AND AttributWert[Value]='br.ub.12'"/>
+				  <TemplateRule Parameters="IsDecomposedBy[Exists]=TRUE AND RelatedObjects[Exists]=TRUE AND IsDefinedBy[Exists]=TRUE AND PSetName[Value]='Allgemeine_Eigenschaften' 
+											AND PropertyName[Value]='bauteilKlassifikation' AND AttributWert[Value]='br.ub.13'"/>
+			  </TemplateRules>
+            </Concept>
+		  </Concepts>
+        </ConceptRoot>
+        <ConceptRoot uuid="00000036-0936-0936-0000-000002907194" name="br.ub.12 Fluegelwand" applicableRootEntity="IfcBuildingElementProxy">
+          <Applicability>
+            <Template ref="69cb72cb-fd55-4e49-bef4-14ca32cd568b"/>
+            <TemplateRules operator="and">
+                <TemplateRule Parameters="PsetName[Value]='Allgemeine_Eigenschaften' AND AttributName[Value]='bauteilKlassifikation' AND Wert[Value]='br.ub.12'"/>
+            </TemplateRules>
+          </Applicability>
+          <Concepts>
+			<Concept uuid="00000036-0936-0936-0000-000002907RRR" name="Ist Teil eines Widerlagers ohne AE" code="">
+              <Template ref="AggregationDecomposesOhneAE"/>
+              <Requirements>
+                <Requirement applicability="export" exchangeRequirement="EinfacheAggregation" requirement="mandatory"/>
+              </Requirements>
+              <TemplateRules operator="and">
+                  <TemplateRule Parameters="Decomposes[Exists]=TRUE AND RelatingObject[Exists]=TRUE AND IstTeilVon[Value]='br.ub.10'"/>
+              </TemplateRules>
+            </Concept>
+			<Concept uuid="00000036-0936-0936-0000-000002907GHH" name="Ist Teil eines Widerlagers mit AE" code="">
+              <Template ref="AggregationDecomposesmitAE"/>
+              <Requirements>
+                <Requirement applicability="export" exchangeRequirement="SOMkonformeAggregation" requirement="mandatory"/>
+              </Requirements>
+              <TemplateRules operator="and">
+                  <TemplateRule Parameters="Decomposes[Exists]=TRUE AND RelatingObject[Exists]=TRUE AND IsDefinedBy[Exists]=TRUE AND PSetName[Value]='Allgemeine_Eigenschaften' 
+											AND PropertyName[Value]='bauteilKlassifikation' AND AttributWert[Value]='br.ub.10'"/>
+              </TemplateRules>
+            </Concept>
+		  </Concepts>
+        </ConceptRoot>
+        <ConceptRoot uuid="00000036-0936-0936-0000-000002907367" name="br.ub.13 Widerlagerfundament" applicableRootEntity="IfcBuildingElementProxy">
+          <Applicability>
+            <Template ref="69cb72cb-fd55-4e49-bef4-14ca32cd568b"/>
+            <TemplateRules operator="and">
+                <TemplateRule Parameters="PsetName[Value]='Allgemeine_Eigenschaften' AND AttributName[Value]='bauteilKlassifikation' AND Wert[Value]='br.ub.13'"/>
+            </TemplateRules>
+		  </Applicability>
+          <Concepts>
+			<Concept uuid="00000036-0936-0936-0000-000002907SSS" name="Ist Teil eines Widerlagers ohne AE" code="">
+              <Template ref="AggregationDecomposesOhneAE"/>
+              <Requirements>
+                <Requirement applicability="export" exchangeRequirement="EinfacheAggregation" requirement="mandatory"/>
+              </Requirements>
+              <TemplateRules operator="and">
+                  <TemplateRule Parameters="Decomposes[Exists]=TRUE AND RelatingObject[Exists]=TRUE AND IstTeilVon[Value]='br.ub.10'"/>
+              </TemplateRules>
+            </Concept>
+			<Concept uuid="00000036-0936-0936-0000-000002907JJI" name="Ist Teil eines Widerlagers mit AE" code="">
+              <Template ref="AggregationDecomposesmitAE"/>
+              <Requirements>
+                <Requirement applicability="export" exchangeRequirement="SOMkonformeAggregation" requirement="mandatory"/>
+              </Requirements>
+              <TemplateRules operator="and">
+                  <TemplateRule Parameters="Decomposes[Exists]=TRUE AND RelatingObject[Exists]=TRUE AND IsDefinedBy[Exists]=TRUE AND PSetName[Value]='Allgemeine_Eigenschaften'
+											AND PropertyName[Value]='bauteilKlassifikation' AND AttributWert[Value]='br.ub.10'"/>
+              </TemplateRules>
+            </Concept>
+		  </Concepts>
+        </ConceptRoot>
+		<ConceptRoot uuid="00000036-0936-0936-0000-000002907BBB" name="br.ub.11 Widerlagerwand" applicableRootEntity="IfcBuildingElementProxy">
+          <Applicability>
+            <Template ref="69cb72cb-fd55-4e49-bef4-14ca32cd568b"/>
+            <TemplateRules operator="and">
+                <TemplateRule Parameters="PsetName[Value]='Allgemeine_Eigenschaften' AND AttributName[Value]='bauteilKlassifikation' AND Wert[Value]='br.ub.11'"/>
+            </TemplateRules>
+          </Applicability>
+          <Concepts>
+            <Concept uuid="00000036-0936-0936-0000-000002907STT" name="Ist Teil eines Widerlagers ohne AE" code="">
+              <Template ref="AggregationDecomposesOhneAE"/>
+              <Requirements>
+                <Requirement applicability="export" exchangeRequirement="EinfacheAggregation" requirement="mandatory"/>
+              </Requirements>
+              <TemplateRules operator="and">
+                  <TemplateRule Parameters="Decomposes[Exists]=TRUE AND RelatingObject[Exists]=TRUE AND IstTeilVon[Value]='br.ub.10'"/>
+              </TemplateRules>
+            </Concept>
+			<Concept uuid="00000036-0936-0936-0000-000002907GGG" name="Ist Teil eines Widerlagers mit AE" code="">
+              <Template ref="AggregationDecomposesmitAE"/>
+              <Requirements>
+                <Requirement applicability="export" exchangeRequirement="SOMkonformeAggregation" requirement="mandatory"/>
+              </Requirements>
+              <TemplateRules operator="and">
+                  <TemplateRule Parameters="Decomposes[Exists]=TRUE AND RelatingObject[Exists]=TRUE AND IsDefinedBy[Exists]=TRUE AND PSetName[Value]='Allgemeine_Eigenschaften' 
+											AND PropertyName[Value]='bauteilKlassifikation' AND AttributWert[Value]='br.ub.10'"/>
+              </TemplateRules>
+            </Concept>
+		  </Concepts>
+        </ConceptRoot>
+	  </Roots>
+    </ModelView></Views>
+</mvdXML>
