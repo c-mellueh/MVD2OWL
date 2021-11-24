@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mvdXML xmlns="http://buildingsmart-tech.org/mvd/XML/1.1" uuid="cb830d34-5696-4263-a7e9-2259ea343117" name="example 7.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://buildingsmart-tech.org/mvd/XML/1.1 http://buildingsmart-tech.org/mvd/XML/1.1/mvdXML_V1.1.xsd">
+  <Templates>
+    <ConceptTemplate uuid="5098cd13-bf4b-473a-a846-a60f69e9b738" name="Object Composition" code="" applicableSchema="IFC4" applicableEntity="IfcObjectDefinition">
+      <Definitions>
+        <Definition>
+          <Body><![CDATA[
+<p>Objects may be composed into parts to indicate levels of  detail, such as a building having multiple storeys, a  framed wall having studs, or a task having subtasks.  Composition may form a hierarchy of multiple levels, where  an object must have a single parent, or if a top-level object then declared within the single project or a project library.</p>          
+      ]]></Body>
+        </Definition>
+      </Definitions>
+      <SubTemplates>
+        <ConceptTemplate uuid="d1e6b86e-7658-443c-b708-86b7dd8b12f4" name="Nesting" applicableSchema="IFC4" applicableEntity="IfcObjectDefinition">
+          <Definitions>
+            <Definition>
+              <Body><![CDATA[<p>A nesting indicates an external ordered part composition relationship between the hosting structure, referred to as the "host", and the attached components, referred to as the "hosted elements". The concept of nesting is used in various ways. Examples are:</p> <ul> <li>Nesting is used on product elements to indicate external connectable parts such as faucets mounted on a sink, or switches within a junction box.</li> <li>Nesting is used on control objects to indicate specification hierarchies.</li> <li>Nesting is used on process objects to indicate subordinate processes which may occur in parallel or in series.</li> <li>Nesting is used on resource objects to indicate subordinate resource allocations which may occur in parallel or in series.</li> </ul> <p>Nesting is a bi-directional relationship, the relationship from the hosting structure to its attached components is called Nesting, and the relationship from the components to their containing structure is called Hosting.</p>]]></Body>
+            </Definition>
+          </Definitions>
+          <Rules>
+            <AttributeRule AttributeName="IsNestedBy">
+              <EntityRules>
+                <EntityRule EntityName="IfcRelNests"/>
+              </EntityRules>
+            </AttributeRule>
+          </Rules>
+          <SubTemplates>
+            <ConceptTemplate uuid="bafc93b7-d0e2-42d8-84cf-5da20ee1480a" name="Port Nesting" code="" applicableSchema="IFC4" applicableEntity="IfcDistributionElement">
+              <Definitions>
+                <Definition>
+                  <Body><![CDATA[<p>Ports indicate possible connections to other objects according to specified system types, flow direction, and connection properties.  Ports are typically connected between devices via cables, pipes, or ducts.</p> <p>Ports may have placement defined indicating the position and outward orientation of the port relative to the product or product type. Ports may also have material profile sets defined indicating the flow area and connection enclosure.</p>]]></Body>
+                </Definition>
+              </Definitions>
+              <Rules>
+                <AttributeRule RuleID="PredefinedType" AttributeName="PredefinedType"/>
+                <AttributeRule AttributeName="IsNestedBy">
+                  <EntityRules>
+                    <EntityRule EntityName="IfcRelNests">
+                      <AttributeRules>
+                        <AttributeRule AttributeName="RelatedObjects">
+                          <EntityRules>
+                            <EntityRule EntityName="IfcDistributionPort">
+                              <AttributeRules>
+                                <AttributeRule RuleID="Name" Description="The name of the port." AttributeName="Name">
+                                  <EntityRules>
+                                    <EntityRule EntityName="IfcLabel"/>
+                                  </EntityRules>
+                                </AttributeRule>
+                                <AttributeRule RuleID="Flow" Description="The flow direction of the port." AttributeName="FlowDirection">
+                                  <EntityRules>
+                                    <EntityRule EntityName="IfcFlowDirectionEnum"/>
+                                  </EntityRules>
+                                </AttributeRule>
+                                <AttributeRule RuleID="Type" AttributeName="SystemType">
+                                  <EntityRules>
+                                    <EntityRule EntityName="IfcDistributionSystemEnum"/>
+                                  </EntityRules>
+                                </AttributeRule>
+                                <AttributeRule AttributeName="ObjectPlacement">
+                                  <EntityRules>
+                                    <EntityRule EntityName="IfcLocalPlacement">
+                                      <AttributeRules>
+                                        <AttributeRule AttributeName="RelativePlacement">
+                                          <EntityRules>
+                                            <EntityRule EntityName="IfcAxis2Placement3D">
+                                              <AttributeRules>
+                                                <AttributeRule AttributeName="Location">
+                                                  <EntityRules>
+                                                    <EntityRule EntityName="IfcCartesianPoint"/>
+                                                  </EntityRules>
+                                                </AttributeRule>
+                                                <AttributeRule AttributeName="Axis">
+                                                  <EntityRules>
+                                                    <EntityRule EntityName="IfcDirection"/>
+                                                  </EntityRules>
+                                                </AttributeRule>
+                                                <AttributeRule AttributeName="RefDirection">
+                                                  <EntityRules>
+                                                    <EntityRule EntityName="IfcDirection"/>
+                                                  </EntityRules>
+                                                </AttributeRule>
+                                              </AttributeRules>
+                                            </EntityRule>
+                                          </EntityRules>
+                                        </AttributeRule>
+                                      </AttributeRules>
+                                    </EntityRule>
+                                  </EntityRules>
+                                </AttributeRule>
+                                <AttributeRule AttributeName="IsDeclaredBy"/>
+                                <AttributeRule AttributeName="PredefinedType">
+                                  <EntityRules>
+                                    <EntityRule EntityName="IfcDistributionPortTypeEnum"/>
+                                  </EntityRules>
+                                </AttributeRule>
+                              </AttributeRules>
+                            </EntityRule>
+                          </EntityRules>
+                        </AttributeRule>
+                      </AttributeRules>
+                    </EntityRule>
+                  </EntityRules>
+                </AttributeRule>
+              </Rules>
+            </ConceptTemplate>
+          </SubTemplates>
+        </ConceptTemplate>
+      </SubTemplates>
+    </ConceptTemplate>
+  </Templates>
+  <Views>
+    <ModelView uuid="dae06832-07d3-4b1c-b4a7-ee32e11d0189" name="HVAC Sample Model View" code="HVAC" applicableSchema="IFC4">
+      <ExchangeRequirements>
+        <ExchangeRequirement uuid="a5846830-de9a-4195-9339-31169ecb7b0e" name="HVAC Sample Exchange" applicability="both"/>
+      </ExchangeRequirements>
+      <Roots>
+        <ConceptRoot uuid="3ca6a49f-81c4-4010-9589-578cab9d4428" name="" applicableRootEntity="IfcHeatExchanger">
+          <Concepts>
+            <Concept uuid="875138d3-6911-4e35-9369-2d273f731250" name="Port" override="false">
+              <Template ref="bafc93b7-d0e2-42d8-84cf-5da20ee1480a"/>
+              <Requirements>
+                <Requirement applicability="import" requirement="mandatory" exchangeRequirement="a5846830-de9a-4195-9339-31169ecb7b0e"/>
+                <Requirement applicability="export" requirement="mandatory" exchangeRequirement="a5846830-de9a-4195-9339-31169ecb7b0e"/>
+              </Requirements>
+              <TemplateRules operator="and">
+                <TemplateRule Description="Inlet of substance to be heated." Parameters="Name[Value]='HeatingInlet' AND Flow[Value]='SINK' AND Type[Value]='NOTDEFINED'"/>
+                <TemplateRule Description="Outlet of substance to be heated." Parameters="Name[Value]='HeatingOutlet' AND Flow[Value]='SOURCE' AND Type[Value]='NOTDEFINED'"/>
+                <TemplateRule Description="Inlet of substance to be cooled." Parameters="Name[Value]='CoolingInlet' AND Flow[Value]='SINK' AND Type[Value]='NOTDEFINED'"/>
+                <TemplateRule Description="Outlet of substance to be cooled." Parameters="Name[Value]='CoolingOutlet' AND Flow[Value]='SOURCE' AND Type[Value]='NOTDEFINED'"/>
+              </TemplateRules>
+            </Concept>
+          </Concepts>
+        </ConceptRoot>
+      </Roots>
+    </ModelView>
+  </Views>
+</mvdXML>
