@@ -6,7 +6,6 @@ import re
 
 
 
-
 ########## Relationships ##########
 
 
@@ -18,12 +17,13 @@ import re
 
 def main():
     doc = "mvdXML_V1.1.xsd"
-    # #file = "Prüfregeln.mvdxml"
     file = "mvdXML_V1-1-Final-Documentation.xml"
+    file2 = "bimq_rules.mvdxml"
+    file3 = "RelAssociatesMaterial.mvdxml"
     mvd = MvdXml()
     #
     #
-    mvd.import_xml(file=file, doc=doc, validation=False)
+    mvd.import_xml(file=file3, doc=doc, validation=False)
 
 
     print("START")
@@ -43,7 +43,6 @@ def main():
 
             rule_id = parameter.has_for_parameter_text
 
-            print(rule_id)
             metric = parameter.has_for_metric
             value = parameter.has_for_parameter_value
             test, path =ct.find_rule_id(rule_id)
@@ -51,18 +50,19 @@ def main():
             text = rule_id+" : "
 
 
-            # for el in path:
-            #     if AttributeRule.__instancecheck__(el):
-            #         text += el.has_for_attribute_name+"->"
-            #
-            #     if EntityRule.__instancecheck__(el):
-            #         text += el.has_for_entity_name+"->"
-            #
-            #     if ConceptTemplate.__instancecheck__(el):
-            #         text += el.has_for_name+"->"
+
+            for el in path:
+                if AttributeRule.__instancecheck__(el):
+                    text += el.has_for_attribute_name+"->"
+
+                if EntityRule.__instancecheck__(el):
+                    text += el.has_for_entity_name+"->"
+
+                if ConceptTemplate.__instancecheck__(el):
+                    text += el.has_for_name+"->"
 
 
-            # print(text+str(value))
+            print(text+str(value))
 
         print()
     onto.save("onto_test.rdfxml")

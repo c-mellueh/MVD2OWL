@@ -244,9 +244,8 @@ with onto:
             path.append(self)
 
             if prefix+self.has_for_rule_id == ruleid:
-                #return self,path
-                print(str(path))
-                return None,None
+                return self,path
+
 
             else:
 
