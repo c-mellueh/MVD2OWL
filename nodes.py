@@ -243,7 +243,7 @@ if __name__ == "__main__":
     import sys
 
     doc = "mvdXML_V1.1.xsd"
-    file = "mvdXML_V1-1-Final-Documentation.xml"
+    file = "Examples/mvdXML_V1-1-Final-Documentation.xml"
     file2 = "bimq_rules.mvdxml"
     file3 = "RelAssociatesMaterial.mvdxml"
     mvd = MvdXml()
