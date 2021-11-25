@@ -125,7 +125,6 @@ class Ui_MainWindow(object):
             for rules in obj.has_template_rules:
 
                 for rule in rules.has_template_rules:
-                    print(rule)
                     paths = rule.path_list
                     self.import_visuals(paths)
 
@@ -216,7 +215,6 @@ class Ui_MainWindow(object):
         label.setGeometry(xpos,ypos,width,height)
         label.show()
 
-        print(bool.__instancecheck__(inhalt))
 
 
         if bool.__instancecheck__(inhalt):
@@ -235,7 +233,6 @@ class Ui_MainWindow(object):
 
         entity_list.append(label)
 
-        print(str(label.x())+":"+str(label.y()))
 
 
 
@@ -244,8 +241,8 @@ if __name__ == "__main__":
 
     doc = "mvdXML_V1.1.xsd"
     file = "Examples/mvdXML_V1-1-Final-Documentation.xml"
-    file2 = "bimq_rules.mvdxml"
-    file3 = "RelAssociatesMaterial.mvdxml"
+    file2 = "Examples/bimq_rules.mvdxml"
+    file3 = "Examples/RelAssociatesMaterial.mvdxml"
     mvd = MvdXml()
     #
     #
