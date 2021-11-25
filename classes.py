@@ -119,6 +119,10 @@ with onto:
                 entity_rule.reference_templates()
 
             self.import_items(xml_object, ModelView, has_model_views, "Views")
+
+            for template_rule in TemplateRule.instances():
+                template_rule.get_linked_rules()
+
             pass
 
 
@@ -135,14 +139,19 @@ with onto:
             self.import_attribute(xml_object, has_for_applicable_entity, "applicableEntity", False)
             self.import_attribute(xml_object, is_partial, "isPartial", False)
 
+
+
             self.name = self.has_for_name+" [Concept Template] "+self.name
 
             pass
 
         pass
 
-        def find_rule_id(self, ruleid:str,path: list=[],prefix = ""):
+        def find_rule_id(self, ruleid:str,path: list=[],prefix = "",applicable_entity=None):
             path = path[:]                  # else python will change the value of input
+
+            if applicable_entity!= self.has_for_applicable_entity:
+                path.append(self)
 
 
             for concept_template in self.has_sub_templates:
@@ -327,7 +336,7 @@ with onto:
 
 
                 if self.refers_to is not None:
-                    value,new_path =  self.refers_to.find_rule_id(ruleid,path = path,prefix = prefix)
+                    value,new_path =  self.refers_to.find_rule_id(ruleid,path = path,prefix = prefix,applicable_entity=self.has_for_entity_name)
                     if value is not None:
                         return value,new_path
 
@@ -422,7 +431,6 @@ with onto:
             # TODO: Add Description
 
             self.import_parameter(xml_object.attrib.get("Parameters"))
-
             pass
 
         pass
@@ -443,16 +451,26 @@ with onto:
 
         def get_linked_rules(self):
 
-            concept_template = self.get_referenced_concept_template()
-            param_list = self.split_parameter()
+            parameters = self.has_for_parameters
+            ct = self.get_referenced_concept_template()
+            self.path_list = []
 
-            rules = []
-            for param in param_list:
-                rule = concept_template.find_ruleid(param[0])
-                param.append(rule)
-                rules.append(param)
 
-            return rules
+            for parameter in parameters:
+                rule_id = parameter.has_for_parameter_text
+                metric = parameter.has_for_metric
+                value = parameter.has_for_parameter_value
+                test, path = ct.find_rule_id(rule_id)
+                path.append(value)
+                parameter.path = path
+
+                self.path_list.append(path)
+
+            return self.path_list
+
+
+
+
 
         def get_referenced_concept_template(self):
             parent = self.get_parent()
@@ -461,7 +479,6 @@ with onto:
 
         def get_parent(self):
             parent = self.is_template_rule_of
-
             if Concept.__instancecheck__(parent) or Applicability.__instancecheck__(parent):
                 return parent
             elif parent is not None:

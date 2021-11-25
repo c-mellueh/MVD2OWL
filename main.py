@@ -31,38 +31,41 @@ def main():
 
     for tr in TemplateRule.instances():
 
-        ct =  tr.get_referenced_concept_template()
-        parameters = tr.has_for_parameters
-
-        print("--------------------------------")
+        # ct =  tr.get_referenced_concept_template()
+        # parameters = tr.has_for_parameters
+        #
+        # print("--------------------------------")
+        # print(tr.has_for_plain_text)
+        #
+        # for parameter in parameters:
+        #
+        #
+        #
+        #     rule_id = parameter.has_for_parameter_text
+        #
+        #     metric = parameter.has_for_metric
+        #     value = parameter.has_for_parameter_value
+        #     test, path =ct.find_rule_id(rule_id)
+        #
+        #     text = rule_id+" : "
         print(tr.has_for_plain_text)
-
-        for parameter in parameters:
-
-
-
-            rule_id = parameter.has_for_parameter_text
-
-            metric = parameter.has_for_metric
-            value = parameter.has_for_parameter_value
-            test, path =ct.find_rule_id(rule_id)
-
-            text = rule_id+" : "
-
-
-
+        paths = tr.path_list
+        for path in paths:
+            text = ""
             for el in path:
                 if AttributeRule.__instancecheck__(el):
                     text += el.has_for_attribute_name+"->"
 
-                if EntityRule.__instancecheck__(el):
+                elif EntityRule.__instancecheck__(el):
                     text += el.has_for_entity_name+"->"
 
-                if ConceptTemplate.__instancecheck__(el):
-                    text += el.has_for_name+"->"
+                elif ConceptTemplate.__instancecheck__(el):
+                    text += el.has_for_applicable_entity+"->"
+
+                else:    text+=str(el)
 
 
-            print(text+str(value))
+            print(text)
 
         print()
     onto.save("onto_test.rdfxml")
