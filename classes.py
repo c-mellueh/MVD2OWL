@@ -23,21 +23,20 @@ with onto:
 
             xml_list = self.get_group_items(name, xml_object)
 
-            property_name = prop.__name__
-
+            property_name = prop.python_name
             for el in xml_list:
                 item = _class()
                 item.initialize(el)
                 function = getattr(self, property_name)
                 function.append(item)
-            pass
+
 
         def import_functional_item(self, xml_object: etree._Element, _class, prop, name: str):
 
             for obj in xml_object.findall(name, namespaces=xml_object.nsmap):
 
                 if obj is not None:
-                    property_name = prop.__name__
+                    property_name = prop.python_name
 
                     item = _class()
                     item.initialize(obj)
@@ -49,7 +48,7 @@ with onto:
             for obj in xml_object.findall(name, namespaces=xml_object.nsmap):
 
                 if obj is not None:
-                    property_name = prop.__name__
+                    property_name = prop.python_name
 
                     item = _class()
                     item.initialize(obj)
@@ -58,9 +57,9 @@ with onto:
                     function.append(item)
 
         def import_attribute(self, xml_object: etree._Element, prop, name: str, is_mandatory: bool):
-            property_name = prop.__name__
-            attribute = xml_object.attrib.get(name)
-            attribute = prop.range[0](attribute)
+            property_name = prop.python_name
+            attribute = str(xml_object.attrib.get(name))
+            #attribute = prop.range[0](attribute)
 
             if attribute is None:
                 if is_mandatory:
@@ -148,14 +147,14 @@ with onto:
             if applicable_entity != self.has_for_applicable_entity:
                 path.append(self)
 
-            for concept_template in self.has_sub_templates:
+            for concept_template in self.sub_templates:
                 help_path = path + [concept_template]
                 value, new_path = concept_template.find_rule_id(ruleid, path=help_path, prefix=prefix)
                 if value is not None:
                     return value, new_path
 
             if has_attribute_rules in self.get_properties():
-                for attribute_rule in self.has_attribute_rules:
+                for attribute_rule in self.attribute_rules:
 
                     value, new_path = attribute_rule.find_rule_id(ruleid, path=path, prefix=prefix)
                     if value is not None:
@@ -252,7 +251,7 @@ with onto:
 
             else:
 
-                for entity_rule in self.has_entity_rules:
+                for entity_rule in self.entity_rules:
                     value, new_path = entity_rule.find_rule_id(ruleid, path=path, prefix=prefix)
                     if value is not None:
                         return value, new_path
@@ -303,7 +302,7 @@ with onto:
             for concept_template in ConceptTemplate.instances():
                 for uuid in references:
                     if uuid == concept_template.has_for_uuid:
-                        self.refers_to = concept_template
+                        self.refers = concept_template
 
             pass
 
@@ -318,13 +317,13 @@ with onto:
             if prefix + self.has_for_rule_id == ruleid:
                 return self, path
             else:
-                for attribute_rule in self.has_attribute_rules:
+                for attribute_rule in self.attribute_rules:
                     value, new_path = attribute_rule.find_rule_id(ruleid, path=path, prefix=prefix)
                     if value is not None:
                         return value, new_path
 
-                if self.refers_to is not None:
-                    value, new_path = self.refers_to.find_rule_id(ruleid, path=path, prefix=prefix,
+                if self.refers is not None:
+                    value, new_path = self.refers.find_rule_id(ruleid, path=path, prefix=prefix,
                                                                   applicable_entity=self.has_for_entity_name)
                     if value is not None:
                         return value, new_path
@@ -384,7 +383,7 @@ with onto:
 
             for concept_template in ConceptTemplate.instances():
                 if uuid == concept_template.has_for_uuid:
-                    self.refers_to = concept_template
+                    self.refers = concept_template
 
         pass
 
@@ -408,7 +407,7 @@ with onto:
             for concept_template in ConceptTemplate.instances():
 
                 if uuid == concept_template.has_for_uuid:
-                    self.refers_to = concept_template
+                    self.refers = concept_template
 
         pass
 
@@ -456,7 +455,7 @@ with onto:
 
         def get_referenced_concept_template(self):
             parent = self.get_parent()
-            return parent.refers_to
+            return parent.refers
             pass
 
         def get_parent(self):
@@ -479,7 +478,7 @@ with onto:
 
         def get_referenced_concept_template(self):
             parent = self.get_parent()[0]
-            return parent.refers_to[0]
+            return parent.refers[0]
             pass
 
         def get_parent(self):
@@ -594,6 +593,7 @@ with onto:
     class has_concept_templates(ObjectProperty, InverseFunctionalProperty):
         domain = [MvdXml]
         range = [ConceptTemplate]
+        python_name = "concept_templates"
         pass
 
 
@@ -601,12 +601,14 @@ with onto:
         domain = [ConceptTemplate]
         range = [MvdXml]
         inverse_property = has_concept_templates
+        python_name ="mvdxml"
         pass
 
 
     class has_model_views(ObjectProperty, InverseFunctionalProperty):
         domain = [MvdXml]
         range = [ModelView]
+        python_name = "model_views"
         pass
 
 
@@ -614,12 +616,14 @@ with onto:
         domain = [ModelView]
         range = [MvdXml]
         inverse_property = has_model_views
+        python_name = "mvdxml"
         pass
 
 
     class has_sub_templates(ObjectProperty, InverseFunctionalProperty):
         domain = [ConceptTemplate]
         range = [ConceptTemplate]
+        python_name="sub_templates"
         pass
 
 
@@ -633,6 +637,8 @@ with onto:
     class has_definitions(ObjectProperty, InverseFunctionalProperty):
         domain = [ConceptTemplate | ModelView | ExchangeRequirement | ConceptRoot | Applicability | Concept]
         range = [Definition]
+        python_name="definitions"
+
         pass
 
 
@@ -643,10 +649,10 @@ with onto:
         pass
 
 
-    class has_attribute_rules(ObjectProperty):
+    class has_attribute_rules(ObjectProperty,InverseFunctionalProperty):
         domain = [ConceptTemplate | EntityRule]
         range = [AttributeRule]
-
+        python_name="attribute_rules"
         pass
 
 
@@ -662,7 +668,7 @@ with onto:
     class has_constraints(ObjectProperty, InverseFunctionalProperty):
         domain = [AttributeRule | EntityRule]
         range = [Constraint]
-
+        python_name = "constraints"
 
     class is_constraint_of(ObjectProperty, FunctionalProperty):
         domain = [Constraint]
@@ -673,7 +679,7 @@ with onto:
     class has_entity_rules(ObjectProperty, InverseFunctionalProperty):
         domain = [AttributeRule]
         range = [EntityRule]
-
+        python_name = "entity_rules"
 
     pass
 
@@ -696,13 +702,13 @@ with onto:
         domain = [EntityRule | Applicability | Concept]
         range = [ConceptTemplate]
         inverse_property = is_referred_by
+        python_name = "refers"
 
-
-    class has_base_views(ModelView >> BaseView):
+    class has_base_views(ModelView >> BaseView,InverseFunctionalProperty):
         pass
 
 
-    class is_base_view_of(BaseView >> ModelView):
+    class is_base_view_of(BaseView >> ModelView,FunctionalProperty):
         inverse_property = has_base_views
         pass
 
@@ -710,6 +716,7 @@ with onto:
     class has_exchange_requirements(ObjectProperty, InverseFunctionalProperty):
         domain = [ModelView]
         range = [ExchangeRequirement]
+        python_name="exchange_requirements"
         pass
 
 
@@ -745,7 +752,7 @@ with onto:
         domain = [Concept]
         range = [ConceptRoot]
 
-        invers_property = has_concepts
+        inverse_property = has_concepts
         pass
 
 
@@ -780,6 +787,7 @@ with onto:
     class has_requirement(ObjectProperty, InverseFunctionalProperty):
         domain = [Concept]
         range = [Requirement]
+
         pass
 
 
