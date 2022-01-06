@@ -157,8 +157,9 @@ class Ui_MainWindow(object):
 
         ### Fenster Aufbau
 
-        MainWindow.setObjectName("MainWindow")
+        MainWindow.setObjectName("MVD2Onto")
         MainWindow.resize(1920, 1080)
+        MainWindow.setWindowTitle("MVD2Onto")
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
 
@@ -396,7 +397,7 @@ if __name__ == "__main__":
     mvd = MvdXml()
     #
     #
-    mvd.import_xml(file=file, doc=doc, validation=False)
+    mvd.import_xml(file=file3, doc=doc, validation=False)
 
     app = QtWidgets.QApplication(sys.argv)
     MainWindow = QtWidgets.QMainWindow()

@@ -12,7 +12,7 @@ def main():
     mvd = MvdXml()
     #
     #
-    mvd.import_xml(file=file3, doc=doc, validation=False)
+    mvd.import_xml(file=file, doc=doc, validation=False)
 
     print("START")
     print("")
@@ -41,6 +41,9 @@ def main():
         print()
     onto.save("onto_test.rdfxml")
 
+
+    for ct in ConceptTemplate.instances():
+        print(ct.has_for_name+ct.has_for_uuid)
 
 if __name__ == "__main__":
     main()
