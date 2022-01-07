@@ -29,9 +29,6 @@ class Connection():
         self.label = None
         self.attribute = attribute
         self.right_proxy = right_proxy
-        print()
-        print(self)
-
         self.metric = metric
         self.scene = self.right_proxy.scene()
 
@@ -53,7 +50,11 @@ class Connection():
     def create_text(self):
         if self.metric != "":
             self.center = self.path.boundingRect().center()
-            self.label = self.scene.addWidget(QtWidgets.QLabel(self.metric))
+            self.label =QtWidgets.QGraphicsTextItem()
+            self.label.setHtml("<div style='background-color:#FFFFFF;'>" + str(self.metric)+ "</div>")
+
+
+            self.scene.addItem(self.label)
             width = self.label.boundingRect().width()
             height = self.label.boundingRect().height()
             movement = QPointF(width,height)/2
@@ -147,6 +148,17 @@ class DragBox(QtWidgets.QGraphicsProxyWidget):
         orig_position = self.scenePos()
         updated_cursor_x = updated_cursor_position.x() - orig_cursor_position.x() + orig_position.x()
         updated_cursor_y = updated_cursor_position.y() - orig_cursor_position.y() + orig_position.y()
+
+
+        if updated_cursor_y <0:
+            updated_cursor_y=0
+        if updated_cursor_x <0:
+            updated_cursor_x=0
+
+        if updated_cursor_y+self.geometry().height()>self.scene().height():
+            updated_cursor_y=self.scene().height()-self.geometry().height()
+        if updated_cursor_x+self.geometry().width()>self.scene().width():
+            updated_cursor_x=self.scene().width()-self.geometry().width()
 
         self.setPos(QPointF(updated_cursor_x, updated_cursor_y))
 
@@ -259,7 +271,7 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "MVD2Onto"))
 
     def initialize(self):
         width, height = self.graphicsView.width(), self.graphicsView.height()
@@ -311,8 +323,12 @@ class Ui_MainWindow(object):
 
     def import_visuals(self, paths,metrics, index):
 
+
         created_entities = []
         graphical_items_dict = {}
+
+        template_rule_scene,gv = self.create_new_scene()
+        template_rule_scene=self.scene
 
         for k,path in enumerate(paths):
             metric = metrics[k]
@@ -325,7 +341,7 @@ class Ui_MainWindow(object):
 
                     if (isinstance(path_item, (ConceptTemplate, EntityRule))):
 
-                        block = self.add_block(path_item,last_block)
+                        block = self.add_block(template_rule_scene,path_item,last_block)
                         graphical_items_dict[path_item] = block
                         created_entities.append(path_item)
                         pass
@@ -338,12 +354,24 @@ class Ui_MainWindow(object):
 
                     else:
 
-                        graphical_items_dict[path_item] = self.add_label(path_item, last_block, metric)
+                        graphical_items_dict[path_item] = self.add_label(template_rule_scene,path_item, last_block, metric)
 
                 last_item =path_item
 
+    def create_new_scene(self):
+        scene = QGraphicsScene()
+        graphicsView = QtWidgets.QGraphicsView(scene)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        sizePolicy.setHorizontalStretch(3)
+        sizePolicy.setVerticalStretch(1)
+        sizePolicy.setHeightForWidth(graphicsView.sizePolicy().hasHeightForWidth())
+        graphicsView.setSizePolicy(sizePolicy)
+        graphicsView.setObjectName("graphicsView")
 
-    def add_block(self, data,last_block):
+        return scene,graphicsView
+
+
+    def add_block(self,scene, data,last_block):
 
         if isinstance(data, ConceptTemplate):
             name = data.has_for_applicable_entity
@@ -361,13 +389,13 @@ class Ui_MainWindow(object):
         ypos = 25
 
         block.setPos((QPointF(xpos, ypos)))
-        self.scene.addItem(block)
+        scene.addItem(block)
 
         block.connect_to_entity(last_block)
 
         return block
 
-    def add_label(self, inhalt, old_proxy, metric):
+    def add_label(self,scene, inhalt, old_proxy, metric):
 
         text = str(inhalt)
 
@@ -379,7 +407,7 @@ class Ui_MainWindow(object):
         label.setSizePolicy(sizePolicy)
         proxy = DragBox(label)
 
-        self.scene.addItem(proxy)
+        scene.addItem(proxy)
         width = 100
         height = 50
         xpos = old_proxy.parent().pos().x()+225
