@@ -13,31 +13,55 @@ from PyQt5.QtCore import Qt, QPointF
 
 class Attribute(QtWidgets.QLabel):
 
-    def __init__(self):
+    def __init__(self,text):
         super().__init__()
+        self.setText(text)
         self.connections = []
+        self.setFrameStyle(1)
 
+    def __str__(self):
+        return "[Attribut] {0}".format(self.text())
 
 class Connection():
 
-    def __init__(self, attribute, right_proxy):
-        self.scene = right_proxy.scene()
+    def __init__(self, attribute, right_proxy,metric):
+
+        self.label = None
         self.attribute = attribute
         self.right_proxy = right_proxy
+        print()
+        print(self)
 
+        self.metric = metric
+        self.scene = self.right_proxy.scene()
+
+        self.create_line()
+        self.create_text()
+
+    def __str__(self):
+        return "{0}->{1}".format(self.attribute,self.right_proxy)
+
+    def create_line(self):
         self.points = self.get_pos()
-
         self.path = QtGui.QPainterPath()
         self.path.moveTo(self.points[0])
         self.path.cubicTo(self.points[1], self.points[2], self.points[3])
-
         self.line = QtWidgets.QGraphicsPathItem()
         self.line.setPath(self.path)
         self.scene.addItem(self.line)
 
+    def create_text(self):
+        if self.metric != "":
+            self.center = self.path.boundingRect().center()
+            self.label = self.scene.addWidget(QtWidgets.QLabel(self.metric))
+            width = self.label.boundingRect().width()
+            height = self.label.boundingRect().height()
+            movement = QPointF(width,height)/2
+            self.label.setPos(self.center-movement)
+
+
     def get_pos(self):
         rectangle_right = self.right_proxy.windowFrameGeometry()
-
         attribute = self.attribute
         groupbox = attribute.parent()
 
@@ -67,7 +91,8 @@ class Connection():
 
         return [pstart, p2, p3, pend]
 
-    def update_line(self):
+    def update(self):
+        ## Update Curve Position
         self.points = self.get_pos()
 
         for i, el in enumerate(self.points):
@@ -75,31 +100,36 @@ class Connection():
 
         self.line.setPath(self.path)
 
+        ## Update Label
+        if self.label is not None:
+            self.center = self.path.boundingRect().center()
+            width = self.label.boundingRect().width()
+            height = self.label.boundingRect().height()
+            movement = QPointF(width,height)/2
+            self.label.setPos(self.center-movement)
+
     pass
 
 
-class drag_box(QtWidgets.QGraphicsProxyWidget):
+class DragBox(QtWidgets.QGraphicsProxyWidget):
+    #is needed to house QGroupBoxy (EntityRepresentation)
 
     def __init__(self, widget):
         super().__init__()
         self.setAcceptHoverEvents(True)
         self.setWidget(widget)
         self.connections = []
-        self.lines = []
 
-    def resizeEvent(self, event):
-        try:
-            for el in self.connections:
-                el.update_line()
-        except:
-            pass
+    def __str__(self):
+        return str(self.widget())
 
-    def connect_to_entity(self, entity):
+    def connect_to_entity(self, attribute,metric = ""):
 
-        if entity is not None:
-            con = Connection(entity, self)
+        if attribute is not None:
+            con = Connection(attribute,self,metric)
+
             self.connections.append(con)
-            entity.parent().graphicsProxyWidget().connections.append(con)
+            attribute.parent().graphicsProxyWidget().connections.append(con)
 
     def hoverEnterEvent(self, event):
         app.instance().setOverrideCursor(QtCore.Qt.OpenHandCursor)
@@ -108,9 +138,6 @@ class drag_box(QtWidgets.QGraphicsProxyWidget):
         app.instance().restoreOverrideCursor()
 
     def mousePressEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
-        rect1 = self.windowFrameRect()
-        groupbox = self.widget()
-        print(groupbox.frameGeometry())
         pass
 
     def mouseMoveEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
@@ -124,7 +151,7 @@ class drag_box(QtWidgets.QGraphicsProxyWidget):
         self.setPos(QPointF(updated_cursor_x, updated_cursor_y))
 
         for el in self.connections:
-            el.update_line()
+            el.update()
 
         pass
 
@@ -133,23 +160,37 @@ class drag_box(QtWidgets.QGraphicsProxyWidget):
 
     pass
 
-
 class EntityRepresentation(QGroupBox):
 
-    def __init__(self, ):
+    """ Widget in DragBox"""
+
+    def __init__(self, title):
+
         super().__init__()
-        self.qlayout = QtWidgets.QVBoxLayout()
-        self.connections = []
+        self.qlayout = QtWidgets.QVBoxLayout()  #Layout for lining up all the Attributes
         self.setLayout(self.qlayout)
+        self.setTitle(title)
+        self.alignment()
+        self.setStyleSheet('QGroupBox:title {'
+                 'subcontrol-origin: margin;'
+                 'subcontrol-position: top center;'
+                 'padding-left: 10px;'
+                 'padding-right: 10px; }')
 
-    def add_attribute(self, text, data):
-        attrib = Attribute()
-        attrib.setText(text)
+    def __str__(self):
+        return "Entity:{0}".format(self.title())
+
+    def add_attribute(self, data):
+
+        text = data.has_for_attribute_name
+        attrib = Attribute(text)
         self.qlayout.addWidget(attrib)
-        attrib.setFrameStyle(1)
-
+        attrib.show()
         return attrib
 
+class LabelRepresentation(QtWidgets.QLabel):
+    def __str__(self):
+        return "[Label] {0}".format(self.text())
 
 class Ui_MainWindow(object):
 
@@ -157,61 +198,55 @@ class Ui_MainWindow(object):
 
         ### Fenster Aufbau
 
-        MainWindow.setObjectName("MVD2Onto")
+        MainWindow.setObjectName("MainWindow")
         MainWindow.resize(1920, 1080)
-        MainWindow.setWindowTitle("MVD2Onto")
+
+        # Base for Columns
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
-
         self.base_layout = QtWidgets.QGridLayout(self.centralwidget)
         self.base_layout.setObjectName("baseLayout")
+        MainWindow.setCentralWidget(self.centralwidget)
 
+        # Columns Layout for Treelist nad Object window
         self.horizontalLayout = QtWidgets.QHBoxLayout()
         self.horizontalLayout.setSpacing(5)
         self.horizontalLayout.setObjectName("horizontalLayout")
 
+        # Inhalt in Fenster hinzufügen
+        self.base_layout.addLayout(self.horizontalLayout, 0, 0, 1, 1)
+
+        # Tree Widget
         self.treeWidget = QtWidgets.QTreeWidget(self.centralwidget)
 
+        # Set Size Policy for TreeWidget
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(1)
-        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setVerticalStretch(1)
         sizePolicy.setHeightForWidth(self.treeWidget.sizePolicy().hasHeightForWidth())
-
         self.treeWidget.setSizePolicy(sizePolicy)
-        self.treeWidget.setMaximumSize(QtCore.QSize(14000, 16777215))
         self.treeWidget.setObjectName("RuleBrowser")
         self.treeWidget.headerItem().setText(0, "Regeln")
+
         self.horizontalLayout.addWidget(self.treeWidget)
 
-        self.rule_view = QtWidgets.QGroupBox()
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
-        sizePolicy.setHorizontalStretch(3)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.rule_view.sizePolicy().hasHeightForWidth())
-        self.rule_view.setSizePolicy(sizePolicy)
-        self.rule_view.setObjectName("rule_view")
-
-        self.rule_view_grid = QtWidgets.QGridLayout(self.rule_view)
-        self.rule_view_grid.setObjectName("rule_view_grid")
-
+        # Object Window
         self.scene = QGraphicsScene()
         self.graphicsView = QtWidgets.QGraphicsView(self.scene)
-        self.graphicsView.setObjectName("graphicsView")
-        self.rule_view_grid.addWidget(self.graphicsView, 0, 0, 1, 1)
-
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
-        sizePolicy.setHorizontalStretch(1)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        sizePolicy.setHorizontalStretch(3)
         sizePolicy.setVerticalStretch(1)
         sizePolicy.setHeightForWidth(self.graphicsView.sizePolicy().hasHeightForWidth())
         self.graphicsView.setSizePolicy(sizePolicy)
+        self.graphicsView.setObjectName("graphicsView")
 
-        self.horizontalLayout.addWidget(self.rule_view)
-        self.base_layout.addLayout(self.horizontalLayout, 0, 0, 1, 1)
-        MainWindow.setCentralWidget(self.centralwidget)
+        self.horizontalLayout.addWidget(self.graphicsView)
+
         self.menubar = QtWidgets.QMenuBar(MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 1527, 22))
         self.menubar.setObjectName("menubar")
         MainWindow.setMenuBar(self.menubar)
+
         self.statusbar = QtWidgets.QStatusBar(MainWindow)
         self.statusbar.setObjectName("statusbar")
         MainWindow.setStatusBar(self.statusbar)
@@ -219,23 +254,17 @@ class Ui_MainWindow(object):
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
+        MainWindow.show()
         self.initialize()
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
-        self.rule_view.setTitle(_translate("MainWindow", "RuleName"))
 
     def initialize(self):
-        MainWindow.show()
-        width, height = self.rule_view.width() - 50, self.rule_view.height() - 50
-
+        width, height = self.graphicsView.width(), self.graphicsView.height()
         self.scene.setSceneRect(0, 0, width, height)
-
         self.init_tree()
-        self.entity_list = []
-
-        pass
 
     def init_tree(self):
         self.treeWidget.setColumnCount(1)
@@ -265,106 +294,96 @@ class Ui_MainWindow(object):
         for el in self.scene.items():
             self.scene.removeItem(el)
 
-        if ConceptRoot.__instancecheck__(obj):
+        rect = QtWidgets.QGraphicsRectItem(0,0,self.scene.width(),self.scene.height())
+        self.scene.addItem(rect)
+
+        if isinstance(obj,ConceptRoot):
             pass
 
-        if Concept.__instancecheck__(obj):
-            self.rule_view.setTitle(obj.has_for_name)
+        if isinstance(obj,Concept):
 
             for rules in obj.has_template_rules:
 
                 for i, rule in enumerate(rules.has_template_rules):
                     if i == 0:  # TODO: Iteration entfernen
-                        self.entity_list = []
-                        paths = rule.path_list
-                        self.import_visuals(paths, i)
+                        paths,metrics = rule.get_linked_rules()
+                        self.import_visuals(paths,metrics, i)
 
-    def import_visuals(self, paths, index):
+    def import_visuals(self, paths,metrics, index):
 
         created_entities = []
-        proxy_dict = {}
-        entity_dict = {}
-        for path in paths:
-            for i, element in enumerate(path):
+        graphical_items_dict = {}
 
-                last_item_index = i - 1
-                if last_item_index >= 0:
-                    last_item = path[last_item_index]
-                else:
-                    last_item = None
+        for k,path in enumerate(paths):
+            metric = metrics[k]
+            last_item = None
 
-                if element not in created_entities:
-                    proxy = proxy_dict.get(last_item)
+            for i, path_item in enumerate(path):
 
-                    if (ConceptTemplate.__instancecheck__(element)):
+                if path_item not in created_entities:
+                    last_block = graphical_items_dict.get(last_item)
 
-                        proxy_dict[element] = self.add_entity(element.has_for_applicable_entity, element, proxy, 0)
+                    if (isinstance(path_item, (ConceptTemplate, EntityRule))):
 
+                        block = self.add_block(path_item,last_block)
+                        graphical_items_dict[path_item] = block
+                        created_entities.append(path_item)
                         pass
-                    elif (EntityRule.__instancecheck__(element)):
-                        proxy_dict[element] = self.add_entity(element.has_for_entity_name, element, proxy, 0)
-                        pass
-                    elif (AttributeRule.__instancecheck__(element)):
 
-                        proxy_dict[element] = proxy.widget().add_attribute(element.has_for_attribute_name, element)
-
+                    elif isinstance(path_item,AttributeRule):
+                        groupbox = last_block.widget()
+                        attribute_label = groupbox.add_attribute(path_item) # returns QLabel housed in QGroupBox
+                        graphical_items_dict[path_item] = attribute_label
+                        created_entities.append(path_item)
 
                     else:
-                        proxy_dict[element] = self.add_label(element, proxy, 0)
-                        pass
 
-                    created_entities.append(element)
+                        graphical_items_dict[path_item] = self.add_label(path_item, last_block, metric)
 
-        for proxy in proxy_dict:
+                last_item =path_item
 
-            proxy = proxy_dict[proxy]
-            if drag_box.__instancecheck__(proxy):
-                for child in proxy.widget().children():
-                    print(child.geometry())
 
-            for connection in proxy.connections:
-                connection.update_line()
+    def add_block(self, data,last_block):
 
-    def add_entity(self, name, data, old_proxy, index):
+        if isinstance(data, ConceptTemplate):
+            name = data.has_for_applicable_entity
+        elif isinstance(data, EntityRule):
+            name = data.has_for_entity_name
 
-        el = self.entity_list
-        proxy = drag_box(EntityRepresentation())
-        self.scene.addItem(proxy)
+        block = DragBox(EntityRepresentation(name))
+
 
         ## size ##
-        width = 200
-        heigth = 50
-        xpos = 25 + len(el) * (width + 25)
-        ypos = 25 + index * 200
+        if last_block is not None:
+            xpos = last_block.parent().pos().x()+220
+        else:
+            xpos = 25
+        ypos = 25
 
-        proxy.setPos((QPointF(xpos, ypos)))
-        proxy.resize(width, heigth)
+        block.setPos((QPointF(xpos, ypos)))
+        self.scene.addItem(block)
 
-        proxy.widget().setObjectName(name)
-        proxy.widget().setTitle(name)
+        block.connect_to_entity(last_block)
 
-        self.entity_list.append(proxy.widget())
-        proxy.connect_to_entity(old_proxy)
-        return proxy
+        return block
 
-    def add_label(self, inhalt, old_proxy, index):
+    def add_label(self, inhalt, old_proxy, metric):
 
         text = str(inhalt)
 
-        entity_list = self.entity_list
 
-        label = QtWidgets.QLabel()
+        label = LabelRepresentation()
         label.setText(text)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred,
                                            type=QtWidgets.QSizePolicy.Label)
         label.setSizePolicy(sizePolicy)
-        proxy = drag_box(label)
+        proxy = DragBox(label)
 
         self.scene.addItem(proxy)
-        width = 200
+        width = 100
         height = 50
-        xpos = 25 + len(entity_list) * (width + 25)
-        ypos = 50 + index * 200
+        xpos = old_proxy.parent().pos().x()+225
+        ypos = 125
 
         label.setGeometry(xpos, ypos, width, height)
 
@@ -380,9 +399,8 @@ class Ui_MainWindow(object):
 
         label.setStyleSheet("border :3px " + color + ";")
 
-        entity_list.append(label)
 
-        proxy.connect_to_entity(old_proxy)
+        proxy.connect_to_entity(old_proxy,metric)
 
         return proxy
 
@@ -393,16 +411,13 @@ if __name__ == "__main__":
     doc = "mvdXML_V1.1.xsd"
     file = "Examples/mvdXML_V1-1-Final-Documentation.xml"
     file2 = "Examples/bimq_rules.mvdxml"
-    file3 = "Examples/RelAssociatesMaterial.mvdxml"
+    file3 = "Examples/RelAssociatesMaterial.xml"
     mvd = MvdXml()
-    #
-    #
     mvd.import_xml(file=file3, doc=doc, validation=False)
 
     app = QtWidgets.QApplication(sys.argv)
     MainWindow = QtWidgets.QMainWindow()
     ui = Ui_MainWindow()
     ui.setupUi(MainWindow, app)
-    # MainWindow.show()
 
     sys.exit(app.exec_())

@@ -418,6 +418,7 @@ with onto:
             # TODO: Add Description
 
             self.import_parameter(xml_object.attrib.get("Parameters"))
+
             pass
 
         pass
@@ -440,6 +441,7 @@ with onto:
             parameters = self.has_for_parameters
             ct = self.get_referenced_concept_template()
             self.path_list = []
+            self.metric_list=[]
 
             for parameter in parameters:
                 rule_id = parameter.has_for_parameter_text
@@ -450,8 +452,9 @@ with onto:
                 parameter.path = path
 
                 self.path_list.append(path)
+                self.metric_list.append(metric)
 
-            return self.path_list
+            return self.path_list,self.metric_list
 
         def get_referenced_concept_template(self):
             parent = self.get_parent()
