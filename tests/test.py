@@ -1,5 +1,20 @@
-from classes import *
+from mvd2onto.classes import *
+'''
+This File is for Testing the conversion from MVD to Onthology
 
+Classes:
+
+    None
+    
+Functions:
+    
+    main()
+
+Misc variables:
+    
+    None
+
+'''
 
 ########## Relationships ##########
 
@@ -7,8 +22,8 @@ from classes import *
 def main():
     doc = "mvdXML_V1.1.xsd"
     file = "../Examples/mvdXML_V1-1-Final-Documentation.xml"
-    file2 = "Examples/Prüfregeln.mvdxml"
-    file3 = "Examples/RelAssociatesMaterial.xml"
+    file2 = "../Examples/Prüfregeln.mvdxml"
+    file3 = "../Examples/RelAssociatesMaterial.xml"
     mvd = MvdXml()
     #
     #
