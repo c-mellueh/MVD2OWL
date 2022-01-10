@@ -594,10 +594,8 @@ class UiMainWindow(object):
 
             trr.centerOn(trr.sceneRect().center())
 
-
-if __name__ == "__main__":
-    import sys
-
+def main ():
+    global application
     doc = "mvdXML_V1.1.xsd"
     file = "Examples/mvdXML_V1-1-Final-Documentation.xml"
     file2 = "Examples/Prüfregeln.mvdxml"
@@ -611,3 +609,6 @@ if __name__ == "__main__":
     ui.setup_ui(window)
 
     sys.exit(application.exec())
+
+if __name__ == "__main__":
+    exit(main())
