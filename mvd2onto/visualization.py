@@ -597,7 +597,7 @@ class UiMainWindow(object):
 def main ():
     global application
     doc = "mvdXML_V1.1.xsd"
-    file = "Examples/mvdXML_V1-1-Final-Documentation.xml"
+    file = "../Examples/mvdXML_V1-1-Final-Documentation.xml"
     file2 = "Examples/Prüfregeln.mvdxml"
     file3 = "Examples/RelAssociatesMaterial.xml"
     mvd = MvdXml()
