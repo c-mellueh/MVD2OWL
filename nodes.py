@@ -29,6 +29,8 @@ class Template_Rule_Rectangle(QGraphicsView):
 
         self.move(50,50)
         print(self.rect())
+        self.add_title(self.objectName())
+
         #self.setAcceptHoverEvents(True)
 
 
@@ -68,10 +70,6 @@ class Template_Rule_Rectangle(QGraphicsView):
                         graphical_items_dict[path_item] = self.add_label(template_rule_scene,path_item, last_block, metric)
 
                 last_item =path_item
-        self.add_title(self.objectName())
-
-
-
 
     def add_block(self,scene, data,last_block):
 
@@ -88,7 +86,7 @@ class Template_Rule_Rectangle(QGraphicsView):
             xpos = last_block.parent().pos().x()+220
         else:
             xpos = 25
-        ypos = 25
+        ypos = 50
 
         block.setPos((QPointF(xpos, ypos)))
         scene.addItem(block)
@@ -113,7 +111,7 @@ class Template_Rule_Rectangle(QGraphicsView):
         width = 100
         height = 50
         xpos = old_proxy.parent().pos().x()+225
-        ypos = 125
+        ypos = 150
 
         label.setGeometry(xpos, ypos, width, height)
 
@@ -135,25 +133,52 @@ class Template_Rule_Rectangle(QGraphicsView):
         return proxy
 
     def add_title(self,title):
-        items = self.scene().items()
-
-        for item in items:
-            item.moveBy(0,25)
 
         scene_rect = self.sceneRect()
         width = scene_rect.width()
-
-        self.top_rect = QtWidgets.QGraphicsRectItem(25,0,width
-                             ,25)
+        pos = self.pos()
+        self.top_rect = self.title_block(pos.x(),pos.y()-25,width
+                             ,25,self)
 
         brush = QtGui.QBrush()
         brush.setStyle(QtCore.Qt.BrushStyle.SolidPattern)
         color = QtGui.QColor("grey")
-        print(color.isValid())
         brush.setColor(color)
-        print(brush.color().name())
         self.top_rect.setBrush(brush)
-        self.scene().addItem(self.top_rect)
+
+        self.parent_scene.addItem(self.top_rect)
+
+    class title_block(QtWidgets.QGraphicsRectItem):
+        def __init__(self,x,y,w,h,view: QGraphicsView):
+            super().__init__(x,y,w,h)
+            self.setAcceptHoverEvents(True)
+            self.graphical_view=view
+        pass
+
+        def hoverEnterEvent(self, event):
+            app.instance().setOverrideCursor(QtCore.Qt.OpenHandCursor)
+
+        def hoverLeaveEvent(self, event):
+            app.instance().restoreOverrideCursor()
+
+        def mousePressEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
+            pass
+
+        def mouseMoveEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
+            orig_cursor_position = event.lastScenePos()
+            updated_cursor_position = event.scenePos()
+
+            x_dif = updated_cursor_position.x() - orig_cursor_position.x()
+            y_dif= updated_cursor_position.y() - orig_cursor_position.y()
+
+            self.graphical_view.move(self.graphical_view.pos().x()+x_dif,self.graphical_view.pos().y()+y_dif)
+            self.moveBy(x_dif,y_dif)
+            print(x_dif,y_dif)
+
+        def mouseReleaseEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
+            pass
+
+
 
 class Attribute(QtWidgets.QLabel):
 
@@ -309,15 +334,15 @@ class DragBox(QtWidgets.QGraphicsProxyWidget):
 
         for el in self.connections:
             el.update()
+        #
+        # view = self.scene().views()[0]
+        # bound = view.scene().itemsBoundingRect()
+        # bound.setWidth(bound.width()+50)
+        # bound.setHeight(bound.height()+50)
+        # view.centerOn(bound.center())
 
-        view = self.scene().views()[0]
-        bound = view.scene().itemsBoundingRect()
-        bound.setWidth(bound.width()+50)
-        bound.setHeight(bound.height()+50)
-        view.centerOn(bound.center())
-
-        print("{0}:{1}".format(bound.width(),bound.height()))
-        view.resize(bound.width(),bound.height())
+        # print("{0}:{1}".format(bound.width(),bound.height()))
+        # view.resize(bound.width(),bound.height())
 
 
 
