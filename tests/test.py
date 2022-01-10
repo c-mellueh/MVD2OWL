@@ -1,4 +1,4 @@
-from mvd2onto.classes import *
+from mvd2onto.core import *
 '''
 This File is for Testing the conversion from MVD to Onthology
 
@@ -69,4 +69,5 @@ def main():
         print(ct.has_for_name+ct.has_for_uuid)
 
 if __name__ == "__main__":
+
     main()
