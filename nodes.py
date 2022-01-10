@@ -48,8 +48,6 @@ class Template_Rule_Rectangle(QGraphicsView):
             metric = metrics[k]
             last_item = None
 
-            print("PATH ",path)
-
             for i, path_item in enumerate(path):
 
                 if path_item not in created_entities:
@@ -81,7 +79,6 @@ class Template_Rule_Rectangle(QGraphicsView):
 
         block = DragBox(EntityRepresentation(name),self)
 
-        print(name)
         ## size ##
         if last_block is not None and not isinstance(last_block,DragBox):
             xpos = last_block.parent().pos().x()+220
@@ -94,16 +91,14 @@ class Template_Rule_Rectangle(QGraphicsView):
         block.setPos((QPointF(xpos, ypos)))
         scene.addItem(block)
 
-        if not isinstance(last_block,DragBox):
-            block.connect_to_entity(last_block)
+        #if not isinstance(last_block,DragBox):
+        block.connect_to_entity(last_block)
 
         return block
 
     def add_label(self,scene, inhalt, old_proxy, metric):
 
         text = str(inhalt)
-        print(inhalt)
-
         label = LabelRepresentation()
         label.setText(text)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred,
@@ -141,7 +136,7 @@ class Template_Rule_Rectangle(QGraphicsView):
         width = scene_rect.width()
         pos = self.pos()
         self.title_block = Title_block(pos.x(),pos.y()-25,width
-                                            ,25,self)
+                                            ,25,self,"TemplateRule")
 
         brush = QtGui.QBrush()
         brush.setStyle(QtCore.Qt.BrushStyle.SolidPattern)
@@ -155,39 +150,66 @@ class Template_Rule_Rectangle(QGraphicsView):
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
 
-
-
 class Template_Rules_Rectangle(QGraphicsView):
 
-    def __init__(self,parent_scene:QGraphicsScene,index:int,position:QPointF):
+    def __init__(self,parent_scene:QGraphicsScene,index:int,position:QPointF,data: TemplateRules):
 
         scene = QGraphicsScene()
         super().__init__()
         self.setScene(scene)
         self.setContentsMargins(0,0,0,0)
         self.move(position)
-
+        self.data = data
+        self.operator = self.data.has_for_operator
         self.setObjectName("Template Rules {0}".format(index))
         self.parent_scene = parent_scene
 
 
         self.turn_off_scrollbar()
 
-        print("TRR Inside {}".format(self.scene()))
-
     def add_title(self,title):
+
+
 
         scene_rect = self.sceneRect()
         width = scene_rect.width()
         pos = self.pos()
         self.title_block = Title_block(pos.x(),pos.y()-25,width
-                                       ,25,self)
+                                       ,25,self,self.operator)
 
         brush = QtGui.QBrush()
         brush.setStyle(QtCore.Qt.BrushStyle.SolidPattern)
-        color = QtGui.QColor("grey")
-        brush.setColor(color)
+
+        if self.operator == "or":
+            color = "blue"
+        elif self.operator == "and":
+            color = "green"
+        elif self.operator == "nor":
+            color = "red"
+        else:
+            color ="grey"
+
+
+
+        brush.setColor(QtGui.QColor(color))
+        pen = QtGui.QPen()
+
+        pen.setColor(color)
+        view = self.scene().views()[0]
+
+        #view.setFrameStyle(1)
+
+        view.setStyleSheet("background-color: rgb(255, 255, 0)")#.format(color))
+
+        view.setFrameStyle(QFrame.Box)
+        view.setLineWidth(2)
+
+        style = "border: 2px solid {};".format(color)
+        print(style)
+        view.setStyleSheet(style)
+
         self.title_block.setBrush(brush)
+        self.title_block.setZValue(0)
 
         self.parent_scene.addItem(self.title_block)
         return self.title_block
@@ -197,12 +219,28 @@ class Template_Rules_Rectangle(QGraphicsView):
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
 
 class Title_block(QtWidgets.QGraphicsRectItem):
-    def __init__(self,x,y,w,h,view: QGraphicsView):
+    def __init__(self,x,y,w,h,view: Template_Rules_Rectangle,text:str):
         super().__init__(x,y,w,h)
         self.setAcceptHoverEvents(True)
         self.graphical_view=view
 
+        self.text = QtWidgets.QGraphicsTextItem(text)
+
+        self.graphical_view.parent_scene.addItem(self.text)
+        print(self.text.pos())
+        self.text.setPos(x,y)
+        self.text.setDefaultTextColor("white")
+
+        font = QtGui.QFont()
+        font.setBold(True)
+
+        self.text.setFont(font)
+        self.text.setZValue(1)
+
+
     pass
+
+
 
     def hoverEnterEvent(self, event):
         app.instance().setOverrideCursor(QtCore.Qt.OpenHandCursor)
@@ -223,6 +261,8 @@ class Title_block(QtWidgets.QGraphicsRectItem):
 
         self.graphical_view.move(self.graphical_view.pos().x()+x_dif,self.graphical_view.pos().y()+y_dif)
         self.moveBy(x_dif,y_dif)
+        self.text.moveBy(x_dif,y_dif)
+
 
     def mouseReleaseEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
         app.instance().restoreOverrideCursor()
@@ -282,15 +322,18 @@ class Connection():
     def get_pos(self):
         rectangle_right = self.right_proxy.windowFrameGeometry()
         attribute = self.attribute
-        groupbox = attribute.parent()
+        if isinstance(attribute,DragBox):
+            rectangle_left = attribute.windowFrameGeometry()
+        else:
+            groupbox = attribute.parent()
 
-        attribute_frame = attribute.geometry()
-        groupbox_frame = groupbox.frameGeometry()
+            attribute_frame = attribute.geometry()
+            groupbox_frame = groupbox.frameGeometry()
 
-        x1 = groupbox_frame.x() + attribute_frame.x()
-        y1 = groupbox_frame.y() + attribute_frame.y()
+            x1 = groupbox_frame.x() + attribute_frame.x()
+            y1 = groupbox_frame.y() + attribute_frame.y()
 
-        rectangle_left = QtCore.QRectF(x1, y1, attribute_frame.width(), attribute_frame.height())
+            rectangle_left = QtCore.QRectF(x1, y1, attribute_frame.width(), attribute_frame.height())
 
         pstart = QPointF()
         p2 = QPointF()
@@ -300,7 +343,7 @@ class Connection():
         pstart.setX(rectangle_left.right())
         pstart.setY(rectangle_left.top() + rectangle_left.height() / 2)
         pend.setX(rectangle_right.left())
-        pend.setY(rectangle_right.top() + rectangle_right.height() / 2)
+        pend.setY(rectangle_right.top() + 15)
 
         p2.setX(rectangle_left.right() + (rectangle_right.left() - rectangle_left.right()) / 2)
         p2.setY(pstart.y())
@@ -350,7 +393,10 @@ class DragBox(QtWidgets.QGraphicsProxyWidget):
             con = Connection(attribute,self,metric)
 
             self.connections.append(con)
-            attribute.parent().graphicsProxyWidget().connections.append(con)
+            if isinstance(attribute,DragBox):
+                attribute.connections.append(con)
+            else:
+                attribute.parent().graphicsProxyWidget().connections.append(con)
 
     def hoverEnterEvent(self, event):
         app.instance().setOverrideCursor(QtCore.Qt.OpenHandCursor)
@@ -361,8 +407,6 @@ class DragBox(QtWidgets.QGraphicsProxyWidget):
     def mousePressEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
         app.instance().setOverrideCursor(QtCore.Qt.OpenHandCursor)
         view = self.scene().views()[0]
-        print("POS {}".format(view.pos()))
-        print("RECT {}".format(view.geometry()))
         pass
 
     def mouseMoveEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
@@ -415,26 +459,36 @@ class EntityRepresentation(QFrame):
         super().__init__()
         self.qlayout = QtWidgets.QVBoxLayout()  #Layout for lining up all the Attributes
         self.setLayout(self.qlayout)
-        #self.setTitle(title)
-        #self.alignment()
         self.setStyleSheet('QGroupBox:title {'
                            'subcontrol-origin: margin;'
                            'subcontrol-position: top center;'
                            'padding-left: 10px;'
                            'padding-right: 10px; }')
+        self.title_text = title
+        self.title = QtWidgets.QLabel(self.title_text)
+        self.qlayout.addWidget(self.title)
+
+
 
     def __str__(self):
         pass
-        #return "Entity:{0}".format(self.title())
+
+    def resizeEvent(self, event:QtGui.QResizeEvent) -> None:
+        self.update_title(self.title_text)
+        pass
 
     def add_attribute(self, data):
 
         text = data.has_for_attribute_name
-        print(text)
         attrib = Attribute(text)
         self.qlayout.addWidget(attrib)
         attrib.show()
         return attrib
+
+    def update_title(self,title):
+        self.title_text=title
+
+
 
 class LabelRepresentation(QtWidgets.QLabel):
     def __str__(self):
@@ -520,7 +574,6 @@ class Ui_MainWindow(object):
         items = []
         for concept_root in ConceptRoot.instances():
             name = concept_root.has_for_name
-            print(name)
 
             if name == "":
                 name = "undefined"
@@ -563,7 +616,7 @@ class Ui_MainWindow(object):
             paths, metrics = rules.get_linked_rules()
             return Template_Rule_Rectangle(parent_scene, paths, metrics, index,position)
         else:
-            trr = Template_Rules_Rectangle(parent_scene, index, position)
+            trr = Template_Rules_Rectangle(parent_scene, index, position,rules)
             for i,rule in enumerate(rules.has_template_rules):
                 self.loop_through_rules(rule,trr.scene(),i)
 
@@ -577,9 +630,6 @@ class Ui_MainWindow(object):
 
             trr.setGeometry(position.x(),position.y(),width,height)
             trr.setSceneRect(-BORDER/2,-BORDER/2,width,height)
-
-            print(trr.geometry())
-            print(trr.sceneRect())
             trr.add_title("test")
 
             trr.centerOn(trr.sceneRect().center())
