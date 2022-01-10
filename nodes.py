@@ -197,15 +197,9 @@ class Template_Rules_Rectangle(QGraphicsView):
         pen.setColor(color)
         view = self.scene().views()[0]
 
-        #view.setFrameStyle(1)
-
-        view.setStyleSheet("background-color: rgb(255, 255, 0)")#.format(color))
-
         view.setFrameStyle(QFrame.Box)
         view.setLineWidth(2)
-
         style = "border: 2px solid {};".format(color)
-        print(style)
         view.setStyleSheet(style)
 
         self.title_block.setBrush(brush)
@@ -224,7 +218,7 @@ class Title_block(QtWidgets.QGraphicsRectItem):
         self.setAcceptHoverEvents(True)
         self.graphical_view=view
 
-        self.text = QtWidgets.QGraphicsTextItem(text)
+        self.text = QtWidgets.QGraphicsTextItem(text.upper())
 
         self.graphical_view.parent_scene.addItem(self.text)
         print(self.text.pos())
