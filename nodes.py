@@ -7,7 +7,7 @@ import re
 
 from PySide6 import QtCore, QtGui, QtWidgets
 from PySide6.QtWidgets import QApplication, QGraphicsView, QGraphicsScene, QGraphicsEllipseItem, QGroupBox, \
-    QTreeWidgetItem,QTreeWidget,QWidget
+    QTreeWidgetItem,QTreeWidget,QWidget,QFrame
 from PySide6.QtCore import Qt, QPointF
 
 
@@ -406,7 +406,7 @@ class DragBox(QtWidgets.QGraphicsProxyWidget):
 
     pass
 
-class EntityRepresentation(QGroupBox):
+class EntityRepresentation(QFrame):
 
     """ Widget in DragBox"""
 
@@ -415,8 +415,8 @@ class EntityRepresentation(QGroupBox):
         super().__init__()
         self.qlayout = QtWidgets.QVBoxLayout()  #Layout for lining up all the Attributes
         self.setLayout(self.qlayout)
-        self.setTitle(title)
-        self.alignment()
+        #self.setTitle(title)
+        #self.alignment()
         self.setStyleSheet('QGroupBox:title {'
                            'subcontrol-origin: margin;'
                            'subcontrol-position: top center;'
@@ -424,7 +424,8 @@ class EntityRepresentation(QGroupBox):
                            'padding-right: 10px; }')
 
     def __str__(self):
-        return "Entity:{0}".format(self.title())
+        pass
+        #return "Entity:{0}".format(self.title())
 
     def add_attribute(self, data):
 
