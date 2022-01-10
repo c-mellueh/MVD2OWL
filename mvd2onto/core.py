@@ -1,68 +1,207 @@
+import lxml.etree
 from lxml import etree
 from owlready2 import *
+
+'''
+Parse MVDXml file into Onthologies using owlready2
+
+Most of the classes don't use the __init__ method.
+
+
+Classes:
+    
+    Base
+    IdentityObject
+    MvdXml
+    ConceptTemplate
+    ModelView
+    Definition
+    Body
+    Link
+    AttributeRule
+    Constraint
+    EntityRule
+    BaseView
+    ExchangeRequirement
+    ConceptRoot
+    Concept
+    Applicability
+    TemplateRule
+    TemplateRules
+    Requirement
+    Parameter
+
+Function:
+
+Misc variables:
+
+    onto
+
+'''
 
 onto = get_ontology("http:/mvdxml/onto.owl")
 
 with onto:
     class Base(Thing):
+        """
+        Masterclass because all Elements share the ability to import subitemes
+
+        Attributes
+        ---------
+        None
+
+        Methods
+        -------
+        get_sub_items(name: str, xml_obj: etree._Element) -> list[etree._Element]
+            search for subitems with specific name
+
+        import_items(self, xml_object: etree._Element, _class, prop, name: str) -> None
+            link sub items to their parent
+
+        """
+
+
 
         @staticmethod
+        def get_sub_items(name: str, xml_obj: etree._Element) -> list[etree._Element]:
+            """
+            search for subitems with specific name
 
-        def get_group_items(name, xml_obj):
+            This function takes a xml_object and searches for sub items,
+            which matches the attribute 'name'
 
-            obj = xml_obj.find(name, namespaces=xml_obj.nsmap)
+            :return: list of Subitems
+            :rtype: list[etree._Element]
+            :param name: name of subitems
+            :type name: str
+            :param xml_obj: XML Parent-Object
+            :type xml_obj: etree._Element
+            """
+            elements = xml_obj.find(name, namespaces=xml_obj.nsmap)
 
-            if obj is None:
+            if elements is None:
                 return []
             else:
-                return list(obj)
+                return list(elements)
 
-        pass
+        def import_items(self, xml_object: etree._Element, _class, prop, name: str) -> None:
+            """
+            link sub items to their parent
 
-        def import_items(self, xml_object: etree._Element, _class, prop, name: str):
+            This function uses get_sub_items to find the subitems
+            
+            Parameters
+            -------------------
 
-            xml_list = self.get_group_items(name, xml_object)
+            :rtype: None
+            :param xml_object: xml object, which is searched for subobject
+            :type xml_object: etree._Element
+            :param _class: class of subitems
+            :type _class: Class
+            :param prop: property which is used to link the subobject to the parent object
+            :type prop: function
+            :param name: name of subitems
+            :type name: str
+            :return: None           
+            """
+            xml_list = self.get_sub_items(name, xml_object)
 
-            property_name = prop.python_name
+            property_name = prop.python_name  # get callable function name from owlready2
+
             for el in xml_list:
                 item = _class()
                 item.initialize(el)
                 function = getattr(self, property_name)
                 function.append(item)
 
+            return None
 
-        def import_functional_item(self, xml_object: etree._Element, _class, prop, name: str):
+        def import_item(self, xml_object: etree._Element, _class, prop, name: str)-> None:
+            """
+                       link sub item to their parent
 
-            for obj in xml_object.findall(name, namespaces=xml_object.nsmap):
+                       This function uses get_sub_items to find the subitem
+                       This function only works, when there is no possibility of multiple subitems
+                       ONLY SINGLE SUBITEMS
 
-                if obj is not None:
-                    property_name = prop.python_name
+                       Parameters
+                       -------------------
 
-                    item = _class()
-                    item.initialize(obj)
+                       :rtype: None
+                       :param xml_object: xml object, which is searched for subobject
+                       :type xml_object: etree._Element
+                       :param _class: class of subitem
+                       :type _class: Class
+                       :param prop: property which is used to link the subobject to the parent object
+                       :type prop: function
+                       :param name: name of subitems
+                       :type name: str
+                       :return: None
+            """
 
-                    setattr(self, property_name,item)
+            for element in xml_object.findall(name, namespaces=xml_object.nsmap):
 
-        def import_item(self, xml_object: etree._Element, _class, prop, name: str):
+                property_name = prop.python_name # get callable function name from owlready2
 
-            for obj in xml_object.findall(name, namespaces=xml_object.nsmap):
+                item = _class()
+                item.initialize(element)
 
-                if obj is not None:
-                    property_name = prop.python_name
+                function = getattr(self, property_name)
+                function.append(item)
 
-                    item = _class()
-                    item.initialize(obj)
+            return None
 
-                    function = getattr(self, property_name)
-                    function.append(item)
+        def import_functional_item(self, xml_object: etree._Element, _class, prop, name: str)-> None:
+            """
+                link sub items to their parent
+                same functionality as import_items but for functional items
 
-        def import_attribute(self, xml_object: etree._Element, prop, name: str, is_mandatory: bool):
-            property_name = prop.python_name
+                Parameters
+                ----
+                :param xml_object: xml object, which is searched for subobject
+                :type xml_object: etree._Element
+                :param _class: class of subitems
+                :type _class: Class
+                :param prop: property which is used to link the subobject to the parent object
+                :type prop: function
+                :param name: name of subitem
+                :type name: str
+    
+                :returns: None
+                :rtype: None
+            """
+            for elements in xml_object.findall(name, namespaces=xml_object.nsmap):
+
+                property_name = prop.python_name  # get callable function name from owlready2
+
+                item = _class()
+                item.initialize(elements)
+
+                setattr(self, property_name, item)
+
+            return None
+
+        def import_attribute(self, xml_object: etree._Element, prop, name: str, is_mandatory: bool)-> None:
+            """
+            adds attribute to Object \n
+            :description: takes attribute 'name' of xml object and saves it in Onthology
+
+            :param xml_object: xml object, which is searched for subobject
+            :type xml_object: etree._Element
+            :param prop: property which is used to link the subobject to the parent object
+            :type prop: function
+            :param name: name of Attribute
+            :type name: str
+            :param is_mandatory: defines if attribute is mandatory
+            :type is_mandatory: bool
+
+            :return: None
+            :rtype: None
+            """
+            property_name = prop.python_name # get callable function name from owlready2
             attribute = str(xml_object.attrib.get(name))
-            #attribute = prop.range[0](attribute)
 
-            if attribute is None:
-                if is_mandatory:
+            if attribute is None and is_mandatory:
                     raise AttributeError(name + " needs to exist!")
 
             else:
@@ -70,9 +209,40 @@ with onto:
 
 
     class IdentityObject(Base):
+        """
+                Subclass of :class: 'Base' because many Elements have identitydata
+
+                Attributes
+                ---------
+                uuid
+                name
+                code
+                version
+                status
+                auhor
+                owner
+                copyright
+
+                Methods
+                -------
+                get_sub_items(name: str, xml_obj: etree._Element) -> list[etree._Element]
+                    search for subitems with specific name
+
+                import_items(self, xml_object: etree._Element, _class, prop, name: str) -> None
+                    link sub items to their parent
+
+                """
+
 
         def import_identity_data(self, xml_object):
+            """
+            Function Defintion
+            --------
+            imports all identity data specified by MVD Documentation
 
+            :param xml_object: xml-object
+            :type xml_object: etree._Element
+            """
             self.import_attribute(xml_object, has_for_uuid, "uuid", True)
             self.import_attribute(xml_object, has_for_name, "name", True)
             self.import_attribute(xml_object, has_for_code, "code", False)
@@ -84,27 +254,47 @@ with onto:
 
 
     class MvdXml(IdentityObject):
+        """counterpart of MvdXml (first Level of MVDxml)"""
+        def import_xml(self, file:str, doc:str=None, validation=None) -> etree._Element:
+            """
+            Imports xml file into python environment
+            If given the xml file will be validated against a xsd file
 
-        def import_xml(self, file, doc, validation) -> etree._Element:
+            :param file: MVDXML file to import
+            :type file: file
+            :param doc: XSD-file
+            :type doc: file
+            :param validation: bool if XML file should be validated
+            :type validation: bool
+            :return: xml representation of mvdxml class
+            :rtype: etree._Element
+            """
             xml_file = etree.parse(file)
 
-            if validation:
-                if doc is not None:
-                    xmlshemadoc = etree.parse(doc)
-                    xmlshema = etree.XMLSchema(xmlshemadoc)
+            if validation and doc is not None:
+                xmlshemadoc = etree.parse(doc)
+                xmlshema = etree.XMLSchema(xmlshemadoc)
 
-                    if not xmlshema.validate(xml_file):
-                        raise ValueError("MVD entspricht nicht den Vorgaben der XSD")
-                    else:
-                        print("Dokument ist fehlerfrei")
+                if not xmlshema.validate(xml_file):
+                    raise ValueError("MVD entspricht nicht den Vorgaben der XSD")
                 else:
-                    raise AttributeError("attribute Doc needs to exist")  # TODO: richtiger Fehler raussuchen
+                    print("Dokument ist fehlerfrei")
+            elif doc is None:
+                raise TypeError("attribute Doc needs to exist")  # TODO: richtiger Fehler raussuchen
 
             xml_object = xml_file.getroot()
             self.initialize(xml_object)
             return xml_object
 
-        def initialize(self, xml_object):
+        def initialize(self, xml_object:etree._Element)-> None:
+            """
+            Initial Startup of class (comparable to __init__)
+
+            :param xml_object: xml representation of mvdxml class
+            :type xml_object: etree._Element
+            :return: None
+            :rtype: None
+            """
             self.import_identity_data(xml_object)
             self.import_items(xml_object, ConceptTemplate, has_concept_templates, "Templates")
 
@@ -116,13 +306,10 @@ with onto:
             for template_rule in TemplateRule.instances():
                 template_rule.get_linked_rules()
 
-            pass
+            return None
 
 
     class ConceptTemplate(IdentityObject):
-
-
-
 
         def initialize(self, xml_object):
             self.import_identity_data(xml_object)
@@ -149,8 +336,7 @@ with onto:
 
             for concept_template in self.sub_templates:
 
-
-                help_path = path #+ [concept_template]
+                help_path = path  # + [concept_template]
                 value, new_path = concept_template.find_rule_id(ruleid, path=help_path, prefix=prefix)
                 if value is not None:
                     return value, new_path
@@ -326,7 +512,7 @@ with onto:
 
                 if self.refers is not None:
                     value, new_path = self.refers.find_rule_id(ruleid, path=path, prefix=prefix,
-                                                                  applicable_entity=self.has_for_entity_name)
+                                                               applicable_entity=self.has_for_entity_name)
                     if value is not None:
                         return value, new_path
 
@@ -443,7 +629,7 @@ with onto:
             parameters = self.has_for_parameters
             ct = self.get_referenced_concept_template()
             self.path_list = []
-            self.metric_list=[]
+            self.metric_list = []
 
             for parameter in parameters:
                 rule_id = parameter.has_for_parameter_text
@@ -456,7 +642,7 @@ with onto:
                 self.path_list.append(path)
                 self.metric_list.append(metric)
 
-            return self.path_list,self.metric_list
+            return self.path_list, self.metric_list
 
         def get_referenced_concept_template(self):
             parent = self.get_parent()
@@ -590,7 +776,6 @@ class Parameter(Base):
 
         pass
 
-
     pass
 
 
@@ -606,7 +791,7 @@ with onto:
         domain = [ConceptTemplate]
         range = [MvdXml]
         inverse_property = has_concept_templates
-        python_name ="mvdxml"
+        python_name = "mvdxml"
         pass
 
 
@@ -628,7 +813,7 @@ with onto:
     class has_sub_templates(ObjectProperty, InverseFunctionalProperty):
         domain = [ConceptTemplate]
         range = [ConceptTemplate]
-        python_name="sub_templates"
+        python_name = "sub_templates"
         pass
 
 
@@ -642,7 +827,7 @@ with onto:
     class has_definitions(ObjectProperty, InverseFunctionalProperty):
         domain = [ConceptTemplate | ModelView | ExchangeRequirement | ConceptRoot | Applicability | Concept]
         range = [Definition]
-        python_name="definitions"
+        python_name = "definitions"
 
         pass
 
@@ -654,10 +839,10 @@ with onto:
         pass
 
 
-    class has_attribute_rules(ObjectProperty,InverseFunctionalProperty):
+    class has_attribute_rules(ObjectProperty, InverseFunctionalProperty):
         domain = [ConceptTemplate | EntityRule]
         range = [AttributeRule]
-        python_name="attribute_rules"
+        python_name = "attribute_rules"
         pass
 
 
@@ -675,6 +860,7 @@ with onto:
         range = [Constraint]
         python_name = "constraints"
 
+
     class is_constraint_of(ObjectProperty, FunctionalProperty):
         domain = [Constraint]
         range = [AttributeRule | EntityRule]
@@ -685,6 +871,7 @@ with onto:
         domain = [AttributeRule]
         range = [EntityRule]
         python_name = "entity_rules"
+
 
     pass
 
@@ -709,11 +896,12 @@ with onto:
         inverse_property = is_referred_by
         python_name = "refers"
 
-    class has_base_views(ModelView >> BaseView,InverseFunctionalProperty):
+
+    class has_base_views(ModelView >> BaseView, InverseFunctionalProperty):
         pass
 
 
-    class is_base_view_of(BaseView >> ModelView,FunctionalProperty):
+    class is_base_view_of(BaseView >> ModelView, FunctionalProperty):
         inverse_property = has_base_views
         pass
 
@@ -721,7 +909,7 @@ with onto:
     class has_exchange_requirements(ObjectProperty, InverseFunctionalProperty):
         domain = [ModelView]
         range = [ExchangeRequirement]
-        python_name="exchange_requirements"
+        python_name = "exchange_requirements"
         pass
 
 
