@@ -148,7 +148,9 @@ with onto:
                 path.append(self)
 
             for concept_template in self.sub_templates:
-                help_path = path + [concept_template]
+
+
+                help_path = path #+ [concept_template]
                 value, new_path = concept_template.find_rule_id(ruleid, path=help_path, prefix=prefix)
                 if value is not None:
                     return value, new_path
