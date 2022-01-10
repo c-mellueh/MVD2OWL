@@ -7,35 +7,32 @@ import re
 
 from PySide6 import QtCore, QtGui, QtWidgets
 from PySide6.QtWidgets import QApplication, QGraphicsView, QGraphicsScene, QGraphicsEllipseItem, QGroupBox, \
-    QTreeWidgetItem,QTreeWidget
+    QTreeWidgetItem,QTreeWidget,QWidget
 from PySide6.QtCore import Qt, QPointF
 
 
 
 class Template_Rule_Rectangle(QGraphicsView):
-    def __init__(self,parent_scene,paths,metrics,index):
-
+    def __init__(self,parent_scene,paths,metrics,index,position:QPointF):
         scene = QGraphicsScene()
         super().__init__(scene)
         self.setContentsMargins(0,0,0,0)
-
+        self.move(position)
 
         self.setObjectName("Template Rule {0}".format(index))
 
         self.parent_scene = parent_scene
         self.import_visuals(paths,metrics,index)
-        parent_scene.addWidget(self)
-        print(self.pos())
 
-        self.move(50,50)
-        print(self.rect())
+        width = self.sceneRect().width()+20
+        height = self.sceneRect().height()+20
+
+        self.setGeometry(position.x(), position.y(), width, height)
+        self.setSceneRect(-10,-10,width,height)
         self.add_title(self.objectName())
 
-        #self.setAcceptHoverEvents(True)
-
-
-
-    pass
+        parent_scene.addWidget(self)
+        self.turn_off_scrollbar()
 
     def import_visuals(self, paths,metrics, index):
 
@@ -85,8 +82,8 @@ class Template_Rule_Rectangle(QGraphicsView):
         if last_block is not None:
             xpos = last_block.parent().pos().x()+220
         else:
-            xpos = 25
-        ypos = 50
+            xpos = 0
+        ypos = 0
 
         block.setPos((QPointF(xpos, ypos)))
         scene.addItem(block)
@@ -106,7 +103,6 @@ class Template_Rule_Rectangle(QGraphicsView):
                                            type=QtWidgets.QSizePolicy.Label)
         label.setSizePolicy(sizePolicy)
         proxy = DragBox(label,self)
-
         scene.addItem(proxy)
         width = 100
         height = 50
@@ -137,22 +133,28 @@ class Template_Rule_Rectangle(QGraphicsView):
         scene_rect = self.sceneRect()
         width = scene_rect.width()
         pos = self.pos()
-        self.top_rect = self.title_block(pos.x(),pos.y()-25,width
+        self.title_block = self.Title_block(pos.x(),pos.y()-25,width
                              ,25,self)
 
         brush = QtGui.QBrush()
         brush.setStyle(QtCore.Qt.BrushStyle.SolidPattern)
         color = QtGui.QColor("grey")
         brush.setColor(color)
-        self.top_rect.setBrush(brush)
+        self.title_block.setBrush(brush)
 
-        self.parent_scene.addItem(self.top_rect)
+        self.parent_scene.addItem(self.title_block)
+        return self.title_block
 
-    class title_block(QtWidgets.QGraphicsRectItem):
+    def turn_off_scrollbar(self):
+        self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+
+    class Title_block(QtWidgets.QGraphicsRectItem):
         def __init__(self,x,y,w,h,view: QGraphicsView):
             super().__init__(x,y,w,h)
             self.setAcceptHoverEvents(True)
             self.graphical_view=view
+
         pass
 
         def hoverEnterEvent(self, event):
@@ -162,6 +164,7 @@ class Template_Rule_Rectangle(QGraphicsView):
             app.instance().restoreOverrideCursor()
 
         def mousePressEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
+            app.instance().setOverrideCursor(QtCore.Qt.OpenHandCursor)
             pass
 
         def mouseMoveEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
@@ -173,9 +176,10 @@ class Template_Rule_Rectangle(QGraphicsView):
 
             self.graphical_view.move(self.graphical_view.pos().x()+x_dif,self.graphical_view.pos().y()+y_dif)
             self.moveBy(x_dif,y_dif)
-            print(x_dif,y_dif)
 
         def mouseReleaseEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
+            app.instance().restoreOverrideCursor()
+
             pass
 
 
@@ -309,6 +313,8 @@ class DragBox(QtWidgets.QGraphicsProxyWidget):
         app.instance().restoreOverrideCursor()
 
     def mousePressEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
+        app.instance().setOverrideCursor(QtCore.Qt.OpenHandCursor)
+
         pass
 
     def mouseMoveEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
@@ -319,34 +325,35 @@ class DragBox(QtWidgets.QGraphicsProxyWidget):
         updated_cursor_x = updated_cursor_position.x() - orig_cursor_position.x() + orig_position.x()
         updated_cursor_y = updated_cursor_position.y() - orig_cursor_position.y() + orig_position.y()
 
-
-        # if updated_cursor_y <0:
-        #     updated_cursor_y=0
-        # if updated_cursor_x <0:
-        #     updated_cursor_x=0
-        #
-        # if updated_cursor_y+self.geometry().height()>self.scene().height():
-        #     updated_cursor_y=self.scene().height()-self.geometry().height()
-        # if updated_cursor_x+self.geometry().width()>self.scene().width():
-        #     updated_cursor_x=self.scene().width()-self.geometry().width()
+        if self.check_for_exit(updated_cursor_x,"x"):
+            updated_cursor_x=orig_position.x()
+        if self.check_for_exit(updated_cursor_y,"y"):
+            updated_cursor_y=orig_position.y()
 
         self.setPos(QPointF(updated_cursor_x, updated_cursor_y))
 
         for el in self.connections:
             el.update()
-        #
-        # view = self.scene().views()[0]
-        # bound = view.scene().itemsBoundingRect()
-        # bound.setWidth(bound.width()+50)
-        # bound.setHeight(bound.height()+50)
-        # view.centerOn(bound.center())
 
-        # print("{0}:{1}".format(bound.width(),bound.height()))
-        # view.resize(bound.width(),bound.height())
+    def check_for_exit(self,value,direction: str):
 
+        if not (direction=="x" or direction =="y"):
+            raise(AttributeError("Direction needs to be 'x' or 'y'"))
 
+        if value < 0:
+            return True
+        elif direction == "x":
+            if value > self.scene().width() - self.geometry().width():
+                return True
+        elif  direction == "y":
+            if value > self.scene().height() - self.geometry().height():
+                return True
+        else:
+            return False
 
     def mouseReleaseEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
+        app.instance().restoreOverrideCursor()
+
         pass
 
     pass
@@ -486,9 +493,6 @@ class Ui_MainWindow(object):
         for el in self.scene.items():
             self.scene.removeItem(el)
 
-        rect = QtWidgets.QGraphicsRectItem(0,0,self.scene.width(),self.scene.height())
-        self.scene.addItem(rect)
-
         if isinstance(obj,ConceptRoot):
             pass
 
@@ -497,11 +501,17 @@ class Ui_MainWindow(object):
             for rules in obj.has_template_rules:
 
                 for i, rule in enumerate(rules.has_template_rules):
+
                     if i == 0:  # TODO: Iteration entfernen
-                        paths,metrics = rule.get_linked_rules()
-                        graphicsView = Template_Rule_Rectangle(self.scene, paths, metrics, i)
 
+                        for k in range(2):
+                            bbox = self.scene.itemsBoundingRect()
+                            paths,metrics = rule.get_linked_rules()
 
+                            print(paths)
+
+                            position = QtCore.QPoint(25,bbox.height()+50)
+                            graphicsView = Template_Rule_Rectangle(self.scene, paths, metrics, i,position)
 
 
 
