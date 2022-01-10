@@ -1,4 +1,4 @@
-from classes import *
+from core import *
 from typing import Union
 from PySide6 import QtCore, QtGui, QtWidgets
 from PySide6.QtWidgets import QGraphicsView, QGraphicsScene, QTreeWidgetItem, QFrame
@@ -598,8 +598,8 @@ def main ():
     global application
     doc = "mvdXML_V1.1.xsd"
     file = "../Examples/mvdXML_V1-1-Final-Documentation.xml"
-    file2 = "Examples/Prüfregeln.mvdxml"
-    file3 = "Examples/RelAssociatesMaterial.xml"
+    file2 = "../Examples/Prüfregeln.mvdxml"
+    file3 = "../Examples/RelAssociatesMaterial.xml"
     mvd = MvdXml()
     mvd.import_xml(file=file2, doc=doc, validation=False)
 
