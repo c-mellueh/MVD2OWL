@@ -5,11 +5,155 @@ import random
 
 import re
 
-from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtWidgets import QApplication, QGraphicsView, QGraphicsScene, QGraphicsEllipseItem, QGroupBox, \
-    QTreeWidgetItem
-from PyQt5.QtCore import Qt, QPointF
+from PySide6 import QtCore, QtGui, QtWidgets
+from PySide6.QtWidgets import QApplication, QGraphicsView, QGraphicsScene, QGraphicsEllipseItem, QGroupBox, \
+    QTreeWidgetItem,QTreeWidget
+from PySide6.QtCore import Qt, QPointF
 
+
+
+class Template_Rule_Rectangle(QGraphicsView):
+    def __init__(self,parent_scene,paths,metrics,index):
+
+        scene = QGraphicsScene()
+        super().__init__(scene)
+        self.setContentsMargins(0,0,0,0)
+
+
+        self.setObjectName("Template Rule {0}".format(index))
+
+        self.parent_scene = parent_scene
+        self.import_visuals(paths,metrics,index)
+        parent_scene.addWidget(self)
+        print(self.pos())
+
+        self.move(50,50)
+        print(self.rect())
+        #self.setAcceptHoverEvents(True)
+
+
+
+    pass
+
+    def import_visuals(self, paths,metrics, index):
+
+        created_entities = []
+        graphical_items_dict = {}
+
+        template_rule_scene =self.scene()
+
+
+        for k,path in enumerate(paths):
+            metric = metrics[k]
+            last_item = None
+
+            for i, path_item in enumerate(path):
+
+                if path_item not in created_entities:
+                    last_block = graphical_items_dict.get(last_item)
+
+                    if (isinstance(path_item, (ConceptTemplate, EntityRule))):
+                        block = self.add_block(template_rule_scene,path_item,last_block)
+                        graphical_items_dict[path_item] = block
+                        created_entities.append(path_item)
+                        pass
+
+                    elif isinstance(path_item,AttributeRule):
+                        groupbox = last_block.widget()
+                        attribute_label = groupbox.add_attribute(path_item) # returns QLabel housed in QGroupBox
+                        graphical_items_dict[path_item] = attribute_label
+                        created_entities.append(path_item)
+
+                    else:
+                        graphical_items_dict[path_item] = self.add_label(template_rule_scene,path_item, last_block, metric)
+
+                last_item =path_item
+        self.add_title(self.objectName())
+
+
+
+
+    def add_block(self,scene, data,last_block):
+
+        if isinstance(data, ConceptTemplate):
+            name = data.has_for_applicable_entity
+        elif isinstance(data, EntityRule):
+            name = data.has_for_entity_name
+
+        block = DragBox(EntityRepresentation(name),self)
+
+
+        ## size ##
+        if last_block is not None:
+            xpos = last_block.parent().pos().x()+220
+        else:
+            xpos = 25
+        ypos = 25
+
+        block.setPos((QPointF(xpos, ypos)))
+        scene.addItem(block)
+
+        block.connect_to_entity(last_block)
+
+        return block
+
+    def add_label(self,scene, inhalt, old_proxy, metric):
+
+        text = str(inhalt)
+
+
+        label = LabelRepresentation()
+        label.setText(text)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred,
+                                           type=QtWidgets.QSizePolicy.Label)
+        label.setSizePolicy(sizePolicy)
+        proxy = DragBox(label,self)
+
+        scene.addItem(proxy)
+        width = 100
+        height = 50
+        xpos = old_proxy.parent().pos().x()+225
+        ypos = 125
+
+        label.setGeometry(xpos, ypos, width, height)
+
+        if bool.__instancecheck__(inhalt):
+            if inhalt == True:
+                color = "solid green"
+            elif inhalt == False:
+                color = "solid red"
+            else:
+                color = "solid blue"
+        else:
+            color = "solid black"
+
+        label.setStyleSheet("border :3px " + color + ";")
+
+
+        proxy.connect_to_entity(old_proxy,metric)
+
+        return proxy
+
+    def add_title(self,title):
+        items = self.scene().items()
+
+        for item in items:
+            item.moveBy(0,25)
+
+        scene_rect = self.sceneRect()
+        width = scene_rect.width()
+
+        self.top_rect = QtWidgets.QGraphicsRectItem(25,0,width
+                             ,25)
+
+        brush = QtGui.QBrush()
+        brush.setStyle(QtCore.Qt.BrushStyle.SolidPattern)
+        color = QtGui.QColor("grey")
+        print(color.isValid())
+        brush.setColor(color)
+        print(brush.color().name())
+        self.top_rect.setBrush(brush)
+        self.scene().addItem(self.top_rect)
 
 class Attribute(QtWidgets.QLabel):
 
@@ -115,11 +259,12 @@ class Connection():
 class DragBox(QtWidgets.QGraphicsProxyWidget):
     #is needed to house QGroupBoxy (EntityRepresentation)
 
-    def __init__(self, widget):
+    def __init__(self, widget,top):
         super().__init__()
         self.setAcceptHoverEvents(True)
         self.setWidget(widget)
         self.connections = []
+        self.top =top
 
     def __str__(self):
         return str(self.widget())
@@ -150,22 +295,31 @@ class DragBox(QtWidgets.QGraphicsProxyWidget):
         updated_cursor_y = updated_cursor_position.y() - orig_cursor_position.y() + orig_position.y()
 
 
-        if updated_cursor_y <0:
-            updated_cursor_y=0
-        if updated_cursor_x <0:
-            updated_cursor_x=0
-
-        if updated_cursor_y+self.geometry().height()>self.scene().height():
-            updated_cursor_y=self.scene().height()-self.geometry().height()
-        if updated_cursor_x+self.geometry().width()>self.scene().width():
-            updated_cursor_x=self.scene().width()-self.geometry().width()
+        # if updated_cursor_y <0:
+        #     updated_cursor_y=0
+        # if updated_cursor_x <0:
+        #     updated_cursor_x=0
+        #
+        # if updated_cursor_y+self.geometry().height()>self.scene().height():
+        #     updated_cursor_y=self.scene().height()-self.geometry().height()
+        # if updated_cursor_x+self.geometry().width()>self.scene().width():
+        #     updated_cursor_x=self.scene().width()-self.geometry().width()
 
         self.setPos(QPointF(updated_cursor_x, updated_cursor_y))
 
         for el in self.connections:
             el.update()
 
-        pass
+        view = self.scene().views()[0]
+        bound = view.scene().itemsBoundingRect()
+        bound.setWidth(bound.width()+50)
+        bound.setHeight(bound.height()+50)
+        view.centerOn(bound.center())
+
+        print("{0}:{1}".format(bound.width(),bound.height()))
+        view.resize(bound.width(),bound.height())
+
+
 
     def mouseReleaseEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
         pass
@@ -281,28 +435,29 @@ class Ui_MainWindow(object):
     def init_tree(self):
         self.treeWidget.setColumnCount(1)
 
+        items = []
         for concept_root in ConceptRoot.instances():
-
             name = concept_root.has_for_name
+            print(name)
 
             if name == "":
                 name = "undefined"
 
-            item = QTreeWidgetItem([name])
-            item.data = concept_root
+
+            item = QTreeWidgetItem(self.treeWidget,[name])
+            item.konzept = concept_root
             self.treeWidget.addTopLevelItem(item)
 
             for concept in concept_root.has_concepts:
-                child = QTreeWidgetItem([concept.has_for_name])
-                child.data = concept
-                item.addChild(child)
+                child = QTreeWidgetItem(item,[concept.has_for_name])
+                child.konzept = concept
 
         self.treeWidget.itemClicked.connect(self.on_tree_clicked)
 
     def on_tree_clicked(self, item):
 
-        obj = item.data
-
+        obj = item.konzept
+        print("Hier",type(obj))
         for el in self.scene.items():
             self.scene.removeItem(el)
 
@@ -319,118 +474,10 @@ class Ui_MainWindow(object):
                 for i, rule in enumerate(rules.has_template_rules):
                     if i == 0:  # TODO: Iteration entfernen
                         paths,metrics = rule.get_linked_rules()
-                        self.import_visuals(paths,metrics, i)
-
-    def import_visuals(self, paths,metrics, index):
+                        graphicsView = Template_Rule_Rectangle(self.scene, paths, metrics, i)
 
 
-        created_entities = []
-        graphical_items_dict = {}
 
-        template_rule_scene,gv = self.create_new_scene()
-        template_rule_scene=self.scene
-
-        for k,path in enumerate(paths):
-            metric = metrics[k]
-            last_item = None
-
-            for i, path_item in enumerate(path):
-
-                if path_item not in created_entities:
-                    last_block = graphical_items_dict.get(last_item)
-
-                    if (isinstance(path_item, (ConceptTemplate, EntityRule))):
-
-                        block = self.add_block(template_rule_scene,path_item,last_block)
-                        graphical_items_dict[path_item] = block
-                        created_entities.append(path_item)
-                        pass
-
-                    elif isinstance(path_item,AttributeRule):
-                        groupbox = last_block.widget()
-                        attribute_label = groupbox.add_attribute(path_item) # returns QLabel housed in QGroupBox
-                        graphical_items_dict[path_item] = attribute_label
-                        created_entities.append(path_item)
-
-                    else:
-
-                        graphical_items_dict[path_item] = self.add_label(template_rule_scene,path_item, last_block, metric)
-
-                last_item =path_item
-
-    def create_new_scene(self):
-        scene = QGraphicsScene()
-        graphicsView = QtWidgets.QGraphicsView(scene)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
-        sizePolicy.setHorizontalStretch(3)
-        sizePolicy.setVerticalStretch(1)
-        sizePolicy.setHeightForWidth(graphicsView.sizePolicy().hasHeightForWidth())
-        graphicsView.setSizePolicy(sizePolicy)
-        graphicsView.setObjectName("graphicsView")
-
-        return scene,graphicsView
-
-
-    def add_block(self,scene, data,last_block):
-
-        if isinstance(data, ConceptTemplate):
-            name = data.has_for_applicable_entity
-        elif isinstance(data, EntityRule):
-            name = data.has_for_entity_name
-
-        block = DragBox(EntityRepresentation(name))
-
-
-        ## size ##
-        if last_block is not None:
-            xpos = last_block.parent().pos().x()+220
-        else:
-            xpos = 25
-        ypos = 25
-
-        block.setPos((QPointF(xpos, ypos)))
-        scene.addItem(block)
-
-        block.connect_to_entity(last_block)
-
-        return block
-
-    def add_label(self,scene, inhalt, old_proxy, metric):
-
-        text = str(inhalt)
-
-
-        label = LabelRepresentation()
-        label.setText(text)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred,
-                                           type=QtWidgets.QSizePolicy.Label)
-        label.setSizePolicy(sizePolicy)
-        proxy = DragBox(label)
-
-        scene.addItem(proxy)
-        width = 100
-        height = 50
-        xpos = old_proxy.parent().pos().x()+225
-        ypos = 125
-
-        label.setGeometry(xpos, ypos, width, height)
-
-        if bool.__instancecheck__(inhalt):
-            if inhalt == True:
-                color = "solid green"
-            elif inhalt == False:
-                color = "solid red"
-            else:
-                color = "solid blue"
-        else:
-            color = "solid black"
-
-        label.setStyleSheet("border :3px " + color + ";")
-
-
-        proxy.connect_to_entity(old_proxy,metric)
-
-        return proxy
 
 
 if __name__ == "__main__":
