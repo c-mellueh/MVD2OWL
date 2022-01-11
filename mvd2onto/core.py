@@ -1,6 +1,9 @@
+from __future__ import annotations
 import lxml.etree
 from lxml import etree
 from owlready2 import *
+from typing import Union
+
 
 '''
 Parse MVDXml file into Onthologies using owlready2
@@ -59,8 +62,6 @@ with onto:
             link sub items to their parent
 
         """
-
-
 
         @staticmethod
         def get_sub_items(name: str, xml_obj: etree._Element) -> list[etree._Element]:
@@ -254,7 +255,7 @@ with onto:
 
 
     class MvdXml(IdentityObject):
-        """counterpart of MvdXml (first Level of MVDxml)"""
+        """counterpart of 'MvdXml' (first Level of MVDxml)"""
         def import_xml(self, file:str, doc:str=None, validation=None) -> etree._Element:
             """
             Imports xml file into python environment
@@ -310,7 +311,7 @@ with onto:
 
 
     class ConceptTemplate(IdentityObject):
-        """ Counterpart of ConceptTemplate in MVDxml"""
+        """ Counterpart of 'ConceptTemplate' in MVDxml"""
         def initialize(self, xml_object:etree._Element)->None:
             """
                         Initial Startup of class (comparable to __init__)
@@ -335,7 +336,8 @@ with onto:
 
             return None
 
-        def find_rule_id(self, ruleid: str, path: list = [], prefix="", applicable_entity=None):
+        def find_rule_id(self, ruleid: str, path: list = [], prefix="", entity_name=None)-> Union[(None,None),(AttributeRule,list),(EntityRule,list)]:
+
             """finds the path to an EntityRule/AttributeRule with matching ruleid
             :param ruleid: rule id searched rule
             :type ruleid: str
@@ -344,38 +346,45 @@ with onto:
             :type path: list
             :param prefix: prefix given by EntityRule       TODO: check if entityRules give prefixes
             :type prefix: str
-            :param applicable_entity:
-            :type applicable_entity:
-            :return:
-            :rtype:
+            :param entity_name: linked name from EntityRule
+            :type entity_name: linked name from EntityRule
+            :return: if path is found, a tuple with (searched object, path) will be returned
+                            else (None,None) will be returned
+            :rtype: Union[(None,None),(AttributeRule,list),(EntityRule,list)]
             """
 
             path = path[:]  # else python will change the value of input
 
-            if applicable_entity != self.has_for_applicable_entity: #if Concept Template is not called by Entity Rule
+            if entity_name != self.has_for_applicable_entity: #if Concept Template is not called by Entity Rule
                 path.append(self)
 
             for concept_template in self.sub_templates:
 
-                help_path = path  # + [concept_template]
-                value, new_path = concept_template.find_rule_id(ruleid, path=help_path, prefix=prefix)
+                value, new_path = concept_template.find_rule_id(ruleid, path=path, prefix=prefix)
                 if value is not None:
                     return value, new_path
 
-            if has_attribute_rules in self.get_properties():
-                for attribute_rule in self.attribute_rules:
 
-                    value, new_path = attribute_rule.find_rule_id(ruleid, path=path, prefix=prefix)
-                    if value is not None:
-                        return value, new_path
+            for attribute_rule in self.attribute_rules:
+
+                value, new_path = attribute_rule.find_rule_id(ruleid, path=path, prefix=prefix)
+                if value is not None:
+                    return value, new_path
 
             return None, None
-            pass
 
 
     class ModelView(IdentityObject):
+        """Counterpart of 'ModelView' in MVDxml"""
+        def initialize(self, xml_object: etree._Element) -> None:
+            """
+            Initial Startup of class (comparable to __init__)
 
-        def initialize(self, xml_object):
+            :param xml_object: xml representation of MVDxml class
+            :type xml_object: etree._Element
+            :return: None
+            :rtype:None
+            """
             self.import_identity_data(xml_object)
             self.import_items(xml_object, Definition, has_definitions, "Definitions")
             self.import_items(xml_object, ExchangeRequirement, has_exchange_requirements, "ExchangeRequirements")
@@ -384,59 +393,86 @@ with onto:
             self.import_attribute(xml_object, has_for_applicable_schema, "applicableSchema", True)
             # TODO: Add BaseView
 
-            pass
-
-        pass
-
 
     class Definition(Base):
-        def initialize(self, xml_object):
+        """Counterpart of 'Definition' in MVDxml"""
+        
+        def initialize(self, xml_object:etree._Element)->None:
+            """
+            Initial Startup of class (comparable to __init__)
+
+            :param xml_object: xml representation of MVDxml class
+            :type xml_object: etree._Element
+            :return: None
+            :rtype:None
+            """
+            
             self.import_functional_item(xml_object, Body, has_body, "Body")
             self.import_item(xml_object, Link, has_links, "Link")
 
-            pass
-
-        pass
-
-
     class Body(Base):
-        def initialize(self, xml_object):
+        """ Counterpart of 'Body' in MVDxml"""
+        def initialize(self, xml_object:etree._Element)-> None:
+            """
+           Initial Startup of class (comparable to __init__)
+
+           :param xml_object: xml representation of MVDxml class
+           :type xml_object: etree._Element
+           :return: None
+           :rtype:None
+            """
+            
             self.import_attribute(xml_object, has_for_lang, "lang", is_mandatory=False)
             self.import_attribute(xml_object, has_for_tags, "tags", is_mandatory=False)
 
-            self.import_concent(xml_object)
+            self.import_content(xml_object)
 
-            pass
+        def import_content(self, xml_object:etree._Element)-> None:
+            """
+            Imports Text of xml Object
 
-        def import_concent(self, xml_object):
+            :param xml_object: xml representation of MVDxml class
+            :type xml_object: etree._Element
+            """
             content = xml_object.text
             self.has_for_content = content
 
-        pass
-
 
     class Link(Base):
-        def initialize(self, xml_object):
+        """Counterpart of 'Link' in MVDxml"""
+
+        def initialize(self, xml_object:etree._Element)->None:
+            """
+          Initial Startup of class (comparable to __init__)
+
+          :param xml_object: xml representation of MVDxml class
+          :type xml_object: etree._Element
+          :return: None
+          :rtype:None
+            """
+
             self.import_attribute(xml_object, has_for_lang, "lang", is_mandatory=True)
             self.import_attribute(xml_object, has_for_title, "title", is_mandatory=False)
             self.import_attribute(xml_object, has_for_category, "catagory", is_mandatory=False)
             self.import_attribute(xml_object, has_for_href, "href", is_mandatory=True)
 
-            self.import_content(xml_object)
-
-            pass
-
-        def import_content(self, xml_object):
-            content = xml_object.text
-            self.has_for_content = content
-
-        pass
-
-        pass
+            self.has_for_content = xml_object.text
 
 
     class AttributeRule(Base):
+        """Counterpart of 'AttributeRule' in MVDxml"""
+
         def initialize(self, xml_object):
+
+            """
+              Initial Startup of class (comparable to __init__)
+
+              :param xml_object: xml representation of MVDxml class
+              :type xml_object: etree._Element
+              :return: None
+              :rtype:None
+            """
+
             self.import_items(xml_object, EntityRule, has_entity_rules, "EntityRules")
             self.import_items(xml_object, Constraint, has_constraints, "Constraints")
 
@@ -450,13 +486,26 @@ with onto:
 
         pass
 
-        def find_rule_id(self, ruleid: str, path: list = [], prefix=""):
-            path = path[:]
+        def find_rule_id(self, ruleid: str, path: list = [], prefix="")-> Union[(None,None),(AttributeRule,list),(EntityRule,list)]:
+
+            """finds the path to an EntityRule/AttributeRule with matching ruleid
+            :param ruleid: rule id searched rule
+            :type ruleid: str
+            :param path: chronological list of itempath
+                        from beginning to this ConceptTemplate
+            :type path: list
+            :param prefix: prefix given by EntityRule       TODO: check if entityRules give prefixes
+            :type prefix: str
+            :return: if path is found, a tuple with (searched object, path) will be returned
+                            else (None,None) will be returned
+            :rtype: Union[(None,None),(AttributeRule,list),(EntityRule,list)]
+            """
+
+            path = path[:] # else python will change the value of input
             path.append(self)
 
             if prefix + self.has_for_rule_id == ruleid:
                 return self, path
-
 
             else:
 
@@ -469,6 +518,8 @@ with onto:
 
 
     class Constraint(Base):
+        """Counterpart of 'AttributeRule' in MVDxml"""
+
         def initialize(self, xml_object):
             self.import_attribute(xml_object, has_for_expression, "Expression", is_mandatory=True)
             pass
@@ -533,7 +584,7 @@ with onto:
 
                 if self.refers is not None:
                     value, new_path = self.refers.find_rule_id(ruleid, path=path, prefix=prefix,
-                                                               applicable_entity=self.has_for_entity_name)
+                                                               entity_name=self.has_for_entity_name)
                     if value is not None:
                         return value, new_path
 
