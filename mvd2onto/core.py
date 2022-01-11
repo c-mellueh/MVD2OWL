@@ -256,6 +256,14 @@ with onto:
 
     class MvdXml(IdentityObject):
         """counterpart of 'MvdXml' (first Level of MVDxml)"""
+
+        def __init__(self,file:str=None, doc:str=None, validation=None) -> etree._Element:
+            super().__init__()
+
+            if not(file is None and doc is None and validation is None):
+                xml_object = self.import_xml(file,doc=doc,validation=validation)
+                self.initialize(xml_object)
+
         def import_xml(self, file:str, doc:str=None, validation=None) -> etree._Element:
             """
             Imports xml file into python environment
@@ -284,7 +292,7 @@ with onto:
                 raise TypeError("attribute Doc needs to exist")  # TODO: richtiger Fehler raussuchen
 
             xml_object = xml_file.getroot()
-            self.initialize(xml_object)
+
             return xml_object
 
         def initialize(self, xml_object:etree._Element)-> None:
@@ -299,12 +307,12 @@ with onto:
             self.import_identity_data(xml_object)
             self.import_items(xml_object, ConceptTemplate, has_concept_templates, "Templates")
 
-            for entity_rule in EntityRule.instances():
+            for entity_rule in EntityRule.instances():  #all Templates need to be imported befor it is possivle to find referenced templates
                 entity_rule.reference_templates()
 
             self.import_items(xml_object, ModelView, has_model_views, "Views")
 
-            for template_rule in TemplateRule.instances():
+            for template_rule in TemplateRule.instances(): #all Rules needs to be imported, before it is possible to import them
                 template_rule.get_linked_rules()
 
             return None
@@ -312,6 +320,9 @@ with onto:
 
     class ConceptTemplate(IdentityObject):
         """ Counterpart of 'ConceptTemplate' in MVDxml"""
+
+
+
         def initialize(self, xml_object:etree._Element)->None:
             """
                         Initial Startup of class (comparable to __init__)

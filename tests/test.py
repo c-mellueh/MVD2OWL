@@ -24,13 +24,16 @@ def main():
     file = "../Examples/mvdXML_V1-1-Final-Documentation.xml"
     file2 = "../Examples/Prüfregeln.mvdxml"
     file3 = "../Examples/RelAssociatesMaterial.xml"
-    mvd = MvdXml()
+    mvd = MvdXml(file=file2, doc=doc, validation=False)
     #
     #
-    mvd.import_xml(file=file2, doc=doc, validation=False)
+    #mvd.import_xml()
 
     print("START")
     print("")
+
+    for ct in ConceptTemplate.instances():
+        print("{} -> {}".format(ct.attribute_rules,bool(ct.attribute_rules)))
 
     for l,tr in enumerate(TemplateRule.instances()):
         if l ==3:
