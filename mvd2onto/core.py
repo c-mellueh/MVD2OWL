@@ -4,7 +4,6 @@ from lxml import etree
 from owlready2 import *
 from typing import Union
 
-
 '''
 Parse MVDXml file into Onthologies using owlready2
 
@@ -100,7 +99,7 @@ with onto:
             :param _class: class of subitems
             :type _class: Class
             :param prop: property which is used to link the subobject to the parent object
-            :type prop: function
+            :type prop: Class
             :param name: name of subitems
             :type name: str
             :return: None           
@@ -110,14 +109,13 @@ with onto:
             property_name = prop.python_name  # get callable function name from owlready2
 
             for el in xml_list:
-                item = _class()
-                item.initialize(el)
+                item = _class(el)
                 function = getattr(self, property_name)
                 function.append(item)
 
             return None
 
-        def import_item(self, xml_object: etree._Element, _class, prop, name: str)-> None:
+        def import_item(self, xml_object: etree._Element, _class, prop, name: str) -> None:
             """
                        link sub item to their parent
 
@@ -134,25 +132,22 @@ with onto:
                        :param _class: class of subitem
                        :type _class: Class
                        :param prop: property which is used to link the subobject to the parent object
-                       :type prop: function
+                       :type prop: Class
                        :param name: name of subitems
                        :type name: str
                        :return: None
             """
 
             for element in xml_object.findall(name, namespaces=xml_object.nsmap):
+                property_name = prop.python_name  # get callable function name from owlready2
 
-                property_name = prop.python_name # get callable function name from owlready2
-
-                item = _class()
-                item.initialize(element)
-
+                item = _class(element)
                 function = getattr(self, property_name)
                 function.append(item)
 
             return None
 
-        def import_functional_item(self, xml_object: etree._Element, _class, prop, name: str)-> None:
+        def import_functional_item(self, xml_object: etree._Element, _class, prop, name: str) -> None:
             """
                 link sub items to their parent
                 same functionality as import_items but for functional items
@@ -171,18 +166,14 @@ with onto:
                 :returns: None
                 :rtype: None
             """
-            for elements in xml_object.findall(name, namespaces=xml_object.nsmap):
-
+            for element in xml_object.findall(name, namespaces=xml_object.nsmap):
                 property_name = prop.python_name  # get callable function name from owlready2
-
-                item = _class()
-                item.initialize(elements)
-
+                item = _class(element)
                 setattr(self, property_name, item)
 
             return None
 
-        def import_attribute(self, xml_object: etree._Element, prop, name: str, is_mandatory: bool)-> None:
+        def import_attribute(self, xml_object: etree._Element, prop, name: str, is_mandatory: bool) -> None:
             """
             adds attribute to Object \n
             :description: takes attribute 'name' of xml object and saves it in Onthology
@@ -190,7 +181,7 @@ with onto:
             :param xml_object: xml object, which is searched for subobject
             :type xml_object: etree._Element
             :param prop: property which is used to link the subobject to the parent object
-            :type prop: function
+            :type prop: Class
             :param name: name of Attribute
             :type name: str
             :param is_mandatory: defines if attribute is mandatory
@@ -199,11 +190,11 @@ with onto:
             :return: None
             :rtype: None
             """
-            property_name = prop.python_name # get callable function name from owlready2
+            property_name = prop.python_name  # get callable function name from owlready2
             attribute = str(xml_object.attrib.get(name))
 
             if attribute is None and is_mandatory:
-                    raise AttributeError(name + " needs to exist!")
+                raise AttributeError(name + " needs to exist!")
 
             else:
                 setattr(self, property_name, attribute)
@@ -234,7 +225,6 @@ with onto:
 
                 """
 
-
         def import_identity_data(self, xml_object):
             """
             Function Defintion
@@ -257,14 +247,36 @@ with onto:
     class MvdXml(IdentityObject):
         """counterpart of 'MvdXml' (first Level of MVDxml)"""
 
-        def __init__(self,file:str=None, doc:str=None, validation=None) -> etree._Element:
+        def __init__(self, file: str = None, doc: str = None, validation=None) -> etree._Element:
+
+            """
+               Initial Startup of class (comparable to __init__)
+
+               :param xml_object: xml representation of mvdxml class
+               :type xml_object: etree._Element
+               :return: None
+               :rtype: None
+            """
+
             super().__init__()
 
-            if not(file is None and doc is None and validation is None):
-                xml_object = self.import_xml(file,doc=doc,validation=validation)
-                self.initialize(xml_object)
+            if not (file is None and doc is None and validation is None):
+                xml_object = self.import_xml(file, doc=doc, validation=validation)
 
-        def import_xml(self, file:str, doc:str=None, validation=None) -> etree._Element:
+                self.import_identity_data(xml_object)
+                self.import_items(xml_object, ConceptTemplate, has_concept_templates, "Templates")
+
+                for entity_rule in EntityRule.instances():  # all Templates need to be imported befor it is possivle to find referenced templates
+                    entity_rule.reference_templates()
+
+                self.import_items(xml_object, ModelView, has_model_views, "Views")
+
+                for template_rule in TemplateRule.instances():  # all Rules needs to be imported, before it is possible to import them
+                    template_rule.get_linked_rules()
+
+            return None
+
+        def import_xml(self, file: str, doc: str = None, validation=None) -> etree._Element:
             """
             Imports xml file into python environment
             If given the xml file will be validated against a xsd file
@@ -295,43 +307,21 @@ with onto:
 
             return xml_object
 
-        def initialize(self, xml_object:etree._Element)-> None:
-            """
-            Initial Startup of class (comparable to __init__)
-
-            :param xml_object: xml representation of mvdxml class
-            :type xml_object: etree._Element
-            :return: None
-            :rtype: None
-            """
-            self.import_identity_data(xml_object)
-            self.import_items(xml_object, ConceptTemplate, has_concept_templates, "Templates")
-
-            for entity_rule in EntityRule.instances():  #all Templates need to be imported befor it is possivle to find referenced templates
-                entity_rule.reference_templates()
-
-            self.import_items(xml_object, ModelView, has_model_views, "Views")
-
-            for template_rule in TemplateRule.instances(): #all Rules needs to be imported, before it is possible to import them
-                template_rule.get_linked_rules()
-
-            return None
-
 
     class ConceptTemplate(IdentityObject):
         """ Counterpart of 'ConceptTemplate' in MVDxml"""
 
-
-
-        def initialize(self, xml_object:etree._Element)->None:
+        def __init__(self, xml_object: etree._Element) -> None:
             """
-                        Initial Startup of class (comparable to __init__)
+                Initial Startup of class
 
-                        :param xml_object: xml representation of mvdxml class
-                        :type xml_object: etree._Element
-                        :return: None
-                        :rtype: None
-                        """
+                :param xml_object: xml representation of mvdxml class
+                :type xml_object: etree._Element
+                :return: None
+                :rtype: None
+            """
+
+            super().__init__()
 
             self.import_identity_data(xml_object)
 
@@ -347,7 +337,8 @@ with onto:
 
             return None
 
-        def find_rule_id(self, ruleid: str, path: list = [], prefix="", entity_name=None)-> Union[(None,None),(AttributeRule,list),(EntityRule,list)]:
+        def find_rule_id(self, ruleid: str, path: list = [], prefix="", entity_name=None) -> Union[
+            (None, None), (AttributeRule, list), (EntityRule, list)]:
 
             """finds the path to an EntityRule/AttributeRule with matching ruleid
             :param ruleid: rule id searched rule
@@ -366,7 +357,7 @@ with onto:
 
             path = path[:]  # else python will change the value of input
 
-            if entity_name != self.has_for_applicable_entity: #if Concept Template is not called by Entity Rule
+            if entity_name != self.has_for_applicable_entity:  # if Concept Template is not called by Entity Rule
                 path.append(self)
 
             for concept_template in self.sub_templates:
@@ -374,7 +365,6 @@ with onto:
                 value, new_path = concept_template.find_rule_id(ruleid, path=path, prefix=prefix)
                 if value is not None:
                     return value, new_path
-
 
             for attribute_rule in self.attribute_rules:
 
@@ -385,446 +375,659 @@ with onto:
             return None, None
 
 
-    class ModelView(IdentityObject):
-        """Counterpart of 'ModelView' in MVDxml"""
-        def initialize(self, xml_object: etree._Element) -> None:
-            """
-            Initial Startup of class (comparable to __init__)
+class ModelView(IdentityObject):
+    """Counterpart of 'ModelView' in MVDxml"""
 
-            :param xml_object: xml representation of MVDxml class
-            :type xml_object: etree._Element
-            :return: None
-            :rtype:None
-            """
-            self.import_identity_data(xml_object)
-            self.import_items(xml_object, Definition, has_definitions, "Definitions")
-            self.import_items(xml_object, ExchangeRequirement, has_exchange_requirements, "ExchangeRequirements")
-            self.import_items(xml_object, ConceptRoot, has_concept_roots, "Roots")
+    def __init__(self, xml_object: etree._Element) -> None:
+        """
+        Initial Startup of class
 
-            self.import_attribute(xml_object, has_for_applicable_schema, "applicableSchema", True)
-            # TODO: Add BaseView
+        :param xml_object: xml representation of MVDxml class
+        :type xml_object: etree._Element
+        :return: None
+        :rtype:None
+        """
 
+        super().__init__()
+        self.import_identity_data(xml_object)
+        self.import_items(xml_object, Definition, has_definitions, "Definitions")
+        self.import_items(xml_object, ExchangeRequirement, has_exchange_requirements, "ExchangeRequirements")
+        self.import_items(xml_object, ConceptRoot, has_concept_roots, "Roots")
 
-    class Definition(Base):
-        """Counterpart of 'Definition' in MVDxml"""
-        
-        def initialize(self, xml_object:etree._Element)->None:
-            """
-            Initial Startup of class (comparable to __init__)
-
-            :param xml_object: xml representation of MVDxml class
-            :type xml_object: etree._Element
-            :return: None
-            :rtype:None
-            """
-            
-            self.import_functional_item(xml_object, Body, has_body, "Body")
-            self.import_item(xml_object, Link, has_links, "Link")
-
-    class Body(Base):
-        """ Counterpart of 'Body' in MVDxml"""
-        def initialize(self, xml_object:etree._Element)-> None:
-            """
-           Initial Startup of class (comparable to __init__)
-
-           :param xml_object: xml representation of MVDxml class
-           :type xml_object: etree._Element
-           :return: None
-           :rtype:None
-            """
-            
-            self.import_attribute(xml_object, has_for_lang, "lang", is_mandatory=False)
-            self.import_attribute(xml_object, has_for_tags, "tags", is_mandatory=False)
-
-            self.import_content(xml_object)
-
-        def import_content(self, xml_object:etree._Element)-> None:
-            """
-            Imports Text of xml Object
-
-            :param xml_object: xml representation of MVDxml class
-            :type xml_object: etree._Element
-            """
-            content = xml_object.text
-            self.has_for_content = content
+        self.import_attribute(xml_object, has_for_applicable_schema, "applicableSchema", True)
+        # TODO: Add BaseView
 
 
-    class Link(Base):
-        """Counterpart of 'Link' in MVDxml"""
+class Definition(Base):
+    """Counterpart of 'Definition' in MVDxml"""
 
-        def initialize(self, xml_object:etree._Element)->None:
-            """
-          Initial Startup of class (comparable to __init__)
+    def __init__(self, xml_object: etree._Element) -> None:
+        """
+        Initial Startup of class (comparable to __init__)
+
+        :param xml_object: xml representation of MVDxml class
+        :type xml_object: etree._Element
+        :return: None
+        :rtype:None
+        """
+
+        super().__init__()
+        self.import_functional_item(xml_object, Body, has_body, "Body")
+        self.import_item(xml_object, Link, has_links, "Link")
+
+
+class Body(Base):
+    """ Counterpart of 'Body' in MVDxml"""
+
+    def __init__(self, xml_object: etree._Element) -> None:
+        """
+       Initial Startup of class (comparable to __init__)
+
+       :param xml_object: xml representation of MVDxml class
+       :type xml_object: etree._Element
+       :return: None
+       :rtype:None
+        """
+
+        super().__init__()
+        self.import_attribute(xml_object, has_for_lang, "lang", is_mandatory=False)
+        self.import_attribute(xml_object, has_for_tags, "tags", is_mandatory=False)
+
+        self.import_content(xml_object)
+
+    def import_content(self, xml_object: etree._Element) -> None:
+        """
+        Imports Text of xml Object
+
+        :param xml_object: xml representation of MVDxml class
+        :type xml_object: etree._Element
+        """
+        content = xml_object.text
+        self.has_for_content = content
+
+
+class Link(Base):
+    """Counterpart of 'Link' in MVDxml"""
+
+    def __init__(self, xml_object: etree._Element) -> None:
+        """
+      Initial Startup of class
+
+      :param xml_object: xml representation of MVDxml class
+      :type xml_object: etree._Element
+      :return: None
+      :rtype:None
+        """
+
+        super().__init__()
+        self.import_attribute(xml_object, has_for_lang, "lang", is_mandatory=True)
+        self.import_attribute(xml_object, has_for_title, "title", is_mandatory=False)
+        self.import_attribute(xml_object, has_for_category, "catagory", is_mandatory=False)
+        self.import_attribute(xml_object, has_for_href, "href", is_mandatory=True)
+
+        self.has_for_content = xml_object.text
+
+
+class AttributeRule(Base):
+    """Counterpart of 'AttributeRule' in MVDxml"""
+
+    def __init__(self, xml_object):
+
+        """
+          Initial Startup of class
 
           :param xml_object: xml representation of MVDxml class
           :type xml_object: etree._Element
           :return: None
           :rtype:None
-            """
+        """
 
-            self.import_attribute(xml_object, has_for_lang, "lang", is_mandatory=True)
-            self.import_attribute(xml_object, has_for_title, "title", is_mandatory=False)
-            self.import_attribute(xml_object, has_for_category, "catagory", is_mandatory=False)
-            self.import_attribute(xml_object, has_for_href, "href", is_mandatory=True)
+        super().__init__()
+        self.import_items(xml_object, EntityRule, has_entity_rules, "EntityRules")
+        self.import_items(xml_object, Constraint, has_constraints, "Constraints")
 
-            self.has_for_content = xml_object.text
+        self.import_attribute(xml_object, has_for_attribute_name, "AttributeName", is_mandatory=True)
+        self.import_attribute(xml_object, has_for_rule_id, "RuleID", is_mandatory=False)
+        self.import_attribute(xml_object, has_for_description, "Description", is_mandatory=False)
 
-
-    class AttributeRule(Base):
-        """Counterpart of 'AttributeRule' in MVDxml"""
-
-        def initialize(self, xml_object):
-
-            """
-              Initial Startup of class (comparable to __init__)
-
-              :param xml_object: xml representation of MVDxml class
-              :type xml_object: etree._Element
-              :return: None
-              :rtype:None
-            """
-
-            self.import_items(xml_object, EntityRule, has_entity_rules, "EntityRules")
-            self.import_items(xml_object, Constraint, has_constraints, "Constraints")
-
-            self.import_attribute(xml_object, has_for_attribute_name, "AttributeName", is_mandatory=True)
-            self.import_attribute(xml_object, has_for_rule_id, "RuleID", is_mandatory=False)
-            self.import_attribute(xml_object, has_for_description, "Description", is_mandatory=False)
-
-            self.name = self.has_for_attribute_name + " [Attribute Rule]" + self.name
-
-            pass
-
-        pass
-
-        def find_rule_id(self, ruleid: str, path: list = [], prefix="")-> Union[(None,None),(AttributeRule,list),(EntityRule,list)]:
-
-            """finds the path to an EntityRule/AttributeRule with matching ruleid
-            :param ruleid: rule id searched rule
-            :type ruleid: str
-            :param path: chronological list of itempath
-                        from beginning to this ConceptTemplate
-            :type path: list
-            :param prefix: prefix given by EntityRule       TODO: check if entityRules give prefixes
-            :type prefix: str
-            :return: if path is found, a tuple with (searched object, path) will be returned
-                            else (None,None) will be returned
-            :rtype: Union[(None,None),(AttributeRule,list),(EntityRule,list)]
-            """
-
-            path = path[:] # else python will change the value of input
-            path.append(self)
-
-            if prefix + self.has_for_rule_id == ruleid:
-                return self, path
-
-            else:
-
-                for entity_rule in self.entity_rules:
-                    value, new_path = entity_rule.find_rule_id(ruleid, path=path, prefix=prefix)
-                    if value is not None:
-                        return value, new_path
-
-                return None, None
-
-
-    class Constraint(Base):
-        """Counterpart of 'AttributeRule' in MVDxml"""
-
-        def initialize(self, xml_object):
-            self.import_attribute(xml_object, has_for_expression, "Expression", is_mandatory=True)
-            pass
-
-        pass
-
-
-    class EntityRule(Base):
-        def initialize(self, xml_object):
-
-            # Reference needs to be established later with reference_templates, because of nesting
-
-            self.import_items(xml_object, AttributeRule, has_attribute_rules, "AttributeRules")
-            self.import_items(xml_object, Constraint, has_constraints, "Constraints")
-
-            self.import_reference(xml_object)
-
-            self.import_attribute(xml_object, has_for_entity_name, "EntityName", is_mandatory=False)
-            self.import_attribute(xml_object, has_for_rule_id, "RuleID", is_mandatory=False)
-            self.import_attribute(xml_object, has_for_description, "Description", is_mandatory=False)
-
-            self.name = self.has_for_entity_name + " [Entity Rule]" + self.name
-
-            pass
-
-        def import_reference(self, xml_object):
-            references = xml_object.find("References", namespaces=xml_object.nsmap)
-            self._reference = []
-            if references is not None:
-                for el in list(references):
-                    self._reference.append(el.attrib.get("ref"))
-                id_prefix = references.attrib.get("IdPrefix")
-                if id_prefix is not None:
-                    self.has_for_id_prefix = id_prefix
-
-        def reference_templates(self):
-
-            references = self._reference
-
-            for concept_template in ConceptTemplate.instances():
-                for uuid in references:
-                    if uuid == concept_template.has_for_uuid:
-                        self.refers = concept_template
-
-            pass
-
-        def find_rule_id(self, ruleid: str, path: list = [], prefix=""):
-            path = path[:]
-            path.append(self)
-
-            pref = self.has_for_id_prefix
-            if pref is not None:
-                prefix += pref
-
-            if prefix + self.has_for_rule_id == ruleid:
-                return self, path
-            else:
-                for attribute_rule in self.attribute_rules:
-                    value, new_path = attribute_rule.find_rule_id(ruleid, path=path, prefix=prefix)
-                    if value is not None:
-                        return value, new_path
-
-                if self.refers is not None:
-                    value, new_path = self.refers.find_rule_id(ruleid, path=path, prefix=prefix,
-                                                               entity_name=self.has_for_entity_name)
-                    if value is not None:
-                        return value, new_path
-
-                return None, None
-
-
-    class BaseView(Base):
-        def initialize(self, xml_object):
-            pass
-
-        pass
-
-
-    class ExchangeRequirement(IdentityObject):
-        def initialize(self, xml_object):
-            self.import_identity_data(xml_object)
-            self.import_attribute(xml_object, has_for_applicability, "applicability", is_mandatory=False)
-            pass
-
-        pass
-
-
-    class ConceptRoot(IdentityObject):
-        def initialize(self, xml_object):
-            self.import_identity_data(xml_object)
-            self.import_items(xml_object, Definition, has_definitions, "Definitions")
-            self.import_functional_item(xml_object, Applicability, has_applicability, "Applicability")
-            self.import_items(xml_object, Concept, has_concepts, "Concepts")
-
-            self.import_attribute(xml_object, has_for_applicable_root_entity, "applicableRootEntity", is_mandatory=True)
-
-            pass
-
-        pass
-
-
-    class Concept(IdentityObject):
-        def initialize(self, xml_object):
-            self.import_identity_data(xml_object)
-            self.import_items(xml_object, Definition, has_definitions, "Definitions")
-            self.import_items(xml_object, Requirement, has_requirement, "Requirements")
-            self.import_item(xml_object, TemplateRule, has_template_rules, "TemplateRule")
-            self.import_item(xml_object, TemplateRules, has_template_rules, "TemplateRules")
-
-            self.find_reffered_concept_template(xml_object)
-
-            self.import_attribute(xml_object, has_for_base_concept, "BaseConcept", is_mandatory=False)
-            self.import_attribute(xml_object, has_for_override, "Override", is_mandatory=False)
-
-            pass
-
-        def find_reffered_concept_template(self, xml_object):
-
-            template = xml_object.find("Template", namespaces=xml_object.nsmap)
-            uuid = template.attrib.get("ref")
-
-            for concept_template in ConceptTemplate.instances():
-                if uuid == concept_template.has_for_uuid:
-                    self.refers = concept_template
-
-        pass
-
-
-    class Applicability(Base):
-        def initialize(self, xml_object):
-
-            self.import_items(xml_object, Definition, has_definitions, "Definitions")
-            self.import_item(xml_object, TemplateRule, has_template_rules, "TemplateRule")
-            self.import_item(xml_object, TemplateRules, has_template_rules, "TemplateRules")
-
-            self.find_reffered_concept_template(xml_object)
-
-            pass
-
-        def find_reffered_concept_template(self, xml_object):
-
-            template = xml_object.find("Template", namespaces=xml_object.nsmap)
-            uuid = template.attrib.get("ref")
-
-            for concept_template in ConceptTemplate.instances():
-
-                if uuid == concept_template.has_for_uuid:
-                    self.refers = concept_template
-
-        pass
-
-
-    class TemplateRule(Base):
-
-        def initialize(self, xml_object):
-            # TODO: Add Description
-
-            self.import_parameter(xml_object.attrib.get("Parameters"))
-
-            pass
-
-        pass
-
-        def import_parameter(self, text):
-            self.has_for_plain_text = text
-            split_list = " AND | OR | NOR | NAND | NOR | XOR | NXOR "
-
-            param_list = re.split(split_list, text)
-
-            for parameter_text in param_list:
-                parameter = Parameter()
-                parameter.initialize(parameter_text)
-                self.has_for_parameters.append(parameter)
-
-            pass
-
-        def get_linked_rules(self):
-
-            parameters = self.has_for_parameters
-            ct = self.get_referenced_concept_template()
-            self.path_list = []
-            self.metric_list = []
-
-            for parameter in parameters:
-                rule_id = parameter.has_for_parameter_text
-                metric = parameter.has_for_metric
-                value = parameter.has_for_parameter_value
-                test, path = ct.find_rule_id(rule_id)
-                path.append(value)
-                parameter.path = path
-
-                self.path_list.append(path)
-                self.metric_list.append(metric)
-
-            return self.path_list, self.metric_list
-
-        def get_referenced_concept_template(self):
-            parent = self.get_parent()
-            return parent.refers
-            pass
-
-        def get_parent(self):
-            parent = self.is_template_rule_of
-            if Concept.__instancecheck__(parent) or Applicability.__instancecheck__(parent):
-                return parent
-            elif parent is not None:
-                return parent.get_parent()
-
-
-    class TemplateRules(Base):
-        def initialize(self, xml_object):
-            self.import_item(xml_object, TemplateRule, has_template_rules, "TemplateRule")
-            self.import_item(xml_object, TemplateRules, has_template_rules, "TemplateRules")
-            self.import_attribute(xml_object, has_for_operator, "operator", is_mandatory=True)
-            # TODO: Add Description
-            pass
-
-        pass
-
-        def get_referenced_concept_template(self):
-            parent = self.get_parent()[0]
-            return parent.refers[0]
-            pass
-
-        def get_parent(self):
-            parent = self.is_template_rule_of
-
-            if Concept.__instancecheck__(parent) or Applicability.__instancecheck__(parent):
-                return parent
-            else:
-                return parent.get_parent()
-
-
-class Requirement(Base):
-    def initialize(self, xml_object):
-
-        self.import_attribute(xml_object, has_for_applicability, "applicability", is_mandatory=False)
-        self.import_attribute(xml_object, has_for_requirement, "requirement", is_mandatory=True)
-        # TODO: extend requirements  (mandatory, recommended, notrelevant...
-        self.import_linked_exchange_requirement(xml_object)
-
-        pass
-
-    def import_linked_exchange_requirement(self, xml_object):
-
-        uuid = xml_object.attrib.get("exchangeRequirement")
-
-        for er in ExchangeRequirement.instances():
-            if uuid == er.has_for_uuid:
-                self.links_to_exchange_requirement = er
+        self.name = self.has_for_attribute_name + " [Attribute Rule]" + self.name
 
         pass
 
     pass
 
+    def find_rule_id(self, ruleid: str, path: list = [], prefix="") -> Union[
+        (None, None), (AttributeRule, list), (EntityRule, list)]:
 
-class Parameter(Base):
+        """finds the path to an EntityRule/AttributeRule with matching ruleid
+        :param ruleid: rule id searched rule
+        :type ruleid: str
+        :param path: chronological list of itempath
+                    from beginning to this ConceptTemplate
+        :type path: list
+        :param prefix: prefix given by EntityRule       TODO: check if entityRules give prefixes
+        :type prefix: str
+        :return: if path is found, a tuple with (searched object, path) will be returned
+                        else (None,None) will be returned
+        :rtype: Union[(None,None),(AttributeRule,list),(EntityRule,list)]
+        """
 
-    def initialize(self, text):
-        self.import_raw_string(text)
-        self.deconstruct_parameter(text)
+        path = path[:]  # else python will change the value of input
+        path.append(self)
+
+        if prefix + self.has_for_rule_id == ruleid:
+            return self, path
+
+        else:
+
+            for entity_rule in self.entity_rules:
+                value, new_path = entity_rule.find_rule_id(ruleid, path=path, prefix=prefix)
+                if value is not None:
+                    return value, new_path
+
+            return None, None
+
+
+class Constraint(Base):
+    """Counterpart of 'Constraint' in MVDxml"""
+
+    def __init__(self, xml_object: etree._Element) -> None:
+        """
+             Initial Startup of class
+
+             :param xml_object: xml representation of MVDxml class
+             :type xml_object: etree._Element
+             :return: None
+             :rtype:None
+        """
+        super().__init__()
+        self.import_attribute(xml_object, has_for_expression, "Expression", is_mandatory=True)
+
+
+class EntityRule(Base):
+    """Counterpart of 'EntityRule' in MVDxml"""
+
+    def __init__(self, xml_object: etree._Element) -> None:
+
+        """
+             Initial Startup of class
+
+             :param xml_object: xml representation of MVDxml class
+             :type xml_object: etree._Element
+             :return: None
+             :rtype:None
+        """
+        super().__init__()
+
+        # Reference to Templates needs to be established later
+        # with reference_templates(), because of nesting
+
+        self.references = []
+        self.has_for_id_prefix = ""
+
+        self.import_items(xml_object, AttributeRule, has_attribute_rules, "AttributeRules")
+        self.import_items(xml_object, Constraint, has_constraints, "Constraints")
+
+        self.import_reference(xml_object)
+
+        self.import_attribute(xml_object, has_for_entity_name, "EntityName", is_mandatory=False)
+        self.import_attribute(xml_object, has_for_rule_id, "RuleID", is_mandatory=False)
+        self.import_attribute(xml_object, has_for_description, "Description", is_mandatory=False)
+
+        self.name = self.has_for_entity_name + " [Entity Rule]" + self.name
+
         pass
 
-    def import_raw_string(self, text):
-        self.has_for_text = text
+    def import_reference(self, xml_object: etree._Element) -> None:
 
-    def deconstruct_parameter(self, text):
+        """import references to Templates
 
-        pattern = re.compile("(.+)\\[(\D+)\\]=(.+)")
+
+            :return: None
+            :rtype: None
+            :param xml_object: xml representation of MVDxml class
+            :type xml_object: etree._Element
+
+        """
+
+        xml_references = xml_object.find("References", namespaces=xml_object.nsmap)
+
+        for el in list(xml_references):
+            self.references.append(el.attrib.get("ref"))
+
+        id_prefix = xml_references.attrib.get("IdPrefix")
+        if id_prefix is not None:
+            self.has_for_id_prefix = id_prefix
+
+    def reference_templates(self) -> ConceptTemplate:
+        """
+        This function needs to be called for every Entity Rule
+            after the whole MVD is initialized
+            if called while initialization it will lead to a crash because
+            the associated template might not be initialized
+
+        :return: reffered Concept Template
+        :rtype: ConceptTemplate
+        """
+
+        for concept_template in ConceptTemplate.instances():
+            for uuid in self.references:
+                if uuid == concept_template.has_for_uuid:
+                    self.refers = concept_template
+
+        return self.refers
+
+    def find_rule_id(self, ruleid: str, path: list = [], prefix: str = "") -> Union[
+        (None, None), (AttributeRule, list), (EntityRule, list)]:
+
+        """finds the path to an EntityRule/AttributeRule with matching ruleid
+            :param ruleid: rule id searched rule
+            :type ruleid: str
+            :param path: chronological list of itempath
+                        from beginning to this ConceptTemplate
+            :type path: list
+            :param prefix: prefix given by EntityRule
+            :type prefix: str
+            :return: if path is found, a tuple with (searched object, path) will be returned
+                            else (None,None) will be returned
+            :rtype: Union[(None,None),(AttributeRule,list),(EntityRule,list)]
+        """
+
+        path = path[:]  # else python will change the value of input
+        path.append(self)
+
+        if self.has_for_id_prefix is not None:
+            prefix += self.has_for_id_prefix
+
+        if prefix + self.has_for_rule_id == ruleid:
+            return self, path
+        else:
+            for attribute_rule in self.attribute_rules:
+                value, new_path = attribute_rule.find_rule_id(ruleid, path=path, prefix=prefix)
+                if value is not None:
+                    return value, new_path
+
+            if self.refers is not None:
+                value, new_path = self.refers.find_rule_id(ruleid, path=path, prefix=prefix,
+                                                           entity_name=self.has_for_entity_name)
+                if value is not None:
+                    return value, new_path
+
+            return None, None
+
+
+class BaseView(Base):
+    """Counterpart of 'BaseView' in MVDxml"""
+
+    def __init__(self, xml_object):
+        """
+             Initial Startup of class
+
+             :param xml_object: xml representation of MVDxml class
+             :type xml_object: etree._Element
+             :return: None
+             :rtype:None
+        """
+        super().__init__()
+
+
+class ExchangeRequirement(IdentityObject):
+    """Counterpart of 'ExchangeRequirement' in MVDxml"""
+
+    def __init__(self, xml_object: etree._Element) -> None:
+        """
+             Initial Startup of class
+
+             :param xml_object: xml representation of MVDxml class
+             :type xml_object: etree._Element
+             :return: None
+             :rtype:None
+        """
+        super().__init__()
+
+        self.import_identity_data(xml_object)
+        self.import_attribute(xml_object, has_for_applicability, "applicability", is_mandatory=False)
+        pass
+
+    pass
+
+
+class ConceptRoot(IdentityObject):
+    """Counterpart of 'ConceptRoot' in MVDxml"""
+
+    def __init__(self, xml_object: etree._Element) -> None:
+        """
+             Initial Startup of class
+
+             :param xml_object: xml representation of MVDxml class
+             :type xml_object: etree._Element
+             :return: None
+             :rtype:None
+        """
+        super().__init__()
+
+        self.import_identity_data(xml_object)
+        self.import_items(xml_object, Definition, has_definitions, "Definitions")
+        self.import_functional_item(xml_object, Applicability, has_applicability, "Applicability")
+        self.import_items(xml_object, Concept, has_concepts, "Concepts")
+
+        self.import_attribute(xml_object, has_for_applicable_root_entity, "applicableRootEntity", is_mandatory=True)
+
+
+class Concept(IdentityObject):
+    """Counterpart of 'Concept' in MVDxml"""
+
+    def __init__(self, xml_object: etree._Element) -> None:
+
+        """
+             Initial Startup of class
+
+             :param xml_object: xml representation of MVDxml class
+             :type xml_object: etree._Element
+             :return: None
+             :rtype:None
+        """
+        super().__init__()
+
+        self.import_identity_data(xml_object)
+        self.import_items(xml_object, Definition, has_definitions, "Definitions")
+        self.import_items(xml_object, Requirement, has_requirement, "Requirements")
+        self.import_item(xml_object, TemplateRule, has_template_rules, "TemplateRule")
+        self.import_item(xml_object, TemplateRules, has_template_rules, "TemplateRules")
+
+        self.refers = self.find_referred_concept_template(xml_object)
+
+        self.import_attribute(xml_object, has_for_base_concept, "BaseConcept", is_mandatory=False)
+        self.import_attribute(xml_object, has_for_override, "Override", is_mandatory=False)
+
+    @staticmethod
+    def find_referred_concept_template(xml_object: etree._Element) -> ConceptTemplate:
+
+        """ finds referred concept Template
+        :param xml_object: xml representation of MVDxml class
+        :type xml_object: etree._Element
+        :return: referred ConceptTemplate
+        :rtype: ConceptTemplate
+        """
+
+        template = xml_object.find("Template", namespaces=xml_object.nsmap)
+        uuid = template.attrib.get("ref")
+
+        for concept_template in ConceptTemplate.instances():
+            if uuid == concept_template.has_for_uuid:
+                return concept_template
+
+        return None
+
+
+class Applicability(Base):
+    """Counterpart of 'Applicability' in MVDxml"""
+
+    def __init__(self, xml_object: etree._Element) -> None:
+
+        """
+             Initial Startup of class
+
+             :param xml_object: xml representation of MVDxml class
+             :type xml_object: etree._Element
+             :return: None
+             :rtype:None
+        """
+        super().__init__()
+
+        self.import_items(xml_object, Definition, has_definitions, "Definitions")
+        self.import_item(xml_object, TemplateRule, has_template_rules, "TemplateRule")
+        self.import_item(xml_object, TemplateRules, has_template_rules, "TemplateRules")
+
+        self.refers = self.find_referred_concept_template(xml_object)
+
+    @staticmethod
+    def find_referred_concept_template(xml_object: etree._Element) -> ConceptTemplate:
+
+        """ finds referred concept Template
+        :param xml_object: xml representation of MVDxml class
+        :type xml_object: etree._Element
+
+        """
+
+        template = xml_object.find("Template", namespaces=xml_object.nsmap)
+        uuid = template.attrib.get("ref")
+
+        for concept_template in ConceptTemplate.instances():
+            if uuid == concept_template.has_for_uuid:
+                return concept_template
+
+        return None
+
+
+class TemplateRule(Base):
+    """Counterpart of 'TemplateRule' in MVDxml"""
+
+    def __init__(self, xml_object: etree._Element) -> None:
+
+        """
+             Initial Startup of class
+
+             :param xml_object: xml representation of MVDxml class
+             :type xml_object: etree._Element
+             :return: None
+             :rtype:None
+        """
+        super().__init__()
+        # TODO: Add Description
+        self.has_for_plain_text = xml_object.attrib.get("Parameters")
+        self.import_parameter(self.has_for_plain_text)
+        self.path_list = []
+        self.metric_list = []
+        
+    def import_parameter(self, text: str) -> None:
+        """import and parsing of Parameters
+
+        :param text: parameter String
+        :type text: str
+        :return: None
+        :rtype: None
+        """
+
+        split_list = " AND | OR | NOR | NAND | NOR | XOR | NXOR "
+
+        param_list = re.split(split_list, text)
+
+        for parameter_text in param_list:
+            parameter = Parameter(parameter_text)
+            self.has_for_parameters.append(parameter)
+
+    def get_linked_rules(self) -> (list, list):
+        """
+        finds Path to referenced EntityRule/AttributeRule
+
+
+        :return: tuple of (path to referenced Rule, contained metrics)
+        :rtype: (list,list)
+        """
+        parameters = self.has_for_parameters
+        ct = self.get_referenced_concept_template()
+
+
+        for parameter in parameters:
+            rule_id = parameter.has_for_parameter_text
+            metric = parameter.has_for_metric
+            value = parameter.has_for_parameter_value
+            test, path = ct.find_rule_id(rule_id)
+            path.append(value)
+            parameter.path = path
+
+            self.path_list.append(path)
+            self.metric_list.append(metric)
+
+        return self.path_list, self.metric_list
+
+    def get_referenced_concept_template(self)-> ConceptTemplate:
+        """
+               finds parent Concept Template
+
+               :return: Parent ConceptTemplate
+               :rtype: ConceptTemplate
+        """
+        
+        parent = self.get_parent()
+        return parent.refers
+        
+
+    def get_parent(self)-> Union[ConceptTemplate,Applicability]:
+        
+        """loop up tree until Parent Concept Template/ Applicability is found
+        
+        :returns: Parent ConceptTemplate or Parent Applicability
+        :rtype:Union[ConceptTemplate,Apllicability]
+        """
+        
+        parent = self.is_template_rule_of
+        if isinstance(parent,Concept) or isinstance(parent, Applicability):
+            return parent
+        elif parent is not None:
+            return parent.get_parent()
+
+
+class TemplateRules(Base):
+    """Counterpart of 'TemplateRules' in MVDxml"""
+
+    def __init__(self, xml_object: etree._Element) -> None:
+
+        """
+             Initial Startup of class
+
+             :param xml_object: xml representation of MVDxml class
+             :type xml_object: etree._Element
+             :return: None
+             :rtype:None
+        """
+        
+        super().__init__()
+        self.import_item(xml_object, TemplateRule, has_template_rules, "TemplateRule")
+        self.import_item(xml_object, TemplateRules, has_template_rules, "TemplateRules")
+        self.import_attribute(xml_object, has_for_operator, "operator", is_mandatory=True)
+        # TODO: Add Description
+
+    def get_referenced_concept_template(self)->Union[ConceptTemplate,Applicability]:
+        """
+               finds parent Concept Template or parent Applicability
+
+               :return: Parent ConceptTemplate or Parent Applicability
+               :rtype: Union[ConceptTemplate, Applicability]
+        """
+
+        parent = self.get_parent()[0]
+        return parent.refers[0]
+        pass
+
+    def get_parent(self):
+        """loop up tree until Parent Concept Template/ Applicability is found
+
+        :returns: Parent ConceptTemplate or Parent Applicability
+        :rtype:Union[ConceptTemplate,Apllicability]
+        """
+
+        parent = self.is_template_rule_of
+
+        if isinstance(parent,Concept) or isinstance(parent, Applicability):
+            return parent
+        else:
+            return parent.get_parent()
+
+
+class Requirement(Base):
+    """Counterpart of 'Requirement' in MVDxml"""
+
+    def __init__(self, xml_object: etree._Element) -> None:
+
+        """
+             Initial Startup of class
+
+             :param xml_object: xml representation of MVDxml class
+             :type xml_object: etree._Element
+             :return: None
+             :rtype:None
+        """
+        super().__init__()
+
+        self.import_attribute(xml_object, has_for_applicability, "applicability", is_mandatory=False)
+        self.import_attribute(xml_object, has_for_requirement, "requirement", is_mandatory=True)
+        # TODO: extend requirements  (mandatory, recommended, notrelevant...
+        self.link_exchange_requirement(xml_object)
+
+    def link_exchange_requirement(self, xml_object:etree._Element)->None:
+
+        """link object to ExchangeRequirement
+
+        :param xml_object: xml representation of MVDxml class
+        :type xml_object: etree._Element
+        :return: None
+        :rtype: None
+        """
+
+        uuid = xml_object.attrib.get("exchangeRequirement") #TODO: check if uppercase is needed
+
+        for er in ExchangeRequirement.instances():
+            if uuid == er.has_for_uuid:
+                self.links_to_exchange_requirement = er
+
+class Parameter(Base):
+    """Counterpart of 'Parameter' in MVDxml"""
+
+    def __init__(self, text:str) -> None:
+
+        """
+             Initial Startup of class
+
+             :param text: xml Parameter Text
+             :type xml_object: str
+             :return: None
+             :rtype:None
+        """
+
+        super().__init__()
+        self.has_for_text=text
+        self.deconstruct_parameter(self.has_for_text)
+        pass
+
+    def deconstruct_parameter(self, text:str):
+
+        """
+        Deconstructs Parameter and saves parts
+
+        :param text: raw Parameter text
+        :type text: str
+        :return: (parameter, metric, value)
+        :rtype: (str,str,str)
+        """
+
+
+        pattern = re.compile("(.+)\\[(\D+)\\]=(.+)")    #Deconstructs Parameter Text
         text = re.search(pattern, text)
 
         if text is not None:
 
-            self.import_parameter(text.group(1))
-            self.import_metric(text.group(2))
-            self.import_value(text.group(3))
+            self.has_for_parameter_text= text.group(1)
+            self.has_for_metric = self.import_metric(text.group(2))
+            self.has_for_parameter_value = self.import_value(text.group(3))
 
         else:
             raise AttributeError("parameter is not correctly defined: " + str(text))
 
-    def import_parameter(self, text):
+        return (self.has_for_parameter_text,
+                self.has_for_metric,
+                self.has_for_parameter_value)
 
-        self.has_for_parameter_text = text
-
-        pass
-
-    def import_metric(self, text):
+    @staticmethod
+    def import_metric(text):
 
         possible_expressions = ['Value', 'Size', 'Type', 'Unique', 'Exists']
 
         if text not in possible_expressions:
             raise AttributeError("metric is not in authorized list")
 
-        self.has_for_metric = text
+        return text
 
     def import_value(self, text):
         value = None
@@ -855,11 +1058,7 @@ class Parameter(Base):
         if value is None:
             raise AttributeError("value is not correctly defined in MVDxml: " + str(text))
 
-        self.has_for_parameter_value = value
-
-        pass
-
-    pass
+        return (value)
 
 
 with onto:
