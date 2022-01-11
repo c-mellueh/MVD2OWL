@@ -310,8 +310,17 @@ with onto:
 
 
     class ConceptTemplate(IdentityObject):
+        """ Counterpart of ConceptTemplate in MVDxml"""
+        def initialize(self, xml_object:etree._Element)->None:
+            """
+                        Initial Startup of class (comparable to __init__)
 
-        def initialize(self, xml_object):
+                        :param xml_object: xml representation of mvdxml class
+                        :type xml_object: etree._Element
+                        :return: None
+                        :rtype: None
+                        """
+
             self.import_identity_data(xml_object)
 
             self.import_items(xml_object, ConceptTemplate, has_sub_templates, "SubTemplates")
@@ -324,14 +333,26 @@ with onto:
 
             self.name = self.has_for_name + " [Concept Template] " + self.name
 
-            pass
-
-        pass
+            return None
 
         def find_rule_id(self, ruleid: str, path: list = [], prefix="", applicable_entity=None):
+            """finds the path to an EntityRule/AttributeRule with matching ruleid
+            :param ruleid: rule id searched rule
+            :type ruleid: str
+            :param path: chronological list of itempath
+                        from beginning to this ConceptTemplate
+            :type path: list
+            :param prefix: prefix given by EntityRule       TODO: check if entityRules give prefixes
+            :type prefix: str
+            :param applicable_entity:
+            :type applicable_entity:
+            :return:
+            :rtype:
+            """
+
             path = path[:]  # else python will change the value of input
 
-            if applicable_entity != self.has_for_applicable_entity:
+            if applicable_entity != self.has_for_applicable_entity: #if Concept Template is not called by Entity Rule
                 path.append(self)
 
             for concept_template in self.sub_templates:
