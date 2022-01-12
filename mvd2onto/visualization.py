@@ -604,8 +604,7 @@ def main ():
     file = "../Examples/mvdXML_V1-1-Final-Documentation.xml"
     file2 = "../Examples/Prüfregeln.mvdxml"
     file3 = "../Examples/RelAssociatesMaterial.xml"
-    mvd = MvdXml()
-    mvd.import_xml(file=file2, doc=doc, validation=False)
+    mvd = MvdXml(file=file2, doc=doc, validation=False)
 
     application = QtWidgets.QApplication(sys.argv)
     window = QtWidgets.QMainWindow()
