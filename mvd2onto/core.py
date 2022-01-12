@@ -1020,8 +1020,16 @@ class Parameter(Base):
                 self.has_for_parameter_value)
 
     @staticmethod
-    def import_metric(text):
+    def import_metric(text: str) -> str:
+        """
+        checks if Metric is acceptable
+        :param text: input metric
+        :type text: str
+        :return: metric
+        :rtype: str
 
+
+        """
         possible_expressions = ['Value', 'Size', 'Type', 'Unique', 'Exists']
 
         if text not in possible_expressions:
@@ -1029,7 +1037,16 @@ class Parameter(Base):
 
         return text
 
-    def import_value(self, text):
+    def import_value(self, text: str) -> Union[str, bool, int, float]:
+        """
+        parse Parameter Value
+
+        :param text: parameter Value
+        :type text: str
+        :return: parsed Parameter Value
+        :rtype: Union[str,bool,int,float]
+        """
+
         value = None
 
         if self.has_for_metric == "Value":
