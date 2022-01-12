@@ -1,21 +1,56 @@
 from core import *
 from typing import Union
 from PySide6 import QtCore, QtGui, QtWidgets
-from PySide6.QtWidgets import QGraphicsView, QGraphicsScene, QTreeWidgetItem, QFrame
+from PySide6.QtWidgets import *
 from PySide6.QtCore import QPointF
+from random import random
 
 # Constants 
 BORDER = 5
 
 
-class TemplateRuleRectangle(QGraphicsView):
-    def __init__(self, parent_scene, paths, metrics, index, position: QPointF):
+class testView(QGraphicsView):
 
+
+    def wheelEvent(self, event:QtGui.QWheelEvent) -> None:
+        point = event.angleDelta() / 4
+        val = point.y()
+
+        modifier = QApplication.keyboardModifiers()
+
+        if bool(modifier==QtCore.Qt.ControlModifier):
+
+
+            if val <0:
+                self.scale(0.9,0.9)
+            else:
+                self.scale(1.1,1.1)
+
+        elif bool(modifier==QtCore.Qt.ShiftModifier):
+
+
+            hor = self.horizontalScrollBar()
+            hor.setValue(hor.value() - val)
+
+        else:
+
+            ver = self.verticalScrollBar()
+
+
+            ver.setValue(ver.value() -val)
+
+        self.update()
+
+
+class TemplateRuleRectangle(QGraphicsView):
+    def __init__(self, parent_scene, paths, metrics, position: QPointF,data: TemplateRule):
+
+        super().__init__()
         scene = QGraphicsScene()
-        super().__init__(scene)
+        self.setScene(scene)
         self.move(position)
 
-        self.setObjectName("Template Rule {0}".format(index))
+        self.data =data
         self.parent_scene = parent_scene
         self.import_visuals(paths, metrics)
 
@@ -25,8 +60,6 @@ class TemplateRuleRectangle(QGraphicsView):
         self.setGeometry(position.x(), position.y(), width, height)
         self.setSceneRect(-10, -10, width, height)
         self.add_title()
-
-        parent_scene.addWidget(self)
         self.turn_off_scrollbar()
 
     def import_visuals(self, paths, metrics):
@@ -37,31 +70,41 @@ class TemplateRuleRectangle(QGraphicsView):
         template_rule_scene = self.scene()
 
         # for k, path in enumerate(paths):
-        metric = metrics
-        last_item = None
 
-        for i, path_item in enumerate(paths):
 
-            if path_item not in created_entities:
-                last_block = graphical_items_dict.get(last_item)
+        for k,path in enumerate(paths):
 
-                if isinstance(path_item, (ConceptTemplate, EntityRule)):
-                    block = self.add_block(template_rule_scene, path_item, last_block)
-                    graphical_items_dict[path_item] = block
-                    created_entities.append(path_item)
-                    pass
+            metric = metrics[k]
+            last_item = None
 
-                elif isinstance(path_item, AttributeRule):
-                    groupbox = last_block.widget()
-                    attribute_label = groupbox.add_attribute(path_item)  # returns QLabel housed in QGroupBox
-                    graphical_items_dict[path_item] = attribute_label
-                    created_entities.append(path_item)
+            for i, path_item in enumerate(path):
 
-                else:
-                    graphical_items_dict[path_item] = self.add_label(template_rule_scene, path_item, last_block,
-                                                                     metric)
+                if path_item not in created_entities:
+                    last_block = graphical_items_dict.get(last_item)
 
-            last_item = path_item
+                    if isinstance(path_item, (ConceptTemplate, EntityRule)):
+
+                        block = self.add_block(template_rule_scene, path_item, last_block)
+                        template_rule_scene.addItem(block)
+                        block.connect_to_entity(last_block)
+
+                        graphical_items_dict[path_item] = block
+                        created_entities.append(path_item)
+                        pass
+
+                    elif isinstance(path_item, AttributeRule):
+                        groupbox = last_block.widget()
+                        attribute_label = groupbox.add_attribute(path_item)  # returns QLabel housed in QGroupBox
+                        graphical_items_dict[path_item] = attribute_label
+                        created_entities.append(path_item)
+
+                    else:
+                        graphical_items_dict[path_item] = self.add_label(template_rule_scene, path_item, last_block,
+                                                                         metric)
+
+                last_item = path_item
+
+
 
     def add_block(self, scene, data, last_block):
 
@@ -84,11 +127,6 @@ class TemplateRuleRectangle(QGraphicsView):
         ypos = 0
 
         block.setPos((QPointF(xpos, ypos)))
-        scene.addItem(block)
-
-        # if not isinstance(last_block,DragBox):
-        block.connect_to_entity(last_block)
-
         return block
 
     def add_label(self, scene, inhalt, old_proxy, metric):
@@ -143,7 +181,7 @@ class TemplateRuleRectangle(QGraphicsView):
 
 class TemplateRulesRectangle(QGraphicsView):
 
-    def __init__(self, parent_scene: QGraphicsScene, index: int, position: QPointF, data: TemplateRules):
+    def __init__(self, parent_scene: QGraphicsScene, position: QPointF, data: TemplateRules):
 
         scene = QGraphicsScene()
         super().__init__()
@@ -152,10 +190,11 @@ class TemplateRulesRectangle(QGraphicsView):
         self.move(position)
         self.data = data
         self.operator = self.data.has_for_operator
-        self.setObjectName("Template Rules {0}".format(index))
         self.parent_scene = parent_scene
 
         self.turn_off_scrollbar()
+
+
 
     def add_title(self):
 
@@ -196,6 +235,11 @@ class TemplateRulesRectangle(QGraphicsView):
     def turn_off_scrollbar(self):
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+
+    def wheelEvent(self, event:QtGui.QWheelEvent) -> None:
+        ui.graphicsView.wheelEvent(event)
+
+        pass
 
 
 class TitleBlock(QtWidgets.QGraphicsRectItem):
@@ -259,7 +303,10 @@ class Attribute(QtWidgets.QLabel):
 
 class Connection:
 
+    liste =[]
+
     def __init__(self, attribute, right_proxy, metric):
+
 
         self.label = None
         self.attribute = attribute
@@ -270,8 +317,11 @@ class Connection:
         self.create_line()
         self.create_text()
 
+        Connection.liste.append(self)
+
+
     def __str__(self):
-        return "{0}->{1}".format(self.attribute, self.right_proxy)
+        return "Connection [{0}->{1}]".format(self.attribute, self.right_proxy)
 
     def create_line(self):
         self.points = self.get_pos()
@@ -345,7 +395,7 @@ class Connection:
             movement = QPointF(width, height) / 2
             self.label.setPos(self.center - movement)
 
-    pass
+        return self.points
 
 
 class DragBox(QtWidgets.QGraphicsProxyWidget):
@@ -353,24 +403,30 @@ class DragBox(QtWidgets.QGraphicsProxyWidget):
 
     def __init__(self, widget, top):
         super().__init__()
+
+        if isinstance(widget,EntityRepresentation):
+            widget.helper=self
+
         self.setAcceptHoverEvents(True)
         self.setWidget(widget)
         self.connections = []
         self.top = top
 
     def __str__(self):
-        return str(self.widget())
+        w = self.widget()
+        return "[Dragbox: {}]".format(w)
 
     def connect_to_entity(self, attribute, metric=""):
 
         if attribute is not None:
             con = Connection(attribute, self, metric)
-
             self.connections.append(con)
             if isinstance(attribute, DragBox):
-                attribute.connections.append(con)
+                 attribute.connections.append(con)
             else:
-                attribute.parent().graphicsProxyWidget().connections.append(con)
+                 par = attribute.parent()
+                 proxy = par.helper
+                 proxy.connections.append(con)
 
     def hoverEnterEvent(self, event):
         application.instance().setOverrideCursor(QtCore.Qt.OpenHandCursor)
@@ -419,51 +475,54 @@ class DragBox(QtWidgets.QGraphicsProxyWidget):
     def mouseReleaseEvent(self, event: QtWidgets.QGraphicsSceneMouseEvent) -> None:
         application.instance().restoreOverrideCursor()
 
-        pass
-
     pass
 
 
 class EntityRepresentation(QFrame):
     """ Widget in DragBox"""
 
-    def __init__(self, title):
+    def __init__(self, title:str):
         super().__init__()
-        self.qlayout = QtWidgets.QVBoxLayout()  # Layout for lining up all the Attributes
-        self.setLayout(self.qlayout)
+        self.helper =None
+        self.title = title
+        self.setLayout(QtWidgets.QVBoxLayout())
         self.setStyleSheet('QGroupBox:title {'
                            'subcontrol-origin: margin;'
                            'subcontrol-position: top center;'
                            'padding-left: 10px;'
                            'padding-right: 10px; }')
-        self.title_text = title
-        self.title = QtWidgets.QLabel(self.title_text)
-        self.qlayout.addWidget(self.title)
+
+        self.setObjectName(str(random()*1000))
+
+        self.title_widget = QtWidgets.QLabel(self.title)
+        self.layout().addWidget(self.title_widget)
 
     def __str__(self):
-        pass
+        return "[EntityRepresentation: {}]".format(self.title)
 
     def resizeEvent(self, event: QtGui.QResizeEvent) -> None:
-        self.update_title(self.title_text)
+        #self.update_title(self.title)
         pass
 
     def add_attribute(self, data):
+
         text = data.has_for_attribute_name
         attrib = Attribute(text)
-        self.qlayout.addWidget(attrib)
+        self.layout().addWidget(attrib)
         attrib.show()
         return attrib
 
     def update_title(self, title):
-        self.title_text = title
+        self.title = title
 
 
 class LabelRepresentation(QtWidgets.QLabel):
     def __str__(self):
-        return "[Label] {0}".format(self.text())
+        return "[Label: {0}]".format(self.text())
 
 
 class UiMainWindow(object):
+
 
     def setup_ui(self, main_window):
 
@@ -503,7 +562,7 @@ class UiMainWindow(object):
 
         # Object Window
         self.scene = QGraphicsScene()
-        self.graphicsView = QtWidgets.QGraphicsView(self.scene)
+        self.graphicsView = testView(self.scene)
         size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         size_policy.setHorizontalStretch(3)
         size_policy.setVerticalStretch(1)
@@ -535,13 +594,7 @@ class UiMainWindow(object):
         main_window.setWindowTitle(_translate("MainWindow", "MVD2Onto"))
 
     def initialize(self):
-        width, height = self.graphicsView.width(), self.graphicsView.height()
-        self.scene.setSceneRect(0, 0, width, height)
-        self.init_tree()
-
-    def init_tree(self):
         self.treeWidget.setColumnCount(1)
-        print(ConceptRoot.instances())
         for concept_root in ConceptRoot.instances():
             name = concept_root.has_for_name
 
@@ -558,14 +611,11 @@ class UiMainWindow(object):
 
         self.treeWidget.itemClicked.connect(self.on_tree_clicked)
 
+
     def on_tree_clicked(self, item):
 
         obj = item.konzept
-        for el in self.scene.items():
-            print("Delete Scene {}".format(el))
-            self.scene.removeItem(el)
-
-        print()
+        self.scene.clear()
 
         if isinstance(obj, ConceptRoot):
             pass
@@ -573,19 +623,84 @@ class UiMainWindow(object):
         if isinstance(obj, Concept):
 
             for index, rules in enumerate(obj.has_template_rules):
-                self.loop_through_rules(rules, self.scene, index)
+                self.loop_through_rules(rules, self.scene)
 
-    def loop_through_rules(self, rules: Union[TemplateRule, TemplateRules], parent_scene, index):
+        for el in Connection.liste:
+            print("HIER",el)
+            print(el.update())
+
+
+    def print_tree(self):
+        for gv in self.scene.items():
+            if not isinstance(gv, TitleBlock | QtWidgets.QGraphicsTextItem | QtWidgets.QGraphicsProxyWidget):
+                print("{} Other Element {}".format("", gv))
+            if isinstance(gv,TitleBlock):
+
+                title_text = gv.text.toPlainText()
+
+            if isinstance(gv,QtWidgets.QGraphicsProxyWidget):
+                gv = gv.widget()
+
+                self.print_scenes(gv,"",title_text)
+        print("----------------------------")
+
+
+    def print_scenes(self, gv:TemplateRulesRectangle ,text,title_text):
+
+
+        print("{} {} Graphic View {}".format(text,title_text,gv))
+        text += "   "
+
+        title_text =""
+
+        for el in  gv.scene().items():
+
+            if not isinstance(el,TitleBlock|QtWidgets.QGraphicsTextItem|QtWidgets.QGraphicsProxyWidget):
+                print("{} Other Element {}".format(text, el))
+
+            if isinstance(el,TitleBlock):
+
+                title_text = el.text.toPlainText()
+
+            if isinstance(el,QtWidgets.QGraphicsProxyWidget) and isinstance(el.widget(), TemplateRulesRectangle):
+                el = el.widget()
+
+                if el is not None:
+                    pass
+                    #self.print_scenes(el,text,title_text)
+
+            elif(isinstance(el,QtWidgets.QGraphicsProxyWidget)):
+                if isinstance(el.widget(),TemplateRuleRectangle):
+                    el = el.widget()
+                    print("{}TEMPRULE {}".format(text,el.data.has_for_plain_text))
+                    print_template_rule_items(el,text)
+                else:
+                    print("{}PROXYWIDGET {}".format(text, el.widget()))
+
+
+
+    def loop_through_rules(self, rules: Union[TemplateRule, TemplateRules], parent_scene):
         bbox = parent_scene.itemsBoundingRect()
-        position = QtCore.QPoint(BORDER, bbox.height() + (index + 1) * BORDER + 25)
+
+        item_count = int(len(parent_scene.items())/3)    #For every Rule exists 3 items (header,rule,title)
+
+        position = QtCore.QPoint(BORDER, bbox.height() + (item_count+1) * BORDER + 25)
 
         if isinstance(rules, TemplateRule):
-            paths, metrics = rules.get_linked_rules()
-            return TemplateRuleRectangle(parent_scene, paths, metrics, index, position)
-        else:
-            trr = TemplateRulesRectangle(parent_scene, index, position, rules)
+            paths = rules.path_list
+            metrics = rules.metric_list
+
+            template_rule_rectangle = TemplateRuleRectangle(parent_scene, paths, metrics, position,rules)
+            return template_rule_rectangle
+
+        elif isinstance(rules,TemplateRules):
+            trr = TemplateRulesRectangle(parent_scene, position, rules)
+
             for i, rule in enumerate(rules.has_template_rules):
-                self.loop_through_rules(rule, trr.scene(), i)
+                template_rule = self.loop_through_rules(rule, trr.scene())
+
+                if template_rule is not None:
+                    trr.scene().addWidget(template_rule)
 
             trr.parent_scene.addWidget(trr)
 
@@ -598,8 +713,45 @@ class UiMainWindow(object):
 
             trr.centerOn(trr.sceneRect().center())
 
+def print_template_rule_items(tr: TemplateRuleRectangle, text):
+    text += " -->"
+
+    items = tr.scene().items()
+
+    text_list = []
+    path_list = []
+    else_list = []
+
+    for el in items:
+
+        if isinstance(el, QtWidgets.QGraphicsTextItem):
+            text_list.append(el)
+        elif isinstance(el, QtWidgets.QGraphicsPathItem):
+            path_list.append(el)
+        else:
+
+            else_list.append(el)
+    printall=False
+    if printall:
+
+        print("{} TEXTITEMS {} Stck.".format(text[:-3], len(text_list)))
+
+        for el in text_list:
+            print("   {} [TextItem] {}".format(text, el.toPlainText()))
+
+        print("{} PATHITEMS {} Stck.".format(text[:-3], len(path_list)))
+
+        for el in path_list:
+            print("   {} [PathItem] {}".format(text, ""))
+
+    print("{} ELSEITEMS {} Stck.".format(text[:-3], len(else_list)))
+    for el in else_list:
+        print("   {} {}".format(text, el))
+
+
 def main ():
     global application
+    global ui
     doc = "mvdXML_V1.1.xsd"
     file = "../Examples/mvdXML_V1-1-Final-Documentation.xml"
     file2 = "../Examples/Prüfregeln.mvdxml"
