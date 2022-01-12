@@ -36,32 +36,32 @@ class TemplateRuleRectangle(QGraphicsView):
 
         template_rule_scene = self.scene()
 
-        for k, path in enumerate(paths):
-            metric = metrics[k]
-            last_item = None
+        # for k, path in enumerate(paths):
+        metric = metrics
+        last_item = None
 
-            for i, path_item in enumerate(path):
+        for i, path_item in enumerate(paths):
 
-                if path_item not in created_entities:
-                    last_block = graphical_items_dict.get(last_item)
+            if path_item not in created_entities:
+                last_block = graphical_items_dict.get(last_item)
 
-                    if isinstance(path_item, (ConceptTemplate, EntityRule)):
-                        block = self.add_block(template_rule_scene, path_item, last_block)
-                        graphical_items_dict[path_item] = block
-                        created_entities.append(path_item)
-                        pass
+                if isinstance(path_item, (ConceptTemplate, EntityRule)):
+                    block = self.add_block(template_rule_scene, path_item, last_block)
+                    graphical_items_dict[path_item] = block
+                    created_entities.append(path_item)
+                    pass
 
-                    elif isinstance(path_item, AttributeRule):
-                        groupbox = last_block.widget()
-                        attribute_label = groupbox.add_attribute(path_item)  # returns QLabel housed in QGroupBox
-                        graphical_items_dict[path_item] = attribute_label
-                        created_entities.append(path_item)
+                elif isinstance(path_item, AttributeRule):
+                    groupbox = last_block.widget()
+                    attribute_label = groupbox.add_attribute(path_item)  # returns QLabel housed in QGroupBox
+                    graphical_items_dict[path_item] = attribute_label
+                    created_entities.append(path_item)
 
-                    else:
-                        graphical_items_dict[path_item] = self.add_label(template_rule_scene, path_item, last_block,
-                                                                         metric)
+                else:
+                    graphical_items_dict[path_item] = self.add_label(template_rule_scene, path_item, last_block,
+                                                                     metric)
 
-                last_item = path_item
+            last_item = path_item
 
     def add_block(self, scene, data, last_block):
 
@@ -526,6 +526,7 @@ class UiMainWindow(object):
         QtCore.QMetaObject.connectSlotsByName(main_window)
 
         main_window.show()
+
         self.initialize()
 
     @staticmethod
@@ -540,7 +541,7 @@ class UiMainWindow(object):
 
     def init_tree(self):
         self.treeWidget.setColumnCount(1)
-
+        print(ConceptRoot.instances())
         for concept_root in ConceptRoot.instances():
             name = concept_root.has_for_name
 
@@ -561,7 +562,10 @@ class UiMainWindow(object):
 
         obj = item.konzept
         for el in self.scene.items():
+            print("Delete Scene {}".format(el))
             self.scene.removeItem(el)
+
+        print()
 
         if isinstance(obj, ConceptRoot):
             pass
