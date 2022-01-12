@@ -591,13 +591,13 @@ class EntityRule(Base):
         """
 
         xml_references = xml_object.find("References", namespaces=xml_object.nsmap)
+        if xml_references is not None:
+            for el in list(xml_references):
+                self.references.append(el.attrib.get("ref"))
 
-        for el in list(xml_references):
-            self.references.append(el.attrib.get("ref"))
-
-        id_prefix = xml_references.attrib.get("IdPrefix")
-        if id_prefix is not None:
-            self.has_for_id_prefix = id_prefix
+            id_prefix = xml_references.attrib.get("IdPrefix")
+            if id_prefix is not None:
+                self.has_for_id_prefix = id_prefix
 
     def reference_templates(self) -> ConceptTemplate:
         """
@@ -857,8 +857,8 @@ class TemplateRule(Base):
             path.append(value)
             parameter.path = path
 
-            self.path_list.append(path)
-            self.metric_list.append(metric)
+            self.path_list = path
+            self.metric_list = metric
 
         return self.path_list, self.metric_list
 
