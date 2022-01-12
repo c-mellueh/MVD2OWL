@@ -27,50 +27,45 @@ def main():
     mvd = MvdXml(file=file2, doc=doc, validation=False)
     #
     #
-    #mvd.import_xml()
+    # mvd.import_xml()
 
     print("START")
     print("")
+    tr = TemplateRule.instances()[3]
+    print(tr.has_for_plain_text)
+    print(tr.path_list)
+    print(tr.get_linked_rules())
+    print(tr.path_list)
+    for l, tr in enumerate(TemplateRule.instances()):
+        if l == 2:
 
-    for ct in ConceptTemplate.instances():
-        print("{} -> {}".format(ct.attribute_rules,bool(ct.attribute_rules)))
+            paths, metrics = tr.get_linked_rules()
 
-    for l,tr in enumerate(TemplateRule.instances()):
-        if l ==3:
-
-
-
-            print(tr.has_for_plain_text)
-            paths,metrics = tr.get_linked_rules()
-
-            for i,path in enumerate(paths):
-
+            for el in enumerate(paths):
 
                 text = ""
-                for el in path:
-                    if AttributeRule.__instancecheck__(el):
-                        text += el.has_for_attribute_name + "->"
+                if AttributeRule.__instancecheck__(el):
+                    text += el.has_for_attribute_name + "->"
 
-                    elif EntityRule.__instancecheck__(el):
-                        text += el.has_for_entity_name + "->"
+                elif EntityRule.__instancecheck__(el):
+                    text += el.has_for_entity_name + "->"
 
-                    elif ConceptTemplate.__instancecheck__(el):
-                        text += el.has_for_applicable_entity + "->"
+                elif ConceptTemplate.__instancecheck__(el):
+                    text += el.has_for_applicable_entity + "->"
 
-                    else:
-                        text += str(el)
+                else:
+                    text += str(el)
 
+            print("{0} ({1})".format(text, metrics[i]))
 
-                print("{0} ({1})".format(text,metrics[i]))
-
-            print()
-            exit()
-    onto.save("onto_test.rdfxml")
+        print()
+        exit()
 
 
-    for ct in ConceptTemplate.instances():
-        print(ct.has_for_name+ct.has_for_uuid)
+onto.save("onto_test.rdfxml")
+
+for ct in ConceptTemplate.instances():
+    print(ct.has_for_name + ct.has_for_uuid)
 
 if __name__ == "__main__":
-
     main()
