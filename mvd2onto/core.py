@@ -815,11 +815,12 @@ class TemplateRule(Base):
         """
         super().__init__()
         # TODO: Add Description
+        self.has_for_parameters = []
         self.has_for_plain_text = xml_object.attrib.get("Parameters")
         self.import_parameter(self.has_for_plain_text)
         self.path_list = []
         self.metric_list = []
-        
+
     def import_parameter(self, text: str) -> None:
         """import and parsing of Parameters
 
@@ -845,9 +846,11 @@ class TemplateRule(Base):
         :return: tuple of (path to referenced Rule, contained metrics)
         :rtype: (list,list)
         """
+
+        self.path_list = []
+        self.metric_list =[]
         parameters = self.has_for_parameters
         ct = self.get_referenced_concept_template()
-
 
         for parameter in parameters:
             rule_id = parameter.has_for_parameter_text
@@ -857,10 +860,10 @@ class TemplateRule(Base):
             path.append(value)
             parameter.path = path
 
-            self.path_list = path
-            self.metric_list = metric
+            self.path_list.append(path)
+            self.metric_list.append(metric)
 
-        return self.path_list, self.metric_list
+        return (self.path_list, self.metric_list)
 
     def get_referenced_concept_template(self)-> ConceptTemplate:
         """
@@ -1124,7 +1127,7 @@ with onto:
 
 
     class has_definitions(ObjectProperty, InverseFunctionalProperty):
-        domain = [ConceptTemplate | ModelView | ExchangeRequirement | ConceptRoot | Applicability | Concept]
+        domain = [Or([ConceptTemplate , ModelView , ExchangeRequirement , ConceptRoot , Applicability , Concept])]
         range = [Definition]
         python_name = "definitions"
 
@@ -1133,13 +1136,13 @@ with onto:
 
     class is_definition_of(ObjectProperty, FunctionalProperty):
         domain = [Definition]
-        range = [ConceptTemplate | ModelView | ExchangeRequirement | ConceptRoot | Applicability | Concept]
+        range = [Or([ConceptTemplate , ModelView , ExchangeRequirement , ConceptRoot , Applicability , Concept])]
         inverse_property = has_definitions
         pass
 
 
     class has_attribute_rules(ObjectProperty, InverseFunctionalProperty):
-        domain = [ConceptTemplate | EntityRule]
+        domain = [Or([ConceptTemplate , EntityRule])]
         range = [AttributeRule]
         python_name = "attribute_rules"
         pass
@@ -1147,7 +1150,7 @@ with onto:
 
     class is_attribute_rule_of(ObjectProperty, FunctionalProperty):
         domain = [AttributeRule]
-        range = [ConceptTemplate | EntityRule]
+        range = [Or([ConceptTemplate , EntityRule])]
 
         inverse_property = has_attribute_rules
 
@@ -1155,14 +1158,14 @@ with onto:
 
 
     class has_constraints(ObjectProperty, InverseFunctionalProperty):
-        domain = [AttributeRule | EntityRule]
+        domain = [Or([AttributeRule , EntityRule])]
         range = [Constraint]
         python_name = "constraints"
 
 
     class is_constraint_of(ObjectProperty, FunctionalProperty):
         domain = [Constraint]
-        range = [AttributeRule | EntityRule]
+        range = [Or([AttributeRule , EntityRule])]
         inverse_property = has_constraints
 
 
@@ -1185,12 +1188,12 @@ with onto:
 
     class is_referred_by(ObjectProperty, InverseFunctionalProperty):
         domain = [ConceptTemplate]
-        range = [EntityRule | Applicability | Concept]
+        range = [Or([EntityRule , Applicability , Concept])]
         pass
 
 
     class refers_to(ObjectProperty, FunctionalProperty):
-        domain = [EntityRule | Applicability | Concept]
+        domain = [Or([EntityRule , Applicability , Concept])]
         range = [ConceptTemplate]
         inverse_property = is_referred_by
         python_name = "refers"
@@ -1264,14 +1267,14 @@ with onto:
 
 
     class has_template_rules(ObjectProperty, InverseFunctionalProperty):
-        domain = [Applicability | Concept]
-        range = [TemplateRule | TemplateRules]
+        domain = [Or([Applicability , Concept])]
+        range = [Or([TemplateRule , TemplateRules])]
         pass
 
 
     class is_template_rule_of(ObjectProperty, FunctionalProperty):
-        domain = [TemplateRule | TemplateRules]
-        range = [Applicability | Concept]
+        domain = [Or([TemplateRule , TemplateRules])]
+        range = [Or([Applicability , Concept])]
         inverse_property = has_template_rules
         pass
 
@@ -1380,7 +1383,7 @@ with onto:
 
 
     class has_for_applicable_schema(DataProperty, FunctionalProperty):
-        domain = [ConceptTemplate | ModelView]
+        domain = [Or([ConceptTemplate , ModelView])]
         range = [str]
         pass
 
@@ -1404,13 +1407,13 @@ with onto:
 
 
     class has_for_rule_id(DataProperty, FunctionalProperty):
-        domain = [AttributeRule | EntityRule]
+        domain = [Or([AttributeRule , EntityRule])]
         range = [str]
         pass
 
 
     class has_for_description(DataProperty, FunctionalProperty):
-        domain = [AttributeRule | EntityRule]
+        domain = [Or([AttributeRule , EntityRule])]
         range = [str]
         pass
 
@@ -1428,7 +1431,7 @@ with onto:
 
 
     class has_for_applicability(DataProperty, FunctionalProperty):
-        domain = [Requirement | ExchangeRequirement]
+        domain = [Or([Requirement , ExchangeRequirement])]
         range = [str]
         pass
 
@@ -1473,7 +1476,7 @@ with onto:
 
 
     class has_for_lang(DataProperty, FunctionalProperty):
-        domain = [Body | Link]
+        domain = [Or([Body , Link])]
         range = [str]
 
 
@@ -1483,7 +1486,7 @@ with onto:
 
 
     class has_for_content(DataProperty, FunctionalProperty):
-        domain = [Body | Link]
+        domain = [Or([Body,  Link])]
         range = [str]
 
 
