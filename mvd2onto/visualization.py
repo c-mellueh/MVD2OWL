@@ -242,6 +242,9 @@ class TemplateRulesRectangle(QGraphicsView):
         pass
 
 
+
+
+
 class TitleBlock(QtWidgets.QGraphicsRectItem):
     def __init__(self, x, y, w, h, view: Union[TemplateRulesRectangle, TemplateRuleRectangle], text: str):
         super().__init__(x, y, w, h)
@@ -273,13 +276,15 @@ class TitleBlock(QtWidgets.QGraphicsRectItem):
         pass
 
     def mouseMoveEvent(self, event: QtWidgets.QGraphicsSceneMouseEvent) -> None:
+
         orig_cursor_position = event.lastScenePos()
         updated_cursor_position = event.scenePos()
 
         x_dif = updated_cursor_position.x() - orig_cursor_position.x()
         y_dif = updated_cursor_position.y() - orig_cursor_position.y()
 
-        self.graphical_view.move(self.graphical_view.pos().x() + x_dif, self.graphical_view.pos().y() + y_dif)
+        proxy = self.graphical_view.graphicsProxyWidget()
+        proxy.moveBy(x_dif,y_dif)
         self.moveBy(x_dif, y_dif)
         self.text.moveBy(x_dif, y_dif)
 
