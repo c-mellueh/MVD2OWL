@@ -7,7 +7,7 @@ from random import random
 
 # Constants 
 BORDER = 5
-
+RESIZE_BORDER_WIDTH = 10
 
 class testView(QGraphicsView):
 
@@ -55,7 +55,7 @@ class MovableRectangle(QGraphicsView):
         self.turn_off_scrollbar()
         self.movable_elements = []
         self.color = "grey"
-
+        self.resize_elements = []
 
     def add_title(self,text):
         width = self.sceneRect().width()
@@ -107,7 +107,7 @@ class MovableRectangle(QGraphicsView):
             self.bottom_right = scene_pos+gpw_rect.bottomRight()
 
             for el in self.movable_elements:
-                if isinstance(el,ResizeRectangle):
+                if isinstance(el,ResizeBorder):
                     if el.orientation == "top" or el.orientation == "bottom":
                         rect = el.rect()
                         rect.setWidth(self.width())
@@ -116,6 +116,40 @@ class MovableRectangle(QGraphicsView):
                         rect = el.rect()
                         rect.setHeight(self.height()+self.title_block.rect().height())
                         el.setRect(rect)
+
+    def add_resize_elements(self):
+
+        gpw = self.graphicsProxyWidget()
+
+
+        pos = self.title_block.rect().topLeft()
+        self.resize_elements.append(ResizeEdge(self,self.parent_scene, pos, "top_left"))
+        self.resize_elements.append(ResizeBorder(self,self.parent_scene,pos,"top"))
+        self.resize_elements.append(ResizeBorder(self,self.parent_scene,pos,"left"))
+
+
+        pos = self.title_block.rect().topRight()
+        self.resize_elements.append(ResizeEdge(self, self.parent_scene, pos, "top_right"))
+        self.resize_elements.append(ResizeBorder(self, self.parent_scene, pos, "right"))
+
+
+        pos = gpw.scenePos()+gpw.rect().bottomLeft()
+        self.resize_elements.append(ResizeEdge(self, self.parent_scene, pos, "bottom_left"))
+        self.resize_elements.append(ResizeBorder(self, self.parent_scene, pos, "bottom"))
+
+
+        pos = gpw.scenePos()+gpw.rect().bottomRight()
+        self.resize_elements.append(ResizeEdge(self, self.parent_scene, pos, "bottom_right"))
+
+        color = QtGui.QColor("black")
+        color.setAlpha(0)
+        pen = QtGui.QPen()
+        pen.setColor(color)
+
+
+        for el in self.resize_elements:
+            self.movable_elements.append(el)
+            el.setPen(pen)
 
 
 
@@ -134,6 +168,7 @@ class TemplateRuleRectangle(MovableRectangle):
         self.setSceneRect(-10, -10, width, height)
         self.add_title("TemplateRule")
         self.turn_off_scrollbar()
+
 
     def import_visuals(self, paths, metrics):
 
@@ -255,29 +290,7 @@ class TemplateRulesRectangle(MovableRectangle):
 
         pass
 
-    def add_resize_elements(self):
 
-        gpw = self.graphicsProxyWidget()
-
-
-        pos = self.title_block.rect().topLeft()
-        self.movable_elements.append(ResizeCircle(self,self.parent_scene, pos, "top_left"))
-        self.movable_elements.append(ResizeRectangle(self,self.parent_scene,pos,"top"))
-        self.movable_elements.append(ResizeRectangle(self,self.parent_scene,pos,"left"))
-
-
-        pos = self.title_block.rect().topRight()
-        self.movable_elements.append(ResizeCircle(self, self.parent_scene, pos, "top_right"))
-        self.movable_elements.append(ResizeRectangle(self, self.parent_scene, pos, "right"))
-
-
-        pos = gpw.scenePos()+gpw.rect().bottomLeft()
-        self.movable_elements.append(ResizeCircle(self, self.parent_scene, pos, "bottom_left"))
-        self.movable_elements.append(ResizeRectangle(self, self.parent_scene, pos, "bottom"))
-
-
-        pos = gpw.scenePos()+gpw.rect().bottomRight()
-        self.movable_elements.append(ResizeCircle(self, self.parent_scene, pos, "bottom_right"))
 
 
 
@@ -293,7 +306,7 @@ class TemplateRulesRectangle(MovableRectangle):
         return color
 
 
-class ResizeCircle(QtWidgets.QGraphicsEllipseItem):
+class ResizeEdge(QtWidgets.QGraphicsRectItem):
 
     def __init__(self,graphics_view:TemplateRulesRectangle,parent:QGraphicsScene,position:QPointF,orientation:str):
 
@@ -301,11 +314,10 @@ class ResizeCircle(QtWidgets.QGraphicsEllipseItem):
         self.graphical_view = graphics_view
 
 
-        self.radius = 5
-        movement = QPoint(self.radius,self.radius)
+        movement = QPoint(RESIZE_BORDER_WIDTH/2,RESIZE_BORDER_WIDTH/2)
 
         position = position-movement
-        super().__init__(position.x(), position.y(), self.radius*2, self.radius*2)
+        super().__init__(position.x(), position.y(), RESIZE_BORDER_WIDTH, RESIZE_BORDER_WIDTH)
         self.setAcceptHoverEvents(True)
 
         self.setZValue(100)
@@ -343,17 +355,17 @@ class ResizeCircle(QtWidgets.QGraphicsEllipseItem):
         if self.orientation == "top_left":
 
             for el in gv.movable_elements:
-                if not isinstance(el,(ResizeCircle,ResizeRectangle)):
+                if not isinstance(el,(ResizeEdge,ResizeBorder)):
 
                     el.moveBy(x_dif,y_dif)
 
-                elif isinstance(el,ResizeCircle):
+                elif isinstance(el,ResizeEdge):
                     if el.orientation =="top_right":
                         el.moveBy(0,y_dif)
 
                     if el.orientation == "bottom_left":
                         el.moveBy(x_dif,0)
-                elif isinstance(el,ResizeRectangle):
+                elif isinstance(el,ResizeBorder):
                     if el.orientation == "top" or el.orientation == "left":
                         el.moveBy(x_dif,y_dif)
                     elif el.orientation == "right":
@@ -376,9 +388,9 @@ class ResizeCircle(QtWidgets.QGraphicsEllipseItem):
         elif self.orientation == "top_right":
             proxy.moveBy(0,y_dif)
             for el in gv.movable_elements:
-                if not isinstance(el,(ResizeCircle,ResizeRectangle)):
+                if not isinstance(el,(ResizeEdge,ResizeBorder)):
                     el.moveBy(0,y_dif)
-                elif isinstance(el,ResizeCircle):
+                elif isinstance(el,ResizeEdge):
                     if el.orientation == "top_left":
                         el.moveBy(0,y_dif)
                     elif el.orientation == "bottom_right":
@@ -405,9 +417,9 @@ class ResizeCircle(QtWidgets.QGraphicsEllipseItem):
             proxy.moveBy(x_dif,0)
             for el in gv.movable_elements:
 
-                if not isinstance(el, (ResizeCircle,ResizeRectangle)):
+                if not isinstance(el, (ResizeEdge,ResizeBorder)):
                     el.moveBy(x_dif,0)
-                elif isinstance(el,ResizeCircle):
+                elif isinstance(el,ResizeEdge):
                     if el.orientation == "top_left":
                         el.moveBy(x_dif, 0)
                     elif el.orientation == "bottom_right":
@@ -433,13 +445,13 @@ class ResizeCircle(QtWidgets.QGraphicsEllipseItem):
         elif self.orientation == "bottom_right":
             #proxy.moveBy(x_dif,0)
             for el in gv.movable_elements:
-                if  isinstance(el, ResizeCircle):
+                if  isinstance(el, ResizeEdge):
                     if el.orientation == "top_right":
                         el.moveBy(x_dif, 0)
                     elif el.orientation == "bottom_left":
                         el.moveBy(0, y_dif)
 
-                if isinstance(el,ResizeRectangle):
+                if isinstance(el,ResizeBorder):
                     if el.orientation =="bottom":
                         el.moveBy(0,y_dif)
                     if el.orientation =="right":
@@ -457,7 +469,7 @@ class ResizeCircle(QtWidgets.QGraphicsEllipseItem):
 
         pass
 
-class ResizeRectangle(QtWidgets.QGraphicsRectItem):
+class ResizeBorder(QtWidgets.QGraphicsRectItem):
 
     def __init__(self, graphics_view: TemplateRulesRectangle, parent: QGraphicsScene, position: QPointF,
                  orientation: str):
@@ -481,7 +493,7 @@ class ResizeRectangle(QtWidgets.QGraphicsRectItem):
         self.setAcceptHoverEvents(True)
 
         parent.addItem(self)
-
+        
     def hoverEnterEvent(self, event):
 
         if self.orientation == "top" or self.orientation == "bottom":
@@ -514,14 +526,14 @@ class ResizeRectangle(QtWidgets.QGraphicsRectItem):
         if self.orientation == "top":
 
             for el in gv.movable_elements:
-                if not isinstance(el, (ResizeCircle, ResizeRectangle)):
+                if not isinstance(el, (ResizeEdge, ResizeBorder)):
                     el.moveBy(0,y_dif)
 
-                elif isinstance(el,ResizeCircle):
+                elif isinstance(el,ResizeEdge):
                     if el.orientation =="top_right" or el.orientation == "top_left":
                         el.moveBy(0,y_dif)
 
-                elif isinstance(el,ResizeRectangle):
+                elif isinstance(el,ResizeBorder):
                     if not el.orientation == "bottom":
                         el.moveBy(0,y_dif)
 
@@ -538,7 +550,7 @@ class ResizeRectangle(QtWidgets.QGraphicsRectItem):
 
             for el in gv.movable_elements:
 
-                if isinstance(el,ResizeCircle):
+                if isinstance(el,ResizeEdge):
                     if el.orientation =="bottom_right" or el.orientation == "bottom_left":
                         el.moveBy(0,y_dif)
 
@@ -552,14 +564,14 @@ class ResizeRectangle(QtWidgets.QGraphicsRectItem):
         elif self.orientation == "left":
 
             for el in gv.movable_elements:
-                if not isinstance(el, (ResizeCircle, ResizeRectangle)):
+                if not isinstance(el, (ResizeEdge, ResizeBorder)):
                     el.moveBy(x_dif, 0)
 
-                elif isinstance(el, ResizeCircle):
+                elif isinstance(el, ResizeEdge):
                     if el.orientation == "bottom_left" or el.orientation == "top_left":
                         el.moveBy(x_dif,0)
 
-                elif isinstance(el, ResizeRectangle):
+                elif isinstance(el, ResizeBorder):
                     if not el.orientation == "right":
                         el.moveBy(x_dif, 0)
 
@@ -576,7 +588,7 @@ class ResizeRectangle(QtWidgets.QGraphicsRectItem):
 
             for el in gv.movable_elements:
 
-                if isinstance(el, ResizeCircle):
+                if isinstance(el, ResizeEdge):
                     if el.orientation == "bottom_right" or el.orientation == "top_right":
                         el.moveBy(x_dif, 0)
 
@@ -1058,6 +1070,7 @@ class UiMainWindow(object):
 
                 if template_rule is not None:
                     trr.scene().addWidget(template_rule)
+                    template_rule.add_resize_elements()
 
             trr.parent_scene.addWidget(trr)
 
