@@ -110,8 +110,9 @@
               <Requirements>
                 <Requirement applicability="import" requirement="mandatory" exchangeRequirement="b66682f3-d593-49c1-9584-183eb6699824" />
               </Requirements>
-			  <TemplateRules>
+			  <TemplateRules operator="and">
 				<TemplateRule Parameters="HasAssociations[Exists]=TRUE AND RelatingMaterial[Exists]=TRUE"/>
+                <TemplateRule Parameters="HasAssociations[Exists]=TRUE AND RelatingMaterial[Exists]=TRUE AND MaterialKategorie[Value]='Stahlbeton'"/>
 			  </TemplateRules>
             </Concept>
 			<Concept uuid="5b650aa3-6de8-4d5e-81a8-7285a3ce0DDB" name="Material der Kategorie Stahlbeton">
@@ -119,8 +120,9 @@
               <Requirements>
                 <Requirement applicability="import" requirement="mandatory" exchangeRequirement="b66682f3-d593-49c1-9584-183eb6699825" />
               </Requirements>
-			  <TemplateRules>
-				<TemplateRule Parameters="HasAssociations[Exists]=TRUE AND RelatingMaterial[Exists]=TRUE AND MaterialKategorie[Value]='Stahlbeton'"/>
+			  <TemplateRules operator="and">
+                <TemplateRule Parameters="HasAssociations[Exists]=TRUE AND RelatingMaterial[Exists]=TRUE"/>
+                <TemplateRule Parameters="HasAssociations[Exists]=TRUE AND RelatingMaterial[Exists]=TRUE AND MaterialKategorie[Value]='Stahlbeton'"/>
 			  </TemplateRules>
             </Concept>
           </Concepts>
