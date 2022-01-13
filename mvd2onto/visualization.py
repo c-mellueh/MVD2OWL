@@ -2,7 +2,7 @@ from core import *
 from typing import Union
 from PySide6 import QtCore, QtGui, QtWidgets
 from PySide6.QtWidgets import *
-from PySide6.QtCore import QPointF
+from PySide6.QtCore import QPointF,QPoint
 from random import random
 
 # Constants 
@@ -42,16 +42,100 @@ class testView(QGraphicsView):
         self.update()
 
 
-class TemplateRuleRectangle(QGraphicsView):
-    def __init__(self, parent_scene, paths, metrics, position: QPointF,data: TemplateRule):
+class MovableRectangle(QGraphicsView):
+    """parent class of TemplateRuleRectangle & TemplateRulesRectangle"""
 
+    def __init__(self,position:QPointF,data: Union[TemplateRule,TemplateRules],parent_scene:QGraphicsScene):
         super().__init__()
         scene = QGraphicsScene()
         self.setScene(scene)
         self.move(position)
-
-        self.data =data
+        self.data = data
         self.parent_scene = parent_scene
+        self.turn_off_scrollbar()
+        self.movable_elements = []
+        self.color = "grey"
+
+
+    def add_title(self,text):
+        width = self.sceneRect().width()
+        self.title_block = TitleBlock(self.pos().x(), self.pos().y() - 25,
+                                      width, 25, self, text)
+
+        # Brush
+        brush = QtGui.QBrush()
+        brush.setStyle(QtCore.Qt.BrushStyle.SolidPattern)
+        brush.setColor(QtGui.QColor(self.color))
+
+        self.title_block.setBrush(brush)
+        self.title_block.setZValue(0)
+
+        self.parent_scene.addItem(self.title_block)
+        self.movable_elements.append(self.title_block)
+        self.movable_elements.append(self.title_block.text)
+
+        return self.title_block
+
+    def turn_off_scrollbar(self):
+        self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+
+    def change_border_color(self, color):
+        view = self.scene().views()[0]
+        view.setFrameStyle(QFrame.Box)
+        view.setLineWidth(2)
+        style = "border: 2px solid {};".format(color)
+        view.setStyleSheet(style)
+
+    def resizeEvent(self, event):
+
+        if self.title_block is not None:
+            bar_height = self.title_block.rect().height()
+            width = self.size().width()
+            rec = self.title_block.rect()
+            rec.setWidth(width)
+            self.title_block.setRect(rec)
+
+            gpw = self.graphicsProxyWidget()
+            scene_pos = gpw.scenePos()
+            gpw_rect = gpw.rect()
+
+            shift = QPointF(0, -bar_height)
+            self.top_left = scene_pos + gpw_rect.topLeft()+shift
+            self.top_right = rec.topRight()+shift
+            self.bottom_left = scene_pos+gpw_rect.bottomLeft()
+            self.bottom_right = scene_pos+gpw_rect.bottomRight()
+
+            print("BARWITH{}".format(self.title_block.rect().width()))
+
+
+        # for el in self.movable_elements:
+        #     if isinstance(el, ResizeCircle):
+        #         shift = QPointF(-el.radius, -el.radius)
+        #
+        #         if el.orientation == "top_left":
+        #              el.setPos(self.top_left+shift)
+        #         #
+        #         elif el.orientation =="top_right":
+        #         #
+        #         #     shift = -shift
+        #         #     print(el.pos())
+        #             el.setX(self.title_block.rect().topRight().x())
+        #
+        #         #     print(el.pos())
+        #         #     el.setZValue(100)
+        #         #     print(el.scenePos())
+        #         #
+        #         # else:
+        #         #     pass
+
+
+
+class TemplateRuleRectangle(MovableRectangle):
+    def __init__(self, parent_scene, paths, metrics, position: QPointF,data: TemplateRule):
+
+        super().__init__(position,data,parent_scene)
+
         self.import_visuals(paths, metrics)
 
         width = self.sceneRect().width() + 20
@@ -59,7 +143,7 @@ class TemplateRuleRectangle(QGraphicsView):
 
         self.setGeometry(position.x(), position.y(), width, height)
         self.setSceneRect(-10, -10, width, height)
-        self.add_title()
+        self.add_title("TemplateRule")
         self.turn_off_scrollbar()
 
     def import_visuals(self, paths, metrics):
@@ -68,9 +152,6 @@ class TemplateRuleRectangle(QGraphicsView):
         graphical_items_dict = {}
 
         template_rule_scene = self.scene()
-
-        # for k, path in enumerate(paths):
-
 
         for k,path in enumerate(paths):
 
@@ -103,8 +184,6 @@ class TemplateRuleRectangle(QGraphicsView):
                                                                          metric)
 
                 last_item = path_item
-
-
 
     def add_block(self, scene, data, last_block):
 
@@ -159,53 +238,54 @@ class TemplateRuleRectangle(QGraphicsView):
 
         return proxy
 
-    def add_title(self):
-
-        scene_rect = self.sceneRect()
-        width = scene_rect.width()
-        pos = self.pos()
-        self.TitleBlock = TitleBlock(pos.x(), pos.y() - 25, width, 25, self, "TemplateRule")
-
-        brush = QtGui.QBrush()
-        brush.setStyle(QtCore.Qt.BrushStyle.SolidPattern)
-        color = QtGui.QColor("grey")
-        brush.setColor(color)
-        self.TitleBlock.setBrush(brush)
-        self.parent_scene.addItem(self.TitleBlock)
-        return self.TitleBlock
-
-    def turn_off_scrollbar(self):
-        self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+class TemplateRulesRectangle(MovableRectangle):
 
 
-class TemplateRulesRectangle(QGraphicsView):
+    def __init__(self, parent_scene: QGraphicsScene, position: QPointF, data: TemplateRules) -> object:
+        """
 
-    def __init__(self, parent_scene: QGraphicsScene, position: QPointF, data: TemplateRules):
+        :param parent_scene:
+        :type parent_scene:
+        :param position:
+        :type position:
+        :param data:
+        :type data:
+        """
 
-        scene = QGraphicsScene()
-        super().__init__()
-        self.setScene(scene)
-        self.setContentsMargins(0, 0, 0, 0)
-        self.move(position)
-        self.data = data
+        super().__init__(position,data,parent_scene)
+
         self.operator = self.data.has_for_operator
-        self.parent_scene = parent_scene
+        self.color = self.get_color()
+        self.change_border_color(self.color)
+        
+        self.title_block=None
+        
 
-        self.turn_off_scrollbar()
+    def wheelEvent(self, event:QtGui.QWheelEvent) -> None:
+        ui.graphicsView.wheelEvent(event)
+
+        pass
+
+    def add_resize_elements(self):
+        
+        #top Left
+        
+        pos = self.title_block.rect().topLeft()
+        self.movable_elements.append(ResizeCircle(self,self.parent_scene, pos, "top_left"))
+        pos = self.title_block.rect().topRight()
+        self.movable_elements.append(ResizeCircle(self, self.parent_scene, pos, "top_right"))
+
+        print(self.graphicsProxyWidget().size())
+
+        gpw = self.graphicsProxyWidget()
+        pos = gpw.scenePos()+gpw.rect().bottomLeft()
+        self.movable_elements.append(ResizeCircle(self, self.parent_scene, pos, "bottom_left"))
+        pos = gpw.scenePos()+gpw.rect().bottomRight()
+        self.movable_elements.append(ResizeCircle(self, self.parent_scene, pos, "bottom_right"))
 
 
 
-    def add_title(self):
-
-        scene_rect = self.sceneRect()
-        width = scene_rect.width()
-        pos = self.pos()
-        self.TitleBlock = TitleBlock(pos.x(), pos.y() - 25, width, 25, self, self.operator)
-
-        brush = QtGui.QBrush()
-        brush.setStyle(QtCore.Qt.BrushStyle.SolidPattern)
-
+    def get_color(self):
         if self.operator == "or":
             color = "blue"
         elif self.operator == "and":
@@ -214,35 +294,142 @@ class TemplateRulesRectangle(QGraphicsView):
             color = "red"
         else:
             color = "grey"
+        return color
 
-        brush.setColor(QtGui.QColor(color))
-        pen = QtGui.QPen()
 
-        pen.setColor(color)
-        view = self.scene().views()[0]
+class ResizeCircle(QtWidgets.QGraphicsEllipseItem):
 
-        view.setFrameStyle(QFrame.Box)
-        view.setLineWidth(2)
-        style = "border: 2px solid {};".format(color)
-        view.setStyleSheet(style)
+    def __init__(self,graphics_view:TemplateRulesRectangle,parent:QGraphicsScene,position:QPointF,orientation:str):
 
-        self.TitleBlock.setBrush(brush)
-        self.TitleBlock.setZValue(0)
+        self.orientation = orientation
+        self.graphical_view = graphics_view
 
-        self.parent_scene.addItem(self.TitleBlock)
-        return self.TitleBlock
 
-    def turn_off_scrollbar(self):
-        self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.radius = 5
+        movement = QPoint(self.radius,self.radius)
 
-    def wheelEvent(self, event:QtGui.QWheelEvent) -> None:
-        ui.graphicsView.wheelEvent(event)
+        position = position-movement
+        super().__init__(position.x(), position.y(), self.radius*2, self.radius*2)
+        self.setAcceptHoverEvents(True)
+
+
+        parent.addItem(self)
+
+    def hoverEnterEvent(self, event):
+
+        if self.orientation == "top_left" or self.orientation == "bottom_right":
+            application.instance().setOverrideCursor(QtCore.Qt.SizeFDiagCursor)
+        elif self.orientation == "top_right" or self.orientation == "bottom_left":
+            application.instance().setOverrideCursor(QtCore.Qt.SizeBDiagCursor)
+
+
+    def hoverLeaveEvent(self, event):
+        application.instance().restoreOverrideCursor()
+
+    def mousePressEvent(self, event: QtWidgets.QGraphicsSceneMouseEvent) -> None:
+        if self.orientation == "top_left" or self.orientation == "bottom_right":
+            application.instance().setOverrideCursor(QtCore.Qt.SizeFDiagCursor)
+        elif self.orientation == "top_right" or self.orientation == "bottom_left":
+            application.instance().setOverrideCursor(QtCore.Qt.SizeBDiagCursor)
+
+    def mouseMoveEvent(self, event: QtWidgets.QGraphicsSceneMouseEvent) -> None:
+        orig_cursor_position = event.lastScenePos()
+        updated_cursor_position = event.scenePos()
+
+        x_dif = updated_cursor_position.x() - orig_cursor_position.x()
+        y_dif = updated_cursor_position.y() - orig_cursor_position.y()
+
+        gv = self.graphical_view
+        proxy = gv.graphicsProxyWidget()
+
+        if self.orientation == "top_left":
+
+            for el in gv.movable_elements:
+                if not isinstance(el,ResizeCircle):
+                    el.moveBy(x_dif,y_dif)
+
+                elif isinstance(el,ResizeCircle):
+                    if el.orientation =="top_right":
+                        el.moveBy(0,y_dif)
+
+                    if el.orientation == "bottom_left":
+                        el.moveBy(x_dif,0)
+
+            self.moveBy(x_dif,y_dif)
+
+            proxy.moveBy(x_dif,y_dif)
+
+            size = proxy.size()
+            size.setHeight(size.height()-y_dif)
+            size.setWidth(size.width()-x_dif)
+            proxy.resize(size)
+
+            for items in gv.scene().items():
+                items.moveBy(-x_dif,-y_dif)
+
+        elif self.orientation == "top_right":
+            proxy.moveBy(0,y_dif)
+            for el in gv.movable_elements:
+                if not isinstance(el,ResizeCircle):
+                    el.moveBy(0,y_dif)
+                else:
+                    if el.orientation == "top_left":
+                        el.moveBy(0,y_dif)
+                    elif el.orientation == "bottom_right":
+                        el.moveBy(x_dif,0)
+
+            self.moveBy(x_dif,y_dif)
+
+            size = proxy.size()
+            size.setWidth(size.width()+x_dif)
+            size.setHeight(size.height()-y_dif)
+            proxy.resize(size)
+
+            for items in gv.scene().items():
+                items.moveBy(0,-y_dif)
+
+        elif self.orientation == "bottom_left":
+            proxy.moveBy(x_dif,0)
+            for el in gv.movable_elements:
+
+                if not isinstance(el, ResizeCircle):
+                    el.moveBy(x_dif,0)
+                else:
+                    if el.orientation == "top_left":
+                        el.moveBy(x_dif, 0)
+                    elif el.orientation == "bottom_right":
+                        el.moveBy(0, y_dif)
+
+            self.moveBy(x_dif, y_dif)
+
+            size = proxy.size()
+            size.setWidth(size.width() - x_dif)
+            size.setHeight(size.height() + y_dif)
+            proxy.resize(size)
+
+            for items in gv.scene().items():
+                 items.moveBy(-x_dif, 0)
+
+        elif self.orientation == "bottom_right":
+            #proxy.moveBy(x_dif,0)
+            for el in gv.movable_elements:
+                if  isinstance(el, ResizeCircle):
+                    if el.orientation == "top_right":
+                        el.moveBy(x_dif, 0)
+                    elif el.orientation == "bottom_left":
+                        el.moveBy(0, y_dif)
+
+            self.moveBy(x_dif, y_dif)
+
+            size = proxy.size()
+            size.setWidth(size.width() + x_dif)
+            size.setHeight(size.height() + y_dif)
+            proxy.resize(size)
+
+    def mouseReleaseEvent(self, event: QtWidgets.QGraphicsSceneMouseEvent) -> None:
+        application.instance().restoreOverrideCursor()
 
         pass
-
-
-
 
 
 class TitleBlock(QtWidgets.QGraphicsRectItem):
@@ -263,6 +450,7 @@ class TitleBlock(QtWidgets.QGraphicsRectItem):
         self.text.setFont(font)
         self.text.setZValue(1)
 
+
     pass
 
     def hoverEnterEvent(self, event):
@@ -272,7 +460,7 @@ class TitleBlock(QtWidgets.QGraphicsRectItem):
         application.instance().restoreOverrideCursor()
 
     def mousePressEvent(self, event: QtWidgets.QGraphicsSceneMouseEvent) -> None:
-        application.instance().setOverrideCursor(QtCore.Qt.OpenHandCursor)
+        application.instance().setOverrideCursor(QtCore.Qt.ClosedHandCursor)
         pass
 
     def mouseMoveEvent(self, event: QtWidgets.QGraphicsSceneMouseEvent) -> None:
@@ -283,10 +471,12 @@ class TitleBlock(QtWidgets.QGraphicsRectItem):
         x_dif = updated_cursor_position.x() - orig_cursor_position.x()
         y_dif = updated_cursor_position.y() - orig_cursor_position.y()
 
+
+        for el in self.graphical_view.movable_elements:
+            el.moveBy(x_dif,y_dif)
+              
         proxy = self.graphical_view.graphicsProxyWidget()
         proxy.moveBy(x_dif,y_dif)
-        self.moveBy(x_dif, y_dif)
-        self.text.moveBy(x_dif, y_dif)
 
     def mouseReleaseEvent(self, event: QtWidgets.QGraphicsSceneMouseEvent) -> None:
         application.instance().restoreOverrideCursor()
@@ -440,7 +630,7 @@ class DragBox(QtWidgets.QGraphicsProxyWidget):
         application.instance().restoreOverrideCursor()
 
     def mousePressEvent(self, event: QtWidgets.QGraphicsSceneMouseEvent) -> None:
-        application.instance().setOverrideCursor(QtCore.Qt.OpenHandCursor)
+        application.instance().setOverrideCursor(QtCore.Qt.ClosedHandCursor)
         pass
 
     def mouseMoveEvent(self, event: QtWidgets.QGraphicsSceneMouseEvent) -> None:
@@ -524,6 +714,11 @@ class EntityRepresentation(QFrame):
 class LabelRepresentation(QtWidgets.QLabel):
     def __str__(self):
         return "[Label: {0}]".format(self.text())
+
+
+
+
+
 
 
 class UiMainWindow(object):
@@ -630,10 +825,6 @@ class UiMainWindow(object):
             for index, rules in enumerate(obj.has_template_rules):
                 self.loop_through_rules(rules, self.scene)
 
-        for el in Connection.liste:
-            print("HIER",el)
-            print(el.update())
-
 
     def print_tree(self):
         for gv in self.scene.items():
@@ -714,7 +905,8 @@ class UiMainWindow(object):
 
             trr.setGeometry(position.x(), position.y(), width, height)
             trr.setSceneRect(-BORDER / 2, -BORDER / 2, width, height)
-            trr.add_title()
+            trr.add_title(trr.operator)
+            trr.add_resize_elements()
 
             trr.centerOn(trr.sceneRect().center())
 
