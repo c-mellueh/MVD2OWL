@@ -1,6 +1,6 @@
 from __future__ import annotations
 import lxml.etree
-from lxml import etree
+from lxml import etree,objectify
 from owlready2 import *
 from typing import Union
 
@@ -63,7 +63,7 @@ with onto:
         """
 
         @staticmethod
-        def get_sub_items(name: str, xml_obj: etree._Element) -> list[etree._Element]:
+        def get_sub_items(name: str, xml_obj: etree._Element) -> etree._Element:
             """
             search for subitems with specific name
 
@@ -79,10 +79,12 @@ with onto:
             """
             elements = xml_obj.find(name, namespaces=xml_obj.nsmap)
 
+
             if elements is None:
-                return []
+                return None
             else:
-                return list(elements)
+
+                return elements
 
         def import_items(self, xml_object: etree._Element, _class, prop, name: str) -> None:
             """
@@ -104,14 +106,18 @@ with onto:
             :type name: str
             :return: None           
             """
-            xml_list = self.get_sub_items(name, xml_object)
+            elements = self.get_sub_items(name, xml_object)
 
             property_name = prop.python_name  # get callable function name from owlready2
 
-            for el in xml_list:
-                item = _class(el)
-                function = getattr(self, property_name)
-                function.append(item)
+            if elements is not None:
+
+
+                for el in list(elements):
+                    item = _class(el)
+                    function = getattr(self, property_name)
+                    function.append(item)
+
 
             return None
 
@@ -191,13 +197,13 @@ with onto:
             :rtype: None
             """
             property_name = prop.python_name  # get callable function name from owlready2
-            attribute = str(xml_object.attrib.get(name))
-
-            if attribute is None and is_mandatory:
+            attribute = xml_object.attrib.get(name)
+            if attribute == None and is_mandatory :
+                print(xml_object.attrib)
                 raise AttributeError(name + " needs to exist!")
 
             else:
-                setattr(self, property_name, attribute)
+                setattr(self, property_name, str(attribute))
 
 
     class IdentityObject(Base):
@@ -235,7 +241,7 @@ with onto:
             :type xml_object: etree._Element
             """
             self.import_attribute(xml_object, has_for_uuid, "uuid", True)
-            self.import_attribute(xml_object, has_for_name, "name", True)
+            self.import_attribute(xml_object, has_for_name, "name", False)
             self.import_attribute(xml_object, has_for_code, "code", False)
             self.import_attribute(xml_object, has_for_version, "version", False)
             self.import_attribute(xml_object, has_for_status, "status", False)
@@ -290,7 +296,9 @@ with onto:
             :return: xml representation of mvdxml class
             :rtype: etree._Element
             """
-            xml_file = etree.parse(file)
+
+            parser = etree.XMLParser(remove_comments=True)
+            xml_file = objectify.parse(file,parser)
 
             if validation and doc is not None:
                 xmlshemadoc = etree.parse(doc)
@@ -729,6 +737,7 @@ class Concept(IdentityObject):
         """
         super().__init__()
 
+
         self.import_identity_data(xml_object)
         self.import_items(xml_object, Definition, has_definitions, "Definitions")
         self.import_items(xml_object, Requirement, has_requirement, "Requirements")
@@ -740,8 +749,8 @@ class Concept(IdentityObject):
         self.import_attribute(xml_object, has_for_base_concept, "BaseConcept", is_mandatory=False)
         self.import_attribute(xml_object, has_for_override, "Override", is_mandatory=False)
 
-    @staticmethod
-    def find_referred_concept_template(xml_object: etree._Element) -> ConceptTemplate:
+
+    def find_referred_concept_template(self,xml_object: etree._Element) -> ConceptTemplate:
 
         """ finds referred concept Template
         :param xml_object: xml representation of MVDxml class
@@ -751,6 +760,7 @@ class Concept(IdentityObject):
         """
 
         template = xml_object.find("Template", namespaces=xml_object.nsmap)
+
         uuid = template.attrib.get("ref")
 
         for concept_template in ConceptTemplate.instances():
@@ -759,6 +769,8 @@ class Concept(IdentityObject):
 
         return None
 
+    def __str__(self):
+        return "Concept [{}]".format(self.has_for_uuid)
 
 class Applicability(Base):
     """Counterpart of 'Applicability' in MVDxml"""
@@ -829,11 +841,9 @@ class TemplateRule(Base):
         :return: None
         :rtype: None
         """
-
-        split_list = " AND | OR | NOR | NAND | NOR | XOR | NXOR "
+        split_list = " AND | OR | NOR | NAND  | XOR | NXOR |and | or| nor | nand | xor | nxor"
 
         param_list = re.split(split_list, text)
-
         for parameter_text in param_list:
             parameter = Parameter(parameter_text)
             self.has_for_parameters.append(parameter)
@@ -858,6 +868,7 @@ class TemplateRule(Base):
             value = parameter.has_for_parameter_value
             test, path = ct.find_rule_id(rule_id)
             path.append(value)
+
             parameter.path = path
 
             self.path_list.append(path)
@@ -909,7 +920,7 @@ class TemplateRules(Base):
         super().__init__()
         self.import_item(xml_object, TemplateRule, has_template_rules, "TemplateRule")
         self.import_item(xml_object, TemplateRules, has_template_rules, "TemplateRules")
-        self.import_attribute(xml_object, has_for_operator, "operator", is_mandatory=True)
+        self.import_attribute(xml_object, has_for_operator, "operator", is_mandatory=False)
         # TODO: Add Description
 
     def get_referenced_concept_template(self)->Union[ConceptTemplate,Applicability]:
@@ -992,10 +1003,10 @@ class Parameter(Base):
         super().__init__()
         self.has_for_text=text
         self.deconstruct_parameter(self.has_for_text)
+
         pass
 
     def deconstruct_parameter(self, text:str):
-
         """
         Deconstructs Parameter and saves parts
 
@@ -1005,15 +1016,14 @@ class Parameter(Base):
         :rtype: (str,str,str)
         """
 
+        text_helper = text.replace(" ","")
 
-        pattern = re.compile("(.+)\\[(\D+)\\]=(.+)")    #Deconstructs Parameter Text
-        text = re.search(pattern, text)
-
-        if text is not None:
-
-            self.has_for_parameter_text= text.group(1)
-            self.has_for_metric = self.import_metric(text.group(2))
-            self.has_for_parameter_value = self.import_value(text.group(3))
+        pattern = re.compile("(.+)\\[(\D+)\\](=|>=|<=|>|<)(.+)")    #Deconstructs Parameter Text
+        text_helper = re.search(pattern, text_helper)
+        if text_helper is not None:
+            self.has_for_parameter_text= text_helper.group(1)
+            self.has_for_metric = self.import_metric(text_helper.group(2))
+            self.has_for_parameter_value = self.import_value(text_helper.group(4))
 
         else:
             raise AttributeError("parameter is not correctly defined: " + str(text))
@@ -1336,7 +1346,6 @@ with onto:
     class has_for_uuid(DataProperty, FunctionalProperty):
         domain = [IdentityObject]
         range = [str]
-
         pass
 
 

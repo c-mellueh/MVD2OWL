@@ -176,8 +176,9 @@ class TemplateRuleRectangle(MovableRectangle):
         graphical_items_dict = {}
 
         template_rule_scene = self.scene()
-
         for k,path in enumerate(paths):
+            print(self.data.has_for_plain_text)
+            print(path)
 
             metric = metrics[k]
             last_item = None
@@ -233,6 +234,13 @@ class TemplateRuleRectangle(MovableRectangle):
         return block
 
     def add_label(self, scene, inhalt, old_proxy, metric):
+        print(old_proxy)
+        print(inhalt)
+
+        if isinstance(old_proxy,DragBox):
+            connect_item = old_proxy
+        else:
+            connect_item = old_proxy.parent()
 
         text = str(inhalt)
         label_ = LabelRepresentation()
@@ -244,7 +252,7 @@ class TemplateRuleRectangle(MovableRectangle):
         scene.addItem(proxy)
         width = 100
         height = 50
-        xpos = old_proxy.parent().pos().x() + 225
+        xpos = connect_item.pos().x() + 225
         ypos = 150
 
         label_.setGeometry(xpos, ypos, width, height)
@@ -1127,7 +1135,9 @@ def main ():
     file = "../Examples/mvdXML_V1-1-Final-Documentation.xml"
     file2 = "../Examples/Prüfregeln.mvdxml"
     file3 = "../Examples/RelAssociatesMaterial.xml"
-    mvd = MvdXml(file=file2, doc=doc, validation=False)
+    file4 = "../Examples/IFC4precast_V1.01.mvdxml"
+    file5 = "../Examples/kit2.mvdxml"
+    mvd = MvdXml(file=file5, doc=doc, validation=False)
 
     application = QtWidgets.QApplication(sys.argv)
     window = QtWidgets.QMainWindow()
