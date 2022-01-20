@@ -365,7 +365,7 @@ with onto:
 
             path = path[:]  # else python will change the value of input
 
-            if entity_name != self.has_for_applicable_entity:  # if Concept Template is not called by Entity Rule
+            if entity_name != self.has_for_applicable_entity and self.is_sub_template_of is not None:  # if Concept Template is not called by Entity Rule
                 path.append(self)
 
             for concept_template in self.sub_templates:
@@ -653,12 +653,14 @@ class EntityRule(Base):
             for attribute_rule in self.attribute_rules:
                 value, new_path = attribute_rule.find_rule_id(ruleid, path=path, prefix=prefix)
                 if value is not None:
+
                     return value, new_path
 
             if self.refers is not None:
                 value, new_path = self.refers.find_rule_id(ruleid, path=path, prefix=prefix,
                                                            entity_name=self.has_for_entity_name)
                 if value is not None:
+
                     return value, new_path
 
             return None, None
@@ -858,15 +860,18 @@ class TemplateRule(Base):
         """
 
         self.path_list = []
-        self.metric_list =[]
+        self.metric_list = []
         parameters = self.has_for_parameters
-        ct = self.get_referenced_concept_template()
-
+        concept = self.get_referenced_concept()
+        ct = concept.refers
+        cr = concept.is_concept_of
         for parameter in parameters:
             rule_id = parameter.has_for_parameter_text
             metric = parameter.has_for_metric
             value = parameter.has_for_parameter_value
-            test, path = ct.find_rule_id(rule_id)
+            path = [cr]
+            test, p = ct.find_rule_id(rule_id)
+            path += p
             path.append(value)
 
             parameter.path = path
@@ -876,16 +881,16 @@ class TemplateRule(Base):
 
         return (self.path_list, self.metric_list)
 
-    def get_referenced_concept_template(self)-> ConceptTemplate:
+    def get_referenced_concept(self) -> Concept:
         """
-               finds parent Concept Template
+               finds parent Concept
 
-               :return: Parent ConceptTemplate
-               :rtype: ConceptTemplate
+               :return: Parent Concept
+               :rtype: Concept
         """
-        
+
         parent = self.get_parent()
-        return parent.refers
+        return parent
         
 
     def get_parent(self)-> Union[ConceptTemplate,Applicability]:
@@ -923,7 +928,7 @@ class TemplateRules(Base):
         self.import_attribute(xml_object, has_for_operator, "operator", is_mandatory=False)
         # TODO: Add Description
 
-    def get_referenced_concept_template(self)->Union[ConceptTemplate,Applicability]:
+    def get_referenced_concept(self) -> Union[ConceptTemplate, Applicability]:
         """
                finds parent Concept Template or parent Applicability
 
@@ -932,7 +937,7 @@ class TemplateRules(Base):
         """
 
         parent = self.get_parent()[0]
-        return parent.refers[0]
+        return parent
         pass
 
     def get_parent(self):

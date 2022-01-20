@@ -177,9 +177,6 @@ class TemplateRuleRectangle(MovableRectangle):
 
         template_rule_scene = self.scene()
         for k,path in enumerate(paths):
-            print(self.data.has_for_plain_text)
-            print(path)
-
             metric = metrics[k]
             last_item = None
 
@@ -188,7 +185,7 @@ class TemplateRuleRectangle(MovableRectangle):
                 if path_item not in created_entities:
                     last_block = graphical_items_dict.get(last_item)
 
-                    if isinstance(path_item, (ConceptTemplate, EntityRule)):
+                    if isinstance(path_item, (ConceptTemplate, EntityRule, ConceptRoot)):
 
                         block = self.add_block(template_rule_scene, path_item, last_block)
                         template_rule_scene.addItem(block)
@@ -218,6 +215,8 @@ class TemplateRuleRectangle(MovableRectangle):
             name = data.has_for_applicable_entity
         elif isinstance(data, EntityRule):
             name = data.has_for_entity_name
+        elif isinstance(data, ConceptRoot):
+            name = data.has_for_applicable_root_entity
 
         block = DragBox(EntityRepresentation(name), self)
 
@@ -234,8 +233,6 @@ class TemplateRuleRectangle(MovableRectangle):
         return block
 
     def add_label(self, scene, inhalt, old_proxy, metric):
-        print(old_proxy)
-        print(inhalt)
 
         if isinstance(old_proxy,DragBox):
             connect_item = old_proxy
@@ -1009,10 +1006,9 @@ class UiMainWindow(object):
 
     def print_tree(self):
         for gv in self.scene.items():
-            if not isinstance(gv, TitleBlock | QtWidgets.QGraphicsTextItem | QtWidgets.QGraphicsProxyWidget):
+            if not isinstance(gv, (TitleBlock, QtWidgets.QGraphicsTextItem, QtWidgets.QGraphicsProxyWidget)):
                 print("{} Other Element {}".format("", gv))
-            if isinstance(gv,TitleBlock):
-
+            if isinstance(gv, TitleBlock):
                 title_text = gv.text.toPlainText()
 
             if isinstance(gv,QtWidgets.QGraphicsProxyWidget):
@@ -1032,7 +1028,7 @@ class UiMainWindow(object):
 
         for el in  gv.scene().items():
 
-            if not isinstance(el,TitleBlock|QtWidgets.QGraphicsTextItem|QtWidgets.QGraphicsProxyWidget):
+            if not isinstance(el, TitleBlock | QtWidgets.QGraphicsTextItem | QtWidgets.QGraphicsProxyWidget):
                 print("{} Other Element {}".format(text, el))
 
             if isinstance(el,TitleBlock):
@@ -1137,7 +1133,7 @@ def main ():
     file3 = "../Examples/RelAssociatesMaterial.xml"
     file4 = "../Examples/IFC4precast_V1.01.mvdxml"
     file5 = "../Examples/kit2.mvdxml"
-    mvd = MvdXml(file=file5, doc=doc, validation=False)
+    mvd = MvdXml(file=file2, doc=doc, validation=False)
 
     application = QtWidgets.QApplication(sys.argv)
     window = QtWidgets.QMainWindow()

@@ -37,19 +37,24 @@ def main():
     paths, metrics = tr.get_linked_rules()
     #print(len(tr.has_for_parameters))
     #print(len(paths))
-    text = ""
-    for i,path in enumerate(paths):
+
+    for i, path in enumerate(paths):
+        # print(path)
+        text = ""
         for el in path:
 
-            if AttributeRule.__instancecheck__(el):
+            if isinstance(el, AttributeRule):
                 text += el.has_for_attribute_name + "->"
 
 
-            elif EntityRule.__instancecheck__(el):
+            elif isinstance(el, EntityRule):
                 text += el.has_for_entity_name + "->"
 
-            elif ConceptTemplate.__instancecheck__(el):
+            elif isinstance(el, ConceptTemplate):
                 text += el.has_for_applicable_entity + "->"
+                print(el.has_for_applicable_entity)
+            elif isinstance(el, ConceptRoot):
+                text += el.has_for_applicable_root_entity + "->"
 
             else:
                 text += str(el)
