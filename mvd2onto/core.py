@@ -188,43 +188,23 @@ def import_attribute(self, xml_object: etree._Element, prop, name: str, is_manda
     :param is_mandatory: defines if attribute is mandatory
     :type is_mandatory: bool
 
-            :return: None
-            :rtype: None
-            """
-            property_name = prop.python_name  # get callable function name from owlready2
-            attribute = xml_object.attrib.get(name)
-            if attribute == None and is_mandatory :
-                print(xml_object.attrib)
-                raise AttributeError(name + " needs to exist!")
+    :return: None
+    :rtype: None
+    """
+    property_name = prop.python_name  # get callable function name from owlready2
+    attribute = xml_object.attrib.get(name)
+    if attribute is None and is_mandatory :
+        raise AttributeError("{} \n {} needs to exist".format(xml_object.attrib,name))
 
-            else:
-                setattr(self, property_name, str(attribute))
-
-
-    class IdentityObject(Base):
-        """
-                Subclass of :class: 'Base' because many Elements have identitydata
-
-                Attributes
-                ---------
-                uuid
-                name
-                code
-                version
-                status
-                auhor
-                owner
-                copyright
-
-                Methods
-                -------
-                get_sub_items(name: str, xml_obj: etree._Element) -> list[etree._Element]
-                    search for subitems with specific name
-
-                import_items(self, xml_object: etree._Element, _class, prop, name: str) -> None
-                    link sub items to their parent
-
-                """
+    elif attribute is not None:
+        if datatype is str:
+            setattr(self, property_name, str(attribute))
+        elif datatype is bool:
+            setattr(self, property_name, bool_parser(attribute))
+        elif datatype is int:
+            setattr(self,property_name, int(attribute))
+        else:
+            raise ValueError("datatype {} unknown".format(datatype))
 
 def import_identity_data(self, xml_object):
     """
