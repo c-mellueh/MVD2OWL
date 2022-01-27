@@ -1,3 +1,5 @@
+import owlready2
+
 from mvd2onto.core import *
 '''
 This File is for Testing the conversion from MVD to Onthology
@@ -18,23 +20,26 @@ Misc variables:
 
 ########## Relationships ##########
 
+owlready2.JAVA_EXE = "C:\Program Files (x86)\Common Files\Oracle\Java\javapath\java.exe"
+
 
 def main():
     doc = "mvdXML_V1.1.xsd"
     file = "../Examples/mvdXML_V1-1-Final-Documentation.xml"
     file2 = "../Examples/Prüfregeln.mvdxml"
     file3 = "../Examples/RelAssociatesMaterial.xml"
-    mvd = MvdXml(file=file2, doc=doc, validation=False)
+    mvd = MvdXml(file=file3, doc=doc, validation=False)
     #
     #
     # mvd.import_xml()
 
     print("START")
     print("")
-    tr = TemplateRule.instances()[3]
+    tr = TemplateRule.instances()[0]
 
     print(tr.has_for_plain_text)
-    paths, metrics = tr.get_linked_rules()
+    paths, metrics,operator = tr.get_linked_rules()
+
     #print(len(tr.has_for_parameters))
     #print(len(paths))
 
@@ -62,13 +67,9 @@ def main():
         print("{0} ({1})".format(text, metrics[i]))
 
     print()
-    exit()
-
-
     onto.save("onto_test.rdfxml")
 
-    for ct in ConceptTemplate.instances():
-        print(ct.has_for_name + ct.has_for_uuid)
+    close_world(MvdXml)
 
 if __name__ == "__main__":
         main()
