@@ -155,11 +155,13 @@ class MovableRectangle(QGraphicsView):
 
 
 class TemplateRuleRectangle(MovableRectangle):
-    def __init__(self, parent_scene, paths, metrics, position: QPointF,data: TemplateRule):
+    def __init__(self, parent_scene, position: QPointF,data: TemplateRule):
 
         super().__init__(position,data,parent_scene)
 
-        self.import_visuals(paths, metrics)
+
+
+        self.import_visuals(data)
 
         width = self.sceneRect().width() + 20
         height = self.sceneRect().height() + 20
@@ -170,14 +172,18 @@ class TemplateRuleRectangle(MovableRectangle):
         self.turn_off_scrollbar()
 
 
-    def import_visuals(self, paths, metrics):
+    def import_visuals(self, data: TemplateRule):
 
         created_entities = []
         graphical_items_dict = {}
 
+        metrics = data.metric_list
+        operators = data.operator_list
+
         template_rule_scene = self.scene()
-        for k,path in enumerate(paths):
+        for k,path in enumerate(data.path_list):
             metric = metrics[k]
+            operator = operators[k]
             last_item = None
 
             for i, path_item in enumerate(path):
@@ -203,7 +209,7 @@ class TemplateRuleRectangle(MovableRectangle):
 
                     else:
                         graphical_items_dict[path_item] = self.add_label(template_rule_scene, path_item, last_block,
-                                                                         metric)
+                                                                         str(metric+operator))
 
                 last_item = path_item
 
@@ -248,7 +254,7 @@ class TemplateRuleRectangle(MovableRectangle):
         proxy = DragBox(label_, self)
         scene.addItem(proxy)
         width = 100
-        height = 50
+        height = label_.height()
         xpos = connect_item.pos().x() + 225
         ypos = 150
 
@@ -678,13 +684,13 @@ class Connection:
 
     liste =[]
 
-    def __init__(self, attribute, right_proxy, metric):
+    def __init__(self, attribute, right_proxy, text):
 
 
         self.label = None
         self.attribute = attribute
         self.right_proxy = right_proxy
-        self.metric = metric
+        self.text = text
         self.scene = self.right_proxy.scene()
 
         self.create_line()
@@ -706,10 +712,10 @@ class Connection:
         self.scene.addItem(self.line)
 
     def create_text(self):
-        if self.metric != "":
+        if self.text != "":
             self.center = self.path.boundingRect().center()
             self.label = QtWidgets.QGraphicsTextItem()
-            self.label.setHtml("<div style='background-color:#FFFFFF;'>" + str(self.metric) + "</div>")
+            self.label.setHtml("<div style='background-color:#FFFFFF;'>" + str(self.text) + "</div>")
 
             self.scene.addItem(self.label)
             width = self.label.boundingRect().width()
@@ -1062,8 +1068,9 @@ class UiMainWindow(object):
         if isinstance(rules, TemplateRule):
             paths = rules.path_list
             metrics = rules.metric_list
+            operators = rules.operator_list
 
-            template_rule_rectangle = TemplateRuleRectangle(parent_scene, paths, metrics, position,rules)
+            template_rule_rectangle = TemplateRuleRectangle(parent_scene, position,rules)
             return template_rule_rectangle
 
         elif isinstance(rules,TemplateRules):
@@ -1133,7 +1140,7 @@ def main ():
     file3 = "../Examples/RelAssociatesMaterial.xml"
     file4 = "../Examples/IFC4precast_V1.01.mvdxml"
     file5 = "../Examples/kit2.mvdxml"
-    mvd = MvdXml(file=file2, doc=doc, validation=False)
+    mvd = MvdXml(file=file5, doc=doc, validation=False)
 
     application = QtWidgets.QApplication(sys.argv)
     window = QtWidgets.QMainWindow()
