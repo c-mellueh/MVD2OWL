@@ -1,5 +1,4 @@
 from __future__ import annotations
-import lxml.etree
 from lxml import etree,objectify
 from owlready2 import *
 from typing import Union
