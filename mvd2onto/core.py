@@ -805,25 +805,19 @@ with onto:
             self.metric_list = []
             self.operator_list = []
             parameters = self.has_for_parameters
-            concept = self.get_parent()
-            ct = concept.refers
-            cr = concept.is_concept_of
+
             for parameter in parameters:
 
-                rule_id = parameter.has_for_parameter_text
-                metric = parameter.has_for_metric
-                operator = parameter.has_for_parameter_operator
-                value = parameter.has_for_parameter_value
                 path = [cr]
-                test, p = ct.find_rule_id(rule_id)
+                test, p = concept_template.find_rule_id(parameter.has_for_parameter_text)
                 path += p
-                path.append(value)
+                path.append( parameter.has_for_parameter_value)
 
                 parameter.path = path
 
                 self.path_list.append(path)
-                self.metric_list.append(metric)
-                self.operator_list.append(operator)
+                self.metric_list.append(parameter.has_for_metric)
+                self.operator_list.append(parameter.has_for_parameter_operator)
 
             return (self.path_list, self.metric_list,self.operator_list)
 
