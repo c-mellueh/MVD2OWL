@@ -315,17 +315,17 @@ with onto:
 
             for concept_template in self.sub_templates:
 
-                value, new_path = concept_template.find_rule_id(ruleid, path=path, prefix=prefix)
-                if value is not None:
-                    return value, new_path
+                new_path = concept_template.find_rule_id(ruleid, path=path, prefix=prefix)
+                if new_path is not None:
+                    return  new_path
 
             for attribute_rule in self.attribute_rules:
 
-                value, new_path = attribute_rule.find_rule_id(ruleid, path=path, prefix=prefix)
-                if value is not None:
-                    return value, new_path
+                new_path = attribute_rule.find_rule_id(ruleid, path=path, prefix=prefix)
+                if new_path is not None:
+                    return  new_path
 
-            return None, None
+            return None
 
 
     class ModelView(Thing):
@@ -463,16 +463,16 @@ with onto:
             path.append(self)
 
             if prefix + str(self.has_for_rule_id) == ruleid:
-                return self, path
+                return  path
 
             else:
 
                 for entity_rule in self.entity_rules:
-                    value, new_path = entity_rule.find_rule_id(ruleid, path=path, prefix=prefix)
-                    if value is not None:
-                        return value, new_path
+                    new_path = entity_rule.find_rule_id(ruleid, path=path, prefix=prefix)
+                    if new_path is not None:
+                        return  new_path
 
-                return None, None
+                return  None
 
 
     class Constraint(Thing):
@@ -581,22 +581,22 @@ with onto:
                 prefix += self.has_for_id_prefix
 
             if prefix + str(self.has_for_rule_id) == ruleid:
-                return self, path
+                return  path
             else:
                 for attribute_rule in self.attribute_rules:
-                    value, new_path = attribute_rule.find_rule_id(ruleid, path=path, prefix=prefix)
-                    if value is not None:
+                    new_path = attribute_rule.find_rule_id(ruleid, path=path, prefix=prefix)
+                    if new_path is not None:
 
-                        return value, new_path
+                        return  new_path
 
                 if self.refers is not None:
-                    value, new_path = self.refers.find_rule_id(ruleid, path=path, prefix=prefix,
+                    new_path = self.refers.find_rule_id(ruleid, path=path, prefix=prefix,
                                                                entity_name=self.has_for_entity_name)
-                    if value is not None:
+                    if new_path is not None:
 
-                        return value, new_path
+                        return  new_path
 
-                return None, None
+                return  None
 
 
     class BaseView(Thing):
@@ -801,7 +801,7 @@ with onto:
             concept_root = parent.is_concept_of
             for parameter in self.has_for_parameters:
 
-                dummy, path = concept_template.find_rule_id(parameter.has_for_parameter_text)
+                path = concept_template.find_rule_id(parameter.has_for_parameter_text)
                 path.insert(0,concept_root)
                 path.append(parameter.value)
 
