@@ -811,7 +811,7 @@ with onto:
                 path = [cr]
                 test, p = concept_template.find_rule_id(parameter.has_for_parameter_text)
                 path += p
-                path.append( parameter.has_for_parameter_value)
+                path.append(parameter.value)
 
                 parameter.path = path
 
@@ -927,7 +927,7 @@ with onto:
             self.has_for_parameter_text = None
             self.has_for_metric = None
             self.has_for_parameter_operator = None
-            self.has_for_parameter_value = None
+            self.value = None
             self.deconstruct_parameter(self.has_for_text)
 
             pass
@@ -950,14 +950,14 @@ with onto:
                 self.has_for_parameter_text= text_helper.group(1)
                 self.has_for_metric = self.import_metric(text_helper.group(2))
                 self.has_for_parameter_operator = text_helper.group(3)
-                self.has_for_parameter_value = self.import_value(text_helper.group(4))
+                self.value = self.import_value(text_helper.group(4))
 
             else:
                 raise AttributeError("parameter is not correctly defined: " + str(text))
 
             return (self.has_for_parameter_text,
                     self.has_for_metric,
-                    self.has_for_parameter_value)
+                    self.value)
 
         @staticmethod
         def import_metric(text: str) -> str:
@@ -1405,6 +1405,7 @@ with onto:
     class has_for_text(DataProperty, FunctionalProperty):
         domain = [Parameter]
         range = [str]
+        python_name = "value"
 
 
     class has_for_parameter_text(DataProperty, FunctionalProperty):
