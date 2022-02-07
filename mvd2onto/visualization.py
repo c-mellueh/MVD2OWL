@@ -617,8 +617,10 @@ class ResizeBorder(QtWidgets.QGraphicsRectItem):
             size = proxy.size()
             size.setWidth(size.width() + x_dif)
             proxy.resize(size)
-
-
+            item:TemplateRuleRectangle = proxy.widget()
+            rec = item.scene().sceneRect()
+            rec.setWidth(rec.width()+x_dif)
+            item.scene().setSceneRect(rec)
 
     def mouseReleaseEvent(self, event: QtWidgets.QGraphicsSceneMouseEvent) -> None:
         application.instance().restoreOverrideCursor()
@@ -698,7 +700,7 @@ class Connection:
 
         self.label = None
         self.attribute = attribute
-        self.right_proxy = right_proxy
+        self.right_proxy :DragBox = right_proxy
         self.text = text
         self.scene = self.right_proxy.scene()
 
@@ -732,7 +734,7 @@ class Connection:
             movement = QPointF(width, height) / 2
             self.label.setPos(self.center - movement)
 
-    def get_pos(self):
+    def get_pos(self)->list[QPointF]:
         rectangle_right = self.right_proxy.windowFrameGeometry()
         attribute = self.attribute
         if isinstance(attribute, DragBox):
@@ -774,6 +776,7 @@ class Connection:
             self.path.setElementPositionAt(i, el.x(), el.y())
 
         self.line.setPath(self.path)
+        self.line.setPos(0.0,0.0)
 
         # Update Label
         if self.label is not None:
@@ -787,7 +790,7 @@ class Connection:
 
 
 class DragBox(QtWidgets.QGraphicsProxyWidget):
-    # is needed to house QGroupBoxy (EntityRepresentation)
+    # is needed to house QGroupBox (EntityRepresentation)
 
     def __init__(self, widget, top):
         super().__init__()
@@ -831,13 +834,20 @@ class DragBox(QtWidgets.QGraphicsProxyWidget):
         updated_cursor_position = event.scenePos()
 
         orig_position = self.scenePos()
-        updated_cursor_x = updated_cursor_position.x() - orig_cursor_position.x() + orig_position.x()
-        updated_cursor_y = updated_cursor_position.y() - orig_cursor_position.y() + orig_position.y()
 
-        if self.check_for_exit(updated_cursor_x, "x"):
-            updated_cursor_x = orig_position.x()
-        if self.check_for_exit(updated_cursor_y, "y"):
-            updated_cursor_y = orig_position.y()
+        x_dif = updated_cursor_position.x() - orig_cursor_position.x()
+        y_dif = updated_cursor_position.y() - orig_cursor_position.y()
+
+        if self.check_for_exit(x_dif + orig_position.x(), "x"):
+            x_dif = 0
+        if self.check_for_exit( y_dif + orig_position.y(), "y"):
+            y_dif = 0
+
+
+        updated_cursor_x = x_dif + orig_position.x()
+        updated_cursor_y = y_dif + orig_position.y()
+
+
 
         self.setPos(QPointF(updated_cursor_x, updated_cursor_y))
 
@@ -846,16 +856,15 @@ class DragBox(QtWidgets.QGraphicsProxyWidget):
 
     def check_for_exit(self, value, direction: str):
 
-        if not (direction == "x" or direction == "y"):
-            raise (AttributeError("Direction needs to be 'x' or 'y'"))
-
+        x_right = value+self.geometry().width()
+        y_bottom = value+self.geometry().height()
         if value < 0:
             return True
         elif direction == "x":
-            if value > self.scene().width() - self.geometry().width():
+            if x_right > self.scene().width():
                 return True
         elif direction == "y":
-            if value > self.scene().height() - self.geometry().height():
+            if y_bottom > self.scene().height():
                 return True
         else:
             return False
@@ -955,7 +964,7 @@ class UiMainWindow(object):
 
         # Object Window
         self.scene = QGraphicsScene()
-        self.graphicsView = testView(self.scene)
+        self.graphicsView = MainView(self.scene)
         size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         size_policy.setHorizontalStretch(3)
         size_policy.setVerticalStretch(1)
