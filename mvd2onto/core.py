@@ -1,5 +1,5 @@
 from __future__ import annotations
-from lxml import etree,objectify
+from lxml import etree, objectify
 from owlready2 import *
 from typing import Union
 
@@ -56,6 +56,7 @@ import_elements(self, xml_object: etree._Element, _class, prop, name: str) -> No
 
 """
 
+
 def import_sub_elements(self, xml_object: etree._Element, _class, prop, name: str) -> None:
     """
     link sub items to their parent
@@ -87,8 +88,8 @@ def import_sub_elements(self, xml_object: etree._Element, _class, prop, name: st
             function = getattr(self, property_name)
             function.append(item)
 
-
     return None
+
 
 def import_elements(self, xml_object: etree._Element, _class, prop, name: str) -> None:
     """
@@ -121,6 +122,7 @@ def import_elements(self, xml_object: etree._Element, _class, prop, name: str) -
 
     return None
 
+
 def import_functional_element(self, xml_object: etree._Element, _class, prop, name: str) -> None:
     """
         link sub items to their parent
@@ -147,7 +149,8 @@ def import_functional_element(self, xml_object: etree._Element, _class, prop, na
 
     return None
 
-def import_attribute(self, xml_object: etree._Element, prop, name: str, is_mandatory: bool, datatype = str) -> None:
+
+def import_attribute(self, xml_object: etree._Element, prop, name: str, is_mandatory: bool, datatype=str) -> None:
     """
     adds attribute to Object \n
     :description: takes attribute 'name' of xml object and saves it in Onthology
@@ -166,8 +169,8 @@ def import_attribute(self, xml_object: etree._Element, prop, name: str, is_manda
     """
     property_name = prop.python_name  # get callable function name from owlready2
     attribute = xml_object.attrib.get(name)
-    if attribute is None and is_mandatory :
-        raise AttributeError("{} \n {} needs to exist".format(xml_object.attrib,name))
+    if attribute is None and is_mandatory:
+        raise AttributeError("{} \n {} needs to exist".format(xml_object.attrib, name))
 
     elif attribute is not None:
         if datatype is str:
@@ -175,9 +178,10 @@ def import_attribute(self, xml_object: etree._Element, prop, name: str, is_manda
         elif datatype is bool:
             setattr(self, property_name, bool_parser(attribute))
         elif datatype is int:
-            setattr(self,property_name, int(attribute))
+            setattr(self, property_name, int(attribute))
         else:
             raise ValueError("datatype {} unknown".format(datatype))
+
 
 def import_identity_data(python_object, xml_object):
     """
@@ -188,21 +192,21 @@ def import_identity_data(python_object, xml_object):
     :param xml_object: xml-object
     :type xml_object: etree._Element
     """
-    import_attribute(python_object,xml_object, has_for_uuid, "uuid", True)
-    import_attribute(python_object,xml_object, has_for_name, "name", False)
-    import_attribute(python_object,xml_object, has_for_code, "code", False)
-    import_attribute(python_object,xml_object, has_for_version, "version", False)
-    import_attribute(python_object,xml_object, has_for_status, "status", False)
-    import_attribute(python_object,xml_object, has_for_author, "author", False)
-    import_attribute(python_object,xml_object, has_for_owner, "owner", False)
-    import_attribute(python_object,xml_object, has_for_copyright, "copyright", False)
+    import_attribute(python_object, xml_object, has_for_uuid, "uuid", True)
+    import_attribute(python_object, xml_object, has_for_name, "name", False)
+    import_attribute(python_object, xml_object, has_for_code, "code", False)
+    import_attribute(python_object, xml_object, has_for_version, "version", False)
+    import_attribute(python_object, xml_object, has_for_status, "status", False)
+    import_attribute(python_object, xml_object, has_for_author, "author", False)
+    import_attribute(python_object, xml_object, has_for_owner, "owner", False)
+    import_attribute(python_object, xml_object, has_for_copyright, "copyright", False)
 
 
 with onto:
     class MvdXml(Thing):
         """counterpart of 'MvdXml' (first Level of MVDxml)"""
 
-        def __init__(self, file: str ,validation=False, doc: str = None ) -> etree._Element:
+        def __init__(self, file: str, validation=False, doc: str = None) -> etree._Element:
 
             """
                Initial Startup of class (comparable to __init__)
@@ -217,7 +221,7 @@ with onto:
 
             xml_object = self.import_xml(file, doc=doc, validation=validation)
 
-            import_identity_data(self,xml_object)
+            import_identity_data(self, xml_object)
             import_sub_elements(self, xml_object, ConceptTemplate, has_concept_templates, "Templates")
 
             for entity_rule in EntityRule.instances():  # all Templates need to be imported befor it is possivle to find referenced templates
@@ -227,7 +231,6 @@ with onto:
 
             for template_rule in TemplateRule.instances():  # all Rules needs to be imported, before it is possible to import them
                 template_rule.get_linked_rules()
-
 
         def import_xml(self, file: str, doc: str = None, validation=None) -> etree._Element:
             """
@@ -245,7 +248,7 @@ with onto:
             """
 
             parser = etree.XMLParser(remove_comments=True)
-            xml_file = objectify.parse(file,parser)
+            xml_file = objectify.parse(file, parser)
 
             if validation and doc is not None:
                 xmlshemadoc = etree.parse(doc)
@@ -278,15 +281,15 @@ with onto:
 
             super().__init__()
 
-            import_identity_data(self,xml_object)
+            import_identity_data(self, xml_object)
 
             import_sub_elements(self, xml_object, ConceptTemplate, has_sub_templates, "SubTemplates")
             import_sub_elements(self, xml_object, Definition, has_definitions, "Definitions")
             import_sub_elements(self, xml_object, AttributeRule, has_attribute_rules, "Rules")
 
-            import_attribute(self,xml_object, has_for_applicable_schema, "applicableSchema", True)
-            import_attribute(self,xml_object, has_for_applicable_entity, "applicableEntity", False)
-            import_attribute(self,xml_object, is_partial, "isPartial", False,datatype= bool)
+            import_attribute(self, xml_object, has_for_applicable_schema, "applicableSchema", True)
+            import_attribute(self, xml_object, has_for_applicable_entity, "applicableEntity", False)
+            import_attribute(self, xml_object, is_partial, "isPartial", False, datatype=bool)
 
             return None
 
@@ -317,13 +320,13 @@ with onto:
 
                 new_path = concept_template.find_rule_id(ruleid, path=path, prefix=prefix)
                 if new_path is not None:
-                    return  new_path
+                    return new_path
 
             for attribute_rule in self.attribute_rules:
 
                 new_path = attribute_rule.find_rule_id(ruleid, path=path, prefix=prefix)
                 if new_path is not None:
-                    return  new_path
+                    return new_path
 
             return None
 
@@ -342,12 +345,13 @@ with onto:
             """
 
             super().__init__()
-            import_identity_data(self,xml_object)
+            import_identity_data(self, xml_object)
             import_sub_elements(self, xml_object, Definition, has_definitions, "Definitions")
-            import_sub_elements(self, xml_object, ExchangeRequirement, has_exchange_requirements, "ExchangeRequirements")
+            import_sub_elements(self, xml_object, ExchangeRequirement, has_exchange_requirements,
+                                "ExchangeRequirements")
             import_sub_elements(self, xml_object, ConceptRoot, has_concept_roots, "Roots")
 
-            import_attribute(self,xml_object, has_for_applicable_schema, "applicableSchema", True)
+            import_attribute(self, xml_object, has_for_applicable_schema, "applicableSchema", True)
             # TODO: Add BaseView
 
 
@@ -383,8 +387,8 @@ with onto:
             """
 
             super().__init__()
-            import_attribute(self,xml_object, has_for_lang, "lang", is_mandatory=False)
-            import_attribute(self,xml_object, has_for_tags, "tags", is_mandatory=False)
+            import_attribute(self, xml_object, has_for_lang, "lang", is_mandatory=False)
+            import_attribute(self, xml_object, has_for_tags, "tags", is_mandatory=False)
 
             self.import_content(xml_object)
 
@@ -413,10 +417,10 @@ with onto:
             """
 
             super().__init__()
-            import_attribute(self,xml_object, has_for_lang, "lang", is_mandatory=True)
-            import_attribute(self,xml_object, has_for_title, "title", is_mandatory=False)
-            import_attribute(self,xml_object, has_for_category, "catagory", is_mandatory=False)
-            import_attribute(self,xml_object, has_for_href, "href", is_mandatory=True)
+            import_attribute(self, xml_object, has_for_lang, "lang", is_mandatory=True)
+            import_attribute(self, xml_object, has_for_title, "title", is_mandatory=False)
+            import_attribute(self, xml_object, has_for_category, "catagory", is_mandatory=False)
+            import_attribute(self, xml_object, has_for_href, "href", is_mandatory=True)
 
             self.has_for_content = xml_object.text
 
@@ -439,9 +443,9 @@ with onto:
             import_sub_elements(self, xml_object, EntityRule, has_entity_rules, "EntityRules")
             import_sub_elements(self, xml_object, Constraint, has_constraints, "Constraints")
 
-            import_attribute(self,xml_object, has_for_attribute_name, "AttributeName", is_mandatory=True)
-            import_attribute(self,xml_object, has_for_rule_id, "RuleID", is_mandatory=False)
-            import_attribute(self,xml_object, has_for_description, "Description", is_mandatory=False)
+            import_attribute(self, xml_object, has_for_attribute_name, "AttributeName", is_mandatory=True)
+            import_attribute(self, xml_object, has_for_rule_id, "RuleID", is_mandatory=False)
+            import_attribute(self, xml_object, has_for_description, "Description", is_mandatory=False)
 
         def find_rule_id(self, ruleid: str, path: list = [], prefix="") -> Union[
             (None, None), (AttributeRule, list), (EntityRule, list)]:
@@ -463,16 +467,16 @@ with onto:
             path.append(self)
 
             if prefix + str(self.has_for_rule_id) == ruleid:
-                return  path
+                return path
 
             else:
 
                 for entity_rule in self.entity_rules:
                     new_path = entity_rule.find_rule_id(ruleid, path=path, prefix=prefix)
                     if new_path is not None:
-                        return  new_path
+                        return new_path
 
-                return  None
+                return None
 
 
     class Constraint(Thing):
@@ -488,7 +492,7 @@ with onto:
                  :rtype:None
             """
             super().__init__()
-            import_attribute(self,xml_object, has_for_expression, "Expression", is_mandatory=True)
+            import_attribute(self, xml_object, has_for_expression, "Expression", is_mandatory=True)
 
 
     class EntityRule(Thing):
@@ -517,9 +521,9 @@ with onto:
 
             self.import_reference(xml_object)
 
-            import_attribute(self,xml_object, has_for_entity_name, "EntityName", is_mandatory=False)
-            import_attribute(self,xml_object, has_for_rule_id, "RuleID", is_mandatory=False)
-            import_attribute(self,xml_object, has_for_description, "Description", is_mandatory=False)
+            import_attribute(self, xml_object, has_for_entity_name, "EntityName", is_mandatory=False)
+            import_attribute(self, xml_object, has_for_rule_id, "RuleID", is_mandatory=False)
+            import_attribute(self, xml_object, has_for_description, "Description", is_mandatory=False)
 
         def import_reference(self, xml_object: etree._Element) -> None:
 
@@ -581,22 +585,20 @@ with onto:
                 prefix += self.has_for_id_prefix
 
             if prefix + str(self.has_for_rule_id) == ruleid:
-                return  path
+                return path
             else:
                 for attribute_rule in self.attribute_rules:
                     new_path = attribute_rule.find_rule_id(ruleid, path=path, prefix=prefix)
                     if new_path is not None:
-
-                        return  new_path
+                        return new_path
 
                 if self.refers is not None:
                     new_path = self.refers.find_rule_id(ruleid, path=path, prefix=prefix,
-                                                               entity_name=self.has_for_entity_name)
+                                                        entity_name=self.has_for_entity_name)
                     if new_path is not None:
+                        return new_path
 
-                        return  new_path
-
-                return  None
+                return None
 
 
     class BaseView(Thing):
@@ -628,8 +630,8 @@ with onto:
             """
             super().__init__()
 
-            import_identity_data(self,xml_object)
-            import_attribute(self,xml_object, has_for_applicability, "applicability", is_mandatory=False)
+            import_identity_data(self, xml_object)
+            import_attribute(self, xml_object, has_for_applicability, "applicability", is_mandatory=False)
             pass
 
         pass
@@ -649,12 +651,13 @@ with onto:
             """
             super().__init__()
 
-            import_identity_data(self,xml_object)
+            import_identity_data(self, xml_object)
             import_sub_elements(self, xml_object, Definition, has_definitions, "Definitions")
             import_functional_element(self, xml_object, Applicability, has_applicability, "Applicability")
             import_sub_elements(self, xml_object, Concept, has_concepts, "Concepts")
 
-            import_attribute(self,xml_object, has_for_applicable_root_entity, "applicableRootEntity", is_mandatory=True)
+            import_attribute(self, xml_object, has_for_applicable_root_entity, "applicableRootEntity",
+                             is_mandatory=True)
 
 
     class Concept(Thing):
@@ -672,8 +675,7 @@ with onto:
             """
             super().__init__()
 
-
-            import_identity_data(self,xml_object)
+            import_identity_data(self, xml_object)
             import_sub_elements(self, xml_object, Definition, has_definitions, "Definitions")
             import_sub_elements(self, xml_object, Requirement, has_requirement, "Requirements")
             import_elements(self, xml_object, TemplateRule, has_template_rules, "TemplateRule")
@@ -681,11 +683,10 @@ with onto:
 
             self.refers = self.find_referred_concept_template(xml_object)
 
-            import_attribute(self,xml_object, has_for_base_concept, "BaseConcept", is_mandatory=False)
-            import_attribute(self,xml_object, has_for_override, "Override", is_mandatory=False,datatype=bool)
+            import_attribute(self, xml_object, has_for_base_concept, "BaseConcept", is_mandatory=False)
+            import_attribute(self, xml_object, has_for_override, "Override", is_mandatory=False, datatype=bool)
 
-
-        def find_referred_concept_template(self,xml_object: etree._Element) -> ConceptTemplate:
+        def find_referred_concept_template(self, xml_object: etree._Element) -> ConceptTemplate:
 
             """ finds referred concept Template
             :param xml_object: xml representation of MVDxml class
@@ -706,6 +707,7 @@ with onto:
 
         def __str__(self):
             return "Concept [{}]".format(self.has_for_uuid)
+
 
     class Applicability(Thing):
         """Counterpart of 'Applicability' in MVDxml"""
@@ -753,8 +755,6 @@ with onto:
 
         """
 
-
-
         def __init__(self, xml_object: etree._Element) -> None:
 
             """
@@ -770,7 +770,6 @@ with onto:
             self.has_for_parameters = []
             self.has_for_plain_text = xml_object.attrib.get("Parameters")
             self.import_parameter(self.has_for_plain_text)
-
 
         def import_parameter(self, text: str) -> None:
             """import and parsing of Parameters
@@ -800,15 +799,13 @@ with onto:
             concept_template = parent.refers
             concept_root = parent.is_concept_of
             for parameter in self.has_for_parameters:
-
                 path = concept_template.find_rule_id(parameter.has_for_parameter_text)
-                path.insert(0,concept_root)
+                path.insert(0, concept_root)
                 path.append(parameter.value)
 
                 parameter.path = path
 
-
-        def get_parent(self)-> Union[ConceptTemplate,Applicability]:
+        def get_parent(self) -> Union[ConceptTemplate, Applicability]:
 
             """loop up tree until Parent Concept Template/ Applicability is found
 
@@ -817,7 +814,7 @@ with onto:
             """
 
             parent = self.is_template_rule_of
-            if isinstance(parent,Concept) or isinstance(parent, Applicability):
+            if isinstance(parent, Concept) or isinstance(parent, Applicability):
                 return parent
             elif parent is not None:
                 return parent.get_parent()
@@ -840,7 +837,7 @@ with onto:
             super().__init__()
             import_elements(self, xml_object, TemplateRule, has_template_rules, "TemplateRule")
             import_elements(self, xml_object, TemplateRules, has_template_rules, "TemplateRules")
-            import_attribute(self,xml_object, has_for_operator, "operator", is_mandatory=False)
+            import_attribute(self, xml_object, has_for_operator, "operator", is_mandatory=False)
             # TODO: Add Description
 
         def get_parent(self):
@@ -852,7 +849,7 @@ with onto:
 
             parent = self.is_template_rule_of
 
-            if isinstance(parent,Concept) or isinstance(parent, Applicability):
+            if isinstance(parent, Concept) or isinstance(parent, Applicability):
                 return parent
             else:
                 return parent.get_parent()
@@ -873,12 +870,12 @@ with onto:
             """
             super().__init__()
 
-            import_attribute(self,xml_object, has_for_applicability, "applicability", is_mandatory=False)
-            import_attribute(self,xml_object, has_for_requirement, "requirement", is_mandatory=True)
+            import_attribute(self, xml_object, has_for_applicability, "applicability", is_mandatory=False)
+            import_attribute(self, xml_object, has_for_requirement, "requirement", is_mandatory=True)
             # TODO: extend requirements  (mandatory, recommended, notrelevant...
             self.link_exchange_requirement(xml_object)
 
-        def link_exchange_requirement(self, xml_object:etree._Element)->None:
+        def link_exchange_requirement(self, xml_object: etree._Element) -> None:
 
             """link object to ExchangeRequirement
 
@@ -888,16 +885,17 @@ with onto:
             :rtype: None
             """
 
-            uuid = xml_object.attrib.get("exchangeRequirement") #TODO: check if uppercase is needed
+            uuid = xml_object.attrib.get("exchangeRequirement")  # TODO: check if uppercase is needed
 
             for er in ExchangeRequirement.instances():
                 if uuid == er.has_for_uuid:
                     self.links_to_exchange_requirement = er
 
+
     class Parameter(Thing):
         """Counterpart of 'Parameter' in MVDxml"""
 
-        def __init__(self, text:str) -> None:
+        def __init__(self, text: str) -> None:
 
             """
                  Initial Startup of class
@@ -909,17 +907,16 @@ with onto:
             """
 
             super().__init__()
-            self.has_for_text=text
+            self.has_for_text = text
             self.has_for_parameter_text = None
             self.has_for_metric = None
             self.has_for_parameter_operator = None
             self.value = None
             self.deconstruct_parameter(self.has_for_text)
 
-
             pass
 
-        def deconstruct_parameter(self, text:str):
+        def deconstruct_parameter(self, text: str):
             """
             Deconstructs Parameter and saves parts
 
@@ -929,12 +926,12 @@ with onto:
             :rtype: (str,str,str)
             """
 
-            text_helper = text.replace(" ","")
+            text_helper = text.replace(" ", "")
 
-            pattern = re.compile("(.+)\\[(\D+)\\](=|>=|<=|>|<)(.+)")    #Deconstructs Parameter Text
+            pattern = re.compile("(.+)\\[(\D+)\\](=|>=|<=|>|<)(.+)")  # Deconstructs Parameter Text
             text_helper = re.search(pattern, text_helper)
             if text_helper is not None:
-                self.has_for_parameter_text= text_helper.group(1)
+                self.has_for_parameter_text = text_helper.group(1)
                 self.has_for_metric = self.import_metric(text_helper.group(2))
                 self.has_for_parameter_operator = text_helper.group(3)
                 self.value = self.import_value(text_helper.group(4))
@@ -1004,7 +1001,6 @@ with onto:
 
             return (value)
 
-
 with onto:
     class has_concept_templates(ObjectProperty, InverseFunctionalProperty):
         domain = [MvdXml]
@@ -1017,7 +1013,7 @@ with onto:
         domain = [ConceptTemplate]
         range = [MvdXml]
         inverse_property = has_concept_templates
-        #python_name = "mvdxml"
+        # python_name = "mvdxml"
         pass
 
 
@@ -1032,7 +1028,7 @@ with onto:
         domain = [ModelView]
         range = [MvdXml]
         inverse_property = has_model_views
-        #python_name = "mvdxml"
+        # python_name = "mvdxml"
         pass
 
 
@@ -1051,7 +1047,7 @@ with onto:
 
 
     class has_definitions(ObjectProperty, InverseFunctionalProperty):
-        domain = [Or([ConceptTemplate , ModelView , ExchangeRequirement , ConceptRoot , Applicability , Concept])]
+        domain = [Or([ConceptTemplate, ModelView, ExchangeRequirement, ConceptRoot, Applicability, Concept])]
         range = [Definition]
         python_name = "definitions"
 
@@ -1060,13 +1056,13 @@ with onto:
 
     class is_definition_of(ObjectProperty, FunctionalProperty):
         domain = [Definition]
-        range = [Or([ConceptTemplate , ModelView , ExchangeRequirement , ConceptRoot , Applicability , Concept])]
+        range = [Or([ConceptTemplate, ModelView, ExchangeRequirement, ConceptRoot, Applicability, Concept])]
         inverse_property = has_definitions
         pass
 
 
     class has_attribute_rules(ObjectProperty, InverseFunctionalProperty):
-        domain = [Or([ConceptTemplate , EntityRule])]
+        domain = [Or([ConceptTemplate, EntityRule])]
         range = [AttributeRule]
         python_name = "attribute_rules"
         pass
@@ -1074,7 +1070,7 @@ with onto:
 
     class is_attribute_rule_of(ObjectProperty, FunctionalProperty):
         domain = [AttributeRule]
-        range = [Or([ConceptTemplate , EntityRule])]
+        range = [Or([ConceptTemplate, EntityRule])]
 
         inverse_property = has_attribute_rules
 
@@ -1082,14 +1078,14 @@ with onto:
 
 
     class has_constraints(ObjectProperty, InverseFunctionalProperty):
-        domain = [Or([AttributeRule , EntityRule])]
+        domain = [Or([AttributeRule, EntityRule])]
         range = [Constraint]
         python_name = "constraints"
 
 
     class is_constraint_of(ObjectProperty, FunctionalProperty):
         domain = [Constraint]
-        range = [Or([AttributeRule , EntityRule])]
+        range = [Or([AttributeRule, EntityRule])]
         inverse_property = has_constraints
 
 
@@ -1112,12 +1108,12 @@ with onto:
 
     class is_referred_by(ObjectProperty, InverseFunctionalProperty):
         domain = [ConceptTemplate]
-        range = [Or([EntityRule , Applicability , Concept])]
+        range = [Or([EntityRule, Applicability, Concept])]
         pass
 
 
     class refers_to(ObjectProperty, FunctionalProperty):
-        domain = [Or([EntityRule , Applicability , Concept])]
+        domain = [Or([EntityRule, Applicability, Concept])]
         range = [ConceptTemplate]
         inverse_property = is_referred_by
         python_name = "refers"
@@ -1191,14 +1187,14 @@ with onto:
 
 
     class has_template_rules(ObjectProperty, InverseFunctionalProperty):
-        domain = [Or([Applicability , Concept])]
-        range = [Or([TemplateRule , TemplateRules])]
+        domain = [Or([Applicability, Concept])]
+        range = [Or([TemplateRule, TemplateRules])]
         pass
 
 
     class is_template_rule_of(ObjectProperty, FunctionalProperty):
-        domain = [Or([TemplateRule , TemplateRules])]
-        range = [Or([Applicability , Concept])]
+        domain = [Or([TemplateRule, TemplateRules])]
+        range = [Or([Applicability, Concept])]
         inverse_property = has_template_rules
         pass
 
@@ -1257,7 +1253,7 @@ with onto:
 
 
     class has_for_applicable_schema(DataProperty, FunctionalProperty):
-        domain = [Or([ConceptTemplate , ModelView])]
+        domain = [Or([ConceptTemplate, ModelView])]
         range = [str]
         pass
 
@@ -1281,13 +1277,13 @@ with onto:
 
 
     class has_for_rule_id(DataProperty, FunctionalProperty):
-        domain = [Or([AttributeRule , EntityRule])]
+        domain = [Or([AttributeRule, EntityRule])]
         range = [str]
         pass
 
 
     class has_for_description(DataProperty, FunctionalProperty):
-        domain = [Or([AttributeRule , EntityRule])]
+        domain = [Or([AttributeRule, EntityRule])]
         range = [str]
         pass
 
@@ -1305,7 +1301,7 @@ with onto:
 
 
     class has_for_applicability(DataProperty, FunctionalProperty):
-        domain = [Or([Requirement , ExchangeRequirement])]
+        domain = [Or([Requirement, ExchangeRequirement])]
         range = [str]
         pass
 
@@ -1350,7 +1346,7 @@ with onto:
 
 
     class has_for_lang(DataProperty, FunctionalProperty):
-        domain = [Or([Body , Link])]
+        domain = [Or([Body, Link])]
         range = [str]
 
 
@@ -1360,7 +1356,7 @@ with onto:
 
 
     class has_for_content(DataProperty, FunctionalProperty):
-        domain = [Or([Body,  Link])]
+        domain = [Or([Body, Link])]
         range = [str]
 
 
@@ -1409,55 +1405,56 @@ with onto:
         domain = [EntityRule]
         range = [str]
 
-    class has_for_parameter_operator(DataProperty,FunctionalProperty):
+
+    class has_for_parameter_operator(DataProperty, FunctionalProperty):
         domain = [Parameter]
         range = [str]
 
+
     ## Identity Objects
     class has_for_uuid(DataProperty, FunctionalProperty):
-        domain = [Or([MvdXml,ConceptTemplate,ModelView,ExchangeRequirement,ConceptRoot,Concept])]
+        domain = [Or([MvdXml, ConceptTemplate, ModelView, ExchangeRequirement, ConceptRoot, Concept])]
         range = [str]
         pass
 
 
     class has_for_name(DataProperty, FunctionalProperty):
-        domain = [Or([MvdXml,ConceptTemplate,ModelView,ExchangeRequirement,ConceptRoot,Concept])]
+        domain = [Or([MvdXml, ConceptTemplate, ModelView, ExchangeRequirement, ConceptRoot, Concept])]
         range = [str]
         pass
 
 
     class has_for_code(DataProperty, FunctionalProperty):
-        domain = [Or([MvdXml,ConceptTemplate,ModelView,ExchangeRequirement,ConceptRoot,Concept])]
+        domain = [Or([MvdXml, ConceptTemplate, ModelView, ExchangeRequirement, ConceptRoot, Concept])]
         range = [str]
         pass
 
 
     class has_for_version(DataProperty, FunctionalProperty):
-        domain = [Or([MvdXml,ConceptTemplate,ModelView,ExchangeRequirement,ConceptRoot,Concept])]
+        domain = [Or([MvdXml, ConceptTemplate, ModelView, ExchangeRequirement, ConceptRoot, Concept])]
         range = [str]
         pass
 
 
     class has_for_status(DataProperty, FunctionalProperty):
-        domain = [Or([MvdXml,ConceptTemplate,ModelView,ExchangeRequirement,ConceptRoot,Concept])]
+        domain = [Or([MvdXml, ConceptTemplate, ModelView, ExchangeRequirement, ConceptRoot, Concept])]
         range = [str]
         pass
 
 
     class has_for_author(DataProperty, FunctionalProperty):
-        domain = [Or([MvdXml,ConceptTemplate,ModelView,ExchangeRequirement,ConceptRoot,Concept])]
+        domain = [Or([MvdXml, ConceptTemplate, ModelView, ExchangeRequirement, ConceptRoot, Concept])]
         range = [str]
         pass
 
 
     class has_for_owner(DataProperty, FunctionalProperty):
-        domain = [Or([MvdXml,ConceptTemplate,ModelView,ExchangeRequirement,ConceptRoot,Concept])]
+        domain = [Or([MvdXml, ConceptTemplate, ModelView, ExchangeRequirement, ConceptRoot, Concept])]
         range = [str]
         pass
 
 
     class has_for_copyright(DataProperty, FunctionalProperty):
-        domain = [Or([MvdXml,ConceptTemplate,ModelView,ExchangeRequirement,ConceptRoot,Concept])]
+        domain = [Or([MvdXml, ConceptTemplate, ModelView, ExchangeRequirement, ConceptRoot, Concept])]
         range = [str]
         pass
-
