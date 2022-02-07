@@ -12,6 +12,7 @@ SCALING_FACTOR =0.1
 
 class testView(QGraphicsView):
 
+class MainView(QGraphicsView):
 
     def wheelEvent(self, event:QtGui.QWheelEvent) -> None:
         point = event.angleDelta() / 4
