@@ -51,36 +51,12 @@ Methods
 get_sub_items(name: str, xml_obj: etree._Element) -> list[etree._Element]
     search for subitems with specific name
 
-import_items(self, xml_object: etree._Element, _class, prop, name: str) -> None
+import_elements(self, xml_object: etree._Element, _class, prop, name: str) -> None
     link sub items to their parent
 
 """
 
-@staticmethod
-def get_sub_items(name: str, xml_obj: etree._Element) -> etree._Element:
-    """
-    search for subitems with specific name
-
-    This function takes a xml_object and searches for sub items,
-    which matches the attribute 'name'
-
-    :return: list of Subitems
-    :rtype: list[etree._Element]
-    :param name: name of subitems
-    :type name: str
-    :param xml_obj: XML Parent-Object
-    :type xml_obj: etree._Element
-    """
-    elements = xml_obj.find(name, namespaces=xml_obj.nsmap)
-
-
-    if elements is None:
-        return None
-    else:
-
-        return elements
-
-def import_items(self, xml_object: etree._Element, _class, prop, name: str) -> None:
+def import_sub_elements(self, xml_object: etree._Element, _class, prop, name: str) -> None:
     """
     link sub items to their parent
 
@@ -100,12 +76,11 @@ def import_items(self, xml_object: etree._Element, _class, prop, name: str) -> N
     :type name: str
     :return: None
     """
-    elements = get_sub_items(name, xml_object)
 
-    property_name = prop.python_name  # get callable function name from owlready2
+    elements = xml_object.find(name, namespaces=xml_object.nsmap)
 
     if elements is not None:
-
+        property_name = prop.python_name  # get callable function name from owlready2
 
         for el in list(elements):
             item = _class(el)
@@ -115,13 +90,12 @@ def import_items(self, xml_object: etree._Element, _class, prop, name: str) -> N
 
     return None
 
-def import_item(self, xml_object: etree._Element, _class, prop, name: str) -> None:
+def import_elements(self, xml_object: etree._Element, _class, prop, name: str) -> None:
     """
                link sub item to their parent
 
-               This function uses get_sub_items to find the subitem
-               This function only works, when there is no possibility of multiple subitems
-               ONLY SINGLE SUBITEMS
+               This function only works, when the subitem is directly inherited
+               ONLY DIRECT SUBITEMS
 
                Parameters
                -------------------
@@ -147,10 +121,10 @@ def import_item(self, xml_object: etree._Element, _class, prop, name: str) -> No
 
     return None
 
-def import_functional_item(self, xml_object: etree._Element, _class, prop, name: str) -> None:
+def import_functional_element(self, xml_object: etree._Element, _class, prop, name: str) -> None:
     """
         link sub items to their parent
-        same functionality as import_items but for functional items
+        same functionality as import_elements but for functional items
 
         Parameters
         ----
@@ -224,7 +198,6 @@ def import_identity_data(python_object, xml_object):
     import_attribute(python_object,xml_object, has_for_copyright, "copyright", False)
 
 
-
 with onto:
     class MvdXml(Thing):
         """counterpart of 'MvdXml' (first Level of MVDxml)"""
@@ -245,12 +218,12 @@ with onto:
             xml_object = self.import_xml(file, doc=doc, validation=validation)
 
             import_identity_data(self,xml_object)
-            import_items(self,xml_object, ConceptTemplate, has_concept_templates, "Templates")
+            import_sub_elements(self, xml_object, ConceptTemplate, has_concept_templates, "Templates")
 
             for entity_rule in EntityRule.instances():  # all Templates need to be imported befor it is possivle to find referenced templates
-                entity_rule.reference_templates()
+                entity_rule.link_referenced_template()
 
-            import_items(self,xml_object, ModelView, has_model_views, "Views")
+            import_sub_elements(self, xml_object, ModelView, has_model_views, "Views")
 
             for template_rule in TemplateRule.instances():  # all Rules needs to be imported, before it is possible to import them
                 template_rule.get_linked_rules()
@@ -307,9 +280,9 @@ with onto:
 
             import_identity_data(self,xml_object)
 
-            import_items(self,xml_object, ConceptTemplate, has_sub_templates, "SubTemplates")
-            import_items(self,xml_object, Definition, has_definitions, "Definitions")
-            import_items(self,xml_object, AttributeRule, has_attribute_rules, "Rules")
+            import_sub_elements(self, xml_object, ConceptTemplate, has_sub_templates, "SubTemplates")
+            import_sub_elements(self, xml_object, Definition, has_definitions, "Definitions")
+            import_sub_elements(self, xml_object, AttributeRule, has_attribute_rules, "Rules")
 
             import_attribute(self,xml_object, has_for_applicable_schema, "applicableSchema", True)
             import_attribute(self,xml_object, has_for_applicable_entity, "applicableEntity", False)
@@ -370,9 +343,9 @@ with onto:
 
             super().__init__()
             import_identity_data(self,xml_object)
-            import_items(self,xml_object, Definition, has_definitions, "Definitions")
-            import_items(self,xml_object, ExchangeRequirement, has_exchange_requirements, "ExchangeRequirements")
-            import_items(self,xml_object, ConceptRoot, has_concept_roots, "Roots")
+            import_sub_elements(self, xml_object, Definition, has_definitions, "Definitions")
+            import_sub_elements(self, xml_object, ExchangeRequirement, has_exchange_requirements, "ExchangeRequirements")
+            import_sub_elements(self, xml_object, ConceptRoot, has_concept_roots, "Roots")
 
             import_attribute(self,xml_object, has_for_applicable_schema, "applicableSchema", True)
             # TODO: Add BaseView
@@ -392,8 +365,8 @@ with onto:
             """
 
             super().__init__()
-            import_functional_item(self,xml_object, Body, has_body, "Body")
-            import_item(self,xml_object, Link, has_links, "Link")
+            import_functional_element(self, xml_object, Body, has_body, "Body")
+            import_elements(self, xml_object, Link, has_links, "Link")
 
 
     class Body(Thing):
@@ -463,8 +436,8 @@ with onto:
             """
 
             super().__init__()
-            import_items(self,xml_object, EntityRule, has_entity_rules, "EntityRules")
-            import_items(self,xml_object, Constraint, has_constraints, "Constraints")
+            import_sub_elements(self, xml_object, EntityRule, has_entity_rules, "EntityRules")
+            import_sub_elements(self, xml_object, Constraint, has_constraints, "Constraints")
 
             import_attribute(self,xml_object, has_for_attribute_name, "AttributeName", is_mandatory=True)
             import_attribute(self,xml_object, has_for_rule_id, "RuleID", is_mandatory=False)
@@ -534,13 +507,13 @@ with onto:
             super().__init__()
 
             # Reference to Templates needs to be established later
-            # with reference_templates(), because of nesting
+            # with link_referenced_template(), because of nesting
 
             self.references = []
             self.has_for_id_prefix = ""
 
-            import_items(self,xml_object, AttributeRule, has_attribute_rules, "AttributeRules")
-            import_items(self,xml_object, Constraint, has_constraints, "Constraints")
+            import_sub_elements(self, xml_object, AttributeRule, has_attribute_rules, "AttributeRules")
+            import_sub_elements(self, xml_object, Constraint, has_constraints, "Constraints")
 
             self.import_reference(xml_object)
 
@@ -569,7 +542,7 @@ with onto:
                 if id_prefix is not None:
                     self.has_for_id_prefix = id_prefix
 
-        def reference_templates(self) -> ConceptTemplate:
+        def link_referenced_template(self) -> ConceptTemplate:
             """
             This function needs to be called for every Entity Rule
                 after the whole MVD is initialized
@@ -584,8 +557,6 @@ with onto:
                 for uuid in self.references:
                     if uuid == concept_template.has_for_uuid:
                         self.refers = concept_template
-
-            return self.refers
 
         def find_rule_id(self, ruleid: str, path: list = [], prefix: str = "") -> Union[
             (None, None), (AttributeRule, list), (EntityRule, list)]:
@@ -679,9 +650,9 @@ with onto:
             super().__init__()
 
             import_identity_data(self,xml_object)
-            import_items(self,xml_object, Definition, has_definitions, "Definitions")
-            import_functional_item(self,xml_object, Applicability, has_applicability, "Applicability")
-            import_items(self,xml_object, Concept, has_concepts, "Concepts")
+            import_sub_elements(self, xml_object, Definition, has_definitions, "Definitions")
+            import_functional_element(self, xml_object, Applicability, has_applicability, "Applicability")
+            import_sub_elements(self, xml_object, Concept, has_concepts, "Concepts")
 
             import_attribute(self,xml_object, has_for_applicable_root_entity, "applicableRootEntity", is_mandatory=True)
 
@@ -703,10 +674,10 @@ with onto:
 
 
             import_identity_data(self,xml_object)
-            import_items(self,xml_object, Definition, has_definitions, "Definitions")
-            import_items(self,xml_object, Requirement, has_requirement, "Requirements")
-            import_item(self,xml_object, TemplateRule, has_template_rules, "TemplateRule")
-            import_item(self,xml_object, TemplateRules, has_template_rules, "TemplateRules")
+            import_sub_elements(self, xml_object, Definition, has_definitions, "Definitions")
+            import_sub_elements(self, xml_object, Requirement, has_requirement, "Requirements")
+            import_elements(self, xml_object, TemplateRule, has_template_rules, "TemplateRule")
+            import_elements(self, xml_object, TemplateRules, has_template_rules, "TemplateRules")
 
             self.refers = self.find_referred_concept_template(xml_object)
 
@@ -751,9 +722,9 @@ with onto:
             """
             super().__init__()
 
-            import_items(self,xml_object, Definition, has_definitions, "Definitions")
-            import_item(self,xml_object, TemplateRule, has_template_rules, "TemplateRule")
-            import_item(self,xml_object, TemplateRules, has_template_rules, "TemplateRules")
+            import_sub_elements(self, xml_object, Definition, has_definitions, "Definitions")
+            import_elements(self, xml_object, TemplateRule, has_template_rules, "TemplateRule")
+            import_elements(self, xml_object, TemplateRules, has_template_rules, "TemplateRules")
 
             self.refers = self.find_referred_concept_template(xml_object)
 
@@ -831,7 +802,7 @@ with onto:
             self.metric_list = []
             self.operator_list = []
             parameters = self.has_for_parameters
-            concept = self.get_referenced_concept()
+            concept = self.get_parent()
             ct = concept.refers
             cr = concept.is_concept_of
             for parameter in parameters:
@@ -895,8 +866,8 @@ with onto:
             """
 
             super().__init__()
-            import_item(self,xml_object, TemplateRule, has_template_rules, "TemplateRule")
-            import_item(self,xml_object, TemplateRules, has_template_rules, "TemplateRules")
+            import_elements(self, xml_object, TemplateRule, has_template_rules, "TemplateRule")
+            import_elements(self, xml_object, TemplateRules, has_template_rules, "TemplateRules")
             import_attribute(self,xml_object, has_for_operator, "operator", is_mandatory=False)
             # TODO: Add Description
 
