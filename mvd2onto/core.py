@@ -770,9 +770,7 @@ with onto:
             self.has_for_parameters = []
             self.has_for_plain_text = xml_object.attrib.get("Parameters")
             self.import_parameter(self.has_for_plain_text)
-            self.path_list = []
-            self.metric_list = []
-            self.operator_list =[]
+
 
         def import_parameter(self, text: str) -> None:
             """import and parsing of Parameters
@@ -789,7 +787,7 @@ with onto:
                 parameter = Parameter(parameter_text)
                 self.has_for_parameters.append(parameter)
 
-        def get_linked_rules(self) -> (list, list,list):
+        def get_linked_rules(self) -> None:
             """
             finds Path to referenced EntityRule/AttributeRule
 
@@ -800,26 +798,14 @@ with onto:
 
             parent = self.get_parent()
             concept_template = parent.refers
-            cr = parent.is_concept_of
-            self.path_list = []
-            self.metric_list = []
-            self.operator_list = []
-            parameters = self.has_for_parameters
+            concept_root = parent.is_concept_of
+            for parameter in self.has_for_parameters:
 
-            for parameter in parameters:
-
-                path = [cr]
-                test, p = concept_template.find_rule_id(parameter.has_for_parameter_text)
-                path += p
+                dummy, path = concept_template.find_rule_id(parameter.has_for_parameter_text)
+                path.insert(0,concept_root)
                 path.append(parameter.value)
 
                 parameter.path = path
-
-                self.path_list.append(path)
-                self.metric_list.append(parameter.has_for_metric)
-                self.operator_list.append(parameter.has_for_parameter_operator)
-
-            return (self.path_list, self.metric_list,self.operator_list)
 
 
         def get_parent(self)-> Union[ConceptTemplate,Applicability]:
@@ -929,6 +915,7 @@ with onto:
             self.has_for_parameter_operator = None
             self.value = None
             self.deconstruct_parameter(self.has_for_text)
+
 
             pass
 
