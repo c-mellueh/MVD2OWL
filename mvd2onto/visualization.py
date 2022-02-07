@@ -184,9 +184,12 @@ class TemplateRuleRectangle(MovableRectangle):
         operators = data.operator_list
 
         template_rule_scene = self.scene()
-        for k,path in enumerate(data.path_list):
-            metric = metrics[k]
-            operator = operators[k]
+
+        for k, parameter in enumerate(data.has_for_parameters):
+            path = parameter.path
+            metric = parameter.has_for_metric
+            operator = parameter.has_for_parameter_operator
+
             last_item = None
 
             for i, path_item in enumerate(path):
