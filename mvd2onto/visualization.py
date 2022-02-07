@@ -199,7 +199,7 @@ class TemplateRuleRectangle(MovableRectangle):
 
                     if isinstance(path_item, (ConceptTemplate, EntityRule, ConceptRoot)):
 
-                        block = self.add_block(template_rule_scene, path_item, last_block)
+                        block = self.add_block(path_item, last_block)
                         template_rule_scene.addItem(block)
                         block.connect_to_entity(last_block)
 
@@ -219,7 +219,7 @@ class TemplateRuleRectangle(MovableRectangle):
 
                 last_item = path_item
 
-    def add_block(self, scene, data, last_block):
+    def add_block(self, data, last_block):
 
         name = "undefined"
 
