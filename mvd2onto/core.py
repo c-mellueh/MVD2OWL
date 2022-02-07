@@ -924,6 +924,10 @@ with onto:
 
             super().__init__()
             self.has_for_text=text
+            self.has_for_parameter_text = None
+            self.has_for_metric = None
+            self.has_for_parameter_operator = None
+            self.has_for_parameter_value = None
             self.deconstruct_parameter(self.has_for_text)
 
             pass
