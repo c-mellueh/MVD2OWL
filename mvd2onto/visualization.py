@@ -2,7 +2,7 @@ from core import *
 from typing import Union
 from PySide6 import QtCore, QtGui, QtWidgets
 from PySide6.QtWidgets import *
-from PySide6.QtCore import QPointF,QPoint
+from PySide6.QtCore import QPointF, QPoint
 from random import random
 
 # Constants 
@@ -10,25 +10,23 @@ BORDER = 5
 RESIZE_BORDER_WIDTH = 10
 SCALING_FACTOR =0.1
 
-class testView(QGraphicsView):
 
 class MainView(QGraphicsView):
 
-    def wheelEvent(self, event:QtGui.QWheelEvent) -> None:
+    def wheelEvent(self, event: QtGui.QWheelEvent) -> None:
         point = event.angleDelta() / 4
         val = point.y()
 
         modifier = QApplication.keyboardModifiers()
 
-        if bool(modifier==QtCore.Qt.ControlModifier):
+        if bool(modifier == QtCore.Qt.ControlModifier):
 
             if val < 0:
                 self.scale(1-SCALING_FACTOR, 1-SCALING_FACTOR)
             else:
                 self.scale(1+SCALING_FACTOR, 1+SCALING_FACTOR)
 
-        elif bool(modifier==QtCore.Qt.ShiftModifier):
-
+        elif bool(modifier == QtCore.Qt.ShiftModifier):
 
             hor = self.horizontalScrollBar()
             hor.setValue(hor.value() - val)
@@ -37,8 +35,7 @@ class MainView(QGraphicsView):
 
             ver = self.verticalScrollBar()
 
-
-            ver.setValue(ver.value() -val)
+            ver.setValue(ver.value() - val)
 
         self.update()
 
@@ -46,7 +43,7 @@ class MainView(QGraphicsView):
 class MovableRectangle(QGraphicsView):
     """parent class of TemplateRuleRectangle & TemplateRulesRectangle"""
 
-    def __init__(self,position:QPointF,data: Union[TemplateRule,TemplateRules],parent_scene:QGraphicsScene):
+    def __init__(self, position: QPointF, data: Union[TemplateRule, TemplateRules], parent_scene: QGraphicsScene):
         super().__init__()
         scene = QGraphicsScene()
         self.setScene(scene)
@@ -61,7 +58,7 @@ class MovableRectangle(QGraphicsView):
         self.view.setFrameStyle(QFrame.Box)
 
 
-    def add_title(self,text):
+    def add_title(self, text):
         width = self.sceneRect().width()
         self.title_block = TitleBlock(self.pos().x(), self.pos().y() - 25,
                                       width, 25, self, text)
@@ -104,44 +101,40 @@ class MovableRectangle(QGraphicsView):
             gpw_rect = gpw.rect()
 
             shift = QPointF(0, -bar_height)
-            self.top_left = scene_pos + gpw_rect.topLeft()+shift
-            self.top_right = rec.topRight()+shift
-            self.bottom_left = scene_pos+gpw_rect.bottomLeft()
-            self.bottom_right = scene_pos+gpw_rect.bottomRight()
+            self.top_left = scene_pos + gpw_rect.topLeft() + shift
+            self.top_right = rec.topRight() + shift
+            self.bottom_left = scene_pos + gpw_rect.bottomLeft()
+            self.bottom_right = scene_pos + gpw_rect.bottomRight()
 
             for el in self.movable_elements:
-                if isinstance(el,ResizeBorder):
+                if isinstance(el, ResizeBorder):
                     if el.orientation == "top" or el.orientation == "bottom":
                         rect = el.rect()
                         rect.setWidth(self.width())
                         el.setRect(rect)
                     if el.orientation == "left" or el.orientation == "right":
                         rect = el.rect()
-                        rect.setHeight(self.height()+self.title_block.rect().height())
+                        rect.setHeight(self.height() + self.title_block.rect().height())
                         el.setRect(rect)
 
     def add_resize_elements(self):
 
         gpw = self.graphicsProxyWidget()
 
-
         pos = self.title_block.rect().topLeft()
-        self.resize_elements.append(ResizeEdge(self,self.parent_scene, pos, "top_left"))
-        self.resize_elements.append(ResizeBorder(self,self.parent_scene,pos,"top"))
-        self.resize_elements.append(ResizeBorder(self,self.parent_scene,pos,"left"))
-
+        self.resize_elements.append(ResizeEdge(self, self.parent_scene, pos, "top_left"))
+        self.resize_elements.append(ResizeBorder(self, self.parent_scene, pos, "top"))
+        self.resize_elements.append(ResizeBorder(self, self.parent_scene, pos, "left"))
 
         pos = self.title_block.rect().topRight()
         self.resize_elements.append(ResizeEdge(self, self.parent_scene, pos, "top_right"))
         self.resize_elements.append(ResizeBorder(self, self.parent_scene, pos, "right"))
 
-
-        pos = gpw.scenePos()+gpw.rect().bottomLeft()
+        pos = gpw.scenePos() + gpw.rect().bottomLeft()
         self.resize_elements.append(ResizeEdge(self, self.parent_scene, pos, "bottom_left"))
         self.resize_elements.append(ResizeBorder(self, self.parent_scene, pos, "bottom"))
 
-
-        pos = gpw.scenePos()+gpw.rect().bottomRight()
+        pos = gpw.scenePos() + gpw.rect().bottomRight()
         self.resize_elements.append(ResizeEdge(self, self.parent_scene, pos, "bottom_right"))
 
         color = QtGui.QColor("black")
@@ -149,20 +142,15 @@ class MovableRectangle(QGraphicsView):
         pen = QtGui.QPen()
         pen.setColor(color)
 
-
         for el in self.resize_elements:
             self.movable_elements.append(el)
             el.setPen(pen)
 
 
-
-
 class TemplateRuleRectangle(MovableRectangle):
-    def __init__(self, parent_scene, position: QPointF,data: TemplateRule):
+    def __init__(self, parent_scene, position: QPointF, data: TemplateRule):
 
-        super().__init__(position,data,parent_scene)
-
-
+        super().__init__(position, data, parent_scene)
 
         self.import_visuals(data)
 
@@ -174,15 +162,10 @@ class TemplateRuleRectangle(MovableRectangle):
         self.add_title("TemplateRule")
         self.turn_off_scrollbar()
 
-
     def import_visuals(self, data: TemplateRule):
 
         created_entities = []
         graphical_items_dict = {}
-
-        metrics = data.metric_list
-        operators = data.operator_list
-
         template_rule_scene = self.scene()
 
         for k, parameter in enumerate(data.has_for_parameters):
@@ -215,7 +198,7 @@ class TemplateRuleRectangle(MovableRectangle):
 
                     else:
                         graphical_items_dict[path_item] = self.add_label(template_rule_scene, path_item, last_block,
-                                                                         str(metric+operator))
+                                                                         str(metric + operator))
 
                 last_item = path_item
 
@@ -242,14 +225,14 @@ class TemplateRuleRectangle(MovableRectangle):
 
         else:
             xpos = 0
-        ypos = 0
+            ypos = 0
 
         block.setPos((QPointF(xpos, ypos)))
         return block
 
     def add_label(self, scene, inhalt, old_proxy, metric):
 
-        if isinstance(old_proxy,DragBox):
+        if isinstance(old_proxy, DragBox):
             connect_item = old_proxy
         else:
             connect_item = old_proxy.parent()
@@ -282,8 +265,8 @@ class TemplateRuleRectangle(MovableRectangle):
 
         return proxy
 
-class TemplateRulesRectangle(MovableRectangle):
 
+class TemplateRulesRectangle(MovableRectangle):
 
     def __init__(self, parent_scene: QGraphicsScene, position: QPointF, data: TemplateRules) -> object:
         """
@@ -296,23 +279,18 @@ class TemplateRulesRectangle(MovableRectangle):
         :type data:
         """
 
-        super().__init__(position,data,parent_scene)
+        super().__init__(position, data, parent_scene)
 
         self.operator = self.data.has_for_operator
         self.color = self.get_color()
         self.change_border_color(self.color)
-        
-        self.title_block=None
-        
 
-    def wheelEvent(self, event:QtGui.QWheelEvent) -> None:
+        self.title_block = None
+
+    def wheelEvent(self, event: QtGui.QWheelEvent) -> None:
         ui.graphicsView.wheelEvent(event)
 
         pass
-
-
-
-
 
     def get_color(self):
         if self.operator == "or":
@@ -328,15 +306,15 @@ class TemplateRulesRectangle(MovableRectangle):
 
 class ResizeEdge(QtWidgets.QGraphicsRectItem):
 
-    def __init__(self,graphics_view:TemplateRulesRectangle,parent:QGraphicsScene,position:QPointF,orientation:str):
+    def __init__(self, graphics_view: TemplateRulesRectangle, parent: QGraphicsScene, position: QPointF,
+                 orientation: str):
 
         self.orientation = orientation
         self.graphical_view = graphics_view
 
+        movement = QPoint(RESIZE_BORDER_WIDTH / 2, RESIZE_BORDER_WIDTH / 2)
 
-        movement = QPoint(RESIZE_BORDER_WIDTH/2,RESIZE_BORDER_WIDTH/2)
-
-        position = position-movement
+        position = position - movement
         super().__init__(position.x(), position.y(), RESIZE_BORDER_WIDTH, RESIZE_BORDER_WIDTH)
         self.setAcceptHoverEvents(True)
 
@@ -349,7 +327,6 @@ class ResizeEdge(QtWidgets.QGraphicsRectItem):
             application.instance().setOverrideCursor(QtCore.Qt.SizeFDiagCursor)
         elif self.orientation == "top_right" or self.orientation == "bottom_left":
             application.instance().setOverrideCursor(QtCore.Qt.SizeBDiagCursor)
-
 
     def hoverLeaveEvent(self, event):
         application.instance().restoreOverrideCursor()
@@ -375,82 +352,82 @@ class ResizeEdge(QtWidgets.QGraphicsRectItem):
         if self.orientation == "top_left":
 
             for el in gv.movable_elements:
-                if not isinstance(el,(ResizeEdge,ResizeBorder)):
+                if not isinstance(el, (ResizeEdge, ResizeBorder)):
 
-                    el.moveBy(x_dif,y_dif)
+                    el.moveBy(x_dif, y_dif)
 
-                elif isinstance(el,ResizeEdge):
-                    if el.orientation =="top_right":
-                        el.moveBy(0,y_dif)
+                elif isinstance(el, ResizeEdge):
+                    if el.orientation == "top_right":
+                        el.moveBy(0, y_dif)
 
                     if el.orientation == "bottom_left":
-                        el.moveBy(x_dif,0)
-                elif isinstance(el,ResizeBorder):
+                        el.moveBy(x_dif, 0)
+                elif isinstance(el, ResizeBorder):
                     if el.orientation == "top" or el.orientation == "left":
-                        el.moveBy(x_dif,y_dif)
+                        el.moveBy(x_dif, y_dif)
                     elif el.orientation == "right":
-                        el.moveBy(0,y_dif)
+                        el.moveBy(0, y_dif)
                     elif el.orientation == "bottom":
-                        el.moveBy(x_dif,0)
+                        el.moveBy(x_dif, 0)
 
-            self.moveBy(x_dif,y_dif)
+            self.moveBy(x_dif, y_dif)
 
-            proxy.moveBy(x_dif,y_dif)
+            proxy.moveBy(x_dif, y_dif)
 
             size = proxy.size()
-            size.setHeight(size.height()-y_dif)
-            size.setWidth(size.width()-x_dif)
+            size.setHeight(size.height() - y_dif)
+            size.setWidth(size.width() - x_dif)
             proxy.resize(size)
 
             for items in gv.scene().items():
-                items.moveBy(-x_dif,-y_dif)
+                items.moveBy(-x_dif, -y_dif)
 
         elif self.orientation == "top_right":
-            proxy.moveBy(0,y_dif)
+            proxy.moveBy(0, y_dif)
             for el in gv.movable_elements:
-                if not isinstance(el,(ResizeEdge,ResizeBorder)):
-                    el.moveBy(0,y_dif)
-                elif isinstance(el,ResizeEdge):
+                if not isinstance(el, (ResizeEdge, ResizeBorder)):
+                    el.moveBy(0, y_dif)
+                elif isinstance(el, ResizeEdge):
                     if el.orientation == "top_left":
-                        el.moveBy(0,y_dif)
+                        el.moveBy(0, y_dif)
                     elif el.orientation == "bottom_right":
-                        el.moveBy(x_dif,0)
+                        el.moveBy(x_dif, 0)
                 else:
                     if el.orientation == "top":
-                        el.moveBy(0,y_dif)
+                        el.moveBy(0, y_dif)
                     elif el.orientation == "right":
-                        el.moveBy(x_dif,y_dif)
+                        el.moveBy(x_dif, y_dif)
                     elif el.orientation == "left":
-                        el.moveBy(0,y_dif)
+                        el.moveBy(0, y_dif)
 
-            self.moveBy(x_dif,y_dif)
+            self.moveBy(x_dif, y_dif)
 
             size = proxy.size()
-            size.setWidth(size.width()+x_dif)
-            size.setHeight(size.height()-y_dif)
+            size.setWidth(size.width() + x_dif)
+            size.setHeight(size.height() - y_dif)
             proxy.resize(size)
 
             for items in gv.scene().items():
-                items.moveBy(0,-y_dif)
+                items.moveBy(0, -y_dif)
 
         elif self.orientation == "bottom_left":
-            proxy.moveBy(x_dif,0)
+            proxy.moveBy(x_dif, 0)
             for el in gv.movable_elements:
 
-                if not isinstance(el, (ResizeEdge,ResizeBorder)):
-                    el.moveBy(x_dif,0)
-                elif isinstance(el,ResizeEdge):
+                if not isinstance(el, (ResizeEdge, ResizeBorder)):
+                    el.moveBy(x_dif, 0)
+                elif isinstance(el, ResizeEdge):
                     if el.orientation == "top_left":
                         el.moveBy(x_dif, 0)
                     elif el.orientation == "bottom_right":
                         el.moveBy(0, y_dif)
                 else:
-                    if el.orientation =="top":
-                        el.moveBy(x_dif,0)
-                    elif el.orientation =="bottom":
-                        el.moveBy(x_dif,y_dif)
+                    if el.orientation == "top":
+                        el.moveBy(x_dif, 0)
+                    elif el.orientation == "bottom":
+                        el.moveBy(x_dif, y_dif)
                     elif el.orientation == "left":
-                        el.moveBy(x_dif,0)
+                        el.moveBy(x_dif, 0)
 
             self.moveBy(x_dif, y_dif)
 
@@ -460,22 +437,22 @@ class ResizeEdge(QtWidgets.QGraphicsRectItem):
             proxy.resize(size)
 
             for items in gv.scene().items():
-                 items.moveBy(-x_dif, 0)
+                items.moveBy(-x_dif, 0)
 
         elif self.orientation == "bottom_right":
-            #proxy.moveBy(x_dif,0)
+            # proxy.moveBy(x_dif,0)
             for el in gv.movable_elements:
-                if  isinstance(el, ResizeEdge):
+                if isinstance(el, ResizeEdge):
                     if el.orientation == "top_right":
                         el.moveBy(x_dif, 0)
                     elif el.orientation == "bottom_left":
                         el.moveBy(0, y_dif)
 
-                if isinstance(el,ResizeBorder):
-                    if el.orientation =="bottom":
-                        el.moveBy(0,y_dif)
-                    if el.orientation =="right":
-                        el.moveBy(x_dif,0)
+                if isinstance(el, ResizeBorder):
+                    if el.orientation == "bottom":
+                        el.moveBy(0, y_dif)
+                    if el.orientation == "right":
+                        el.moveBy(x_dif, 0)
 
             self.moveBy(x_dif, y_dif)
 
@@ -489,6 +466,7 @@ class ResizeEdge(QtWidgets.QGraphicsRectItem):
 
         pass
 
+
 class ResizeBorder(QtWidgets.QGraphicsRectItem):
 
     def __init__(self, graphics_view: TemplateRulesRectangle, parent: QGraphicsScene, position: QPointF,
@@ -501,26 +479,25 @@ class ResizeBorder(QtWidgets.QGraphicsRectItem):
 
         self.width = 10
 
-        if self.orientation =="top" or self.orientation =="bottom":
-            position.setY(position.y()-self.width/2)
+        if self.orientation == "top" or self.orientation == "bottom":
+            position.setY(position.y() - self.width / 2)
             super().__init__(position.x(), position.y(), self.graphical_view.width(), self.width)
 
-        elif self.orientation =="left" or self.orientation == "right":
-            position.setX(position.x() - self.width/2)
-            super().__init__(position.x(), position.y(), self.width, self.graphical_view.height()+self.graphical_view.title_block.rect().height())
-
+        elif self.orientation == "left" or self.orientation == "right":
+            position.setX(position.x() - self.width / 2)
+            super().__init__(position.x(), position.y(), self.width,
+                             self.graphical_view.height() + self.graphical_view.title_block.rect().height())
 
         self.setAcceptHoverEvents(True)
 
         parent.addItem(self)
-        
+
     def hoverEnterEvent(self, event):
 
         if self.orientation == "top" or self.orientation == "bottom":
             application.instance().setOverrideCursor(QtCore.Qt.SizeVerCursor)
         elif self.orientation == "left" or self.orientation == "right":
             application.instance().setOverrideCursor(QtCore.Qt.SizeHorCursor)
-
 
     def hoverLeaveEvent(self, event):
         application.instance().restoreOverrideCursor()
@@ -547,37 +524,37 @@ class ResizeBorder(QtWidgets.QGraphicsRectItem):
 
             for el in gv.movable_elements:
                 if not isinstance(el, (ResizeEdge, ResizeBorder)):
-                    el.moveBy(0,y_dif)
+                    el.moveBy(0, y_dif)
 
-                elif isinstance(el,ResizeEdge):
-                    if el.orientation =="top_right" or el.orientation == "top_left":
-                        el.moveBy(0,y_dif)
+                elif isinstance(el, ResizeEdge):
+                    if el.orientation == "top_right" or el.orientation == "top_left":
+                        el.moveBy(0, y_dif)
 
-                elif isinstance(el,ResizeBorder):
+                elif isinstance(el, ResizeBorder):
                     if not el.orientation == "bottom":
-                        el.moveBy(0,y_dif)
+                        el.moveBy(0, y_dif)
 
-            proxy.moveBy(0,y_dif)
+            proxy.moveBy(0, y_dif)
 
             size = proxy.size()
-            size.setHeight(size.height()-y_dif)
+            size.setHeight(size.height() - y_dif)
             proxy.resize(size)
 
             for items in gv.scene().items():
-                items.moveBy(0,-y_dif)
+                items.moveBy(0, -y_dif)
 
         if self.orientation == "bottom":
 
             for el in gv.movable_elements:
 
-                if isinstance(el,ResizeEdge):
-                    if el.orientation =="bottom_right" or el.orientation == "bottom_left":
-                        el.moveBy(0,y_dif)
+                if isinstance(el, ResizeEdge):
+                    if el.orientation == "bottom_right" or el.orientation == "bottom_left":
+                        el.moveBy(0, y_dif)
 
-            self.moveBy(0,y_dif)
+            self.moveBy(0, y_dif)
 
             size = proxy.size()
-            size.setHeight(size.height()+y_dif)
+            size.setHeight(size.height() + y_dif)
             proxy.resize(size)
 
 
@@ -589,20 +566,20 @@ class ResizeBorder(QtWidgets.QGraphicsRectItem):
 
                 elif isinstance(el, ResizeEdge):
                     if el.orientation == "bottom_left" or el.orientation == "top_left":
-                        el.moveBy(x_dif,0)
+                        el.moveBy(x_dif, 0)
 
                 elif isinstance(el, ResizeBorder):
                     if not el.orientation == "right":
                         el.moveBy(x_dif, 0)
 
-            proxy.moveBy(x_dif,0)
+            proxy.moveBy(x_dif, 0)
 
             size = proxy.size()
             size.setWidth(size.width() - x_dif)
             proxy.resize(size)
 
             for items in gv.scene().items():
-                items.moveBy(-x_dif,0)
+                items.moveBy(-x_dif, 0)
 
         elif self.orientation == "right":
 
@@ -612,7 +589,7 @@ class ResizeBorder(QtWidgets.QGraphicsRectItem):
                     if el.orientation == "bottom_right" or el.orientation == "top_right":
                         el.moveBy(x_dif, 0)
 
-            self.moveBy(x_dif,0)
+            self.moveBy(x_dif, 0)
 
             size = proxy.size()
             size.setWidth(size.width() + x_dif)
@@ -626,6 +603,7 @@ class ResizeBorder(QtWidgets.QGraphicsRectItem):
         application.instance().restoreOverrideCursor()
 
         pass
+
 
 class TitleBlock(QtWidgets.QGraphicsRectItem):
     def __init__(self, x, y, w, h, view: Union[TemplateRulesRectangle, TemplateRuleRectangle], text: str):
@@ -645,7 +623,6 @@ class TitleBlock(QtWidgets.QGraphicsRectItem):
         self.text.setFont(font)
         self.text.setZValue(1)
 
-
     pass
 
     def hoverEnterEvent(self, event):
@@ -659,19 +636,17 @@ class TitleBlock(QtWidgets.QGraphicsRectItem):
         pass
 
     def mouseMoveEvent(self, event: QtWidgets.QGraphicsSceneMouseEvent) -> None:
-
         orig_cursor_position = event.lastScenePos()
         updated_cursor_position = event.scenePos()
 
         x_dif = updated_cursor_position.x() - orig_cursor_position.x()
         y_dif = updated_cursor_position.y() - orig_cursor_position.y()
 
-
         for el in self.graphical_view.movable_elements:
-            el.moveBy(x_dif,y_dif)
-              
+            el.moveBy(x_dif, y_dif)
+
         proxy = self.graphical_view.graphicsProxyWidget()
-        proxy.moveBy(x_dif,y_dif)
+        proxy.moveBy(x_dif, y_dif)
 
     def mouseReleaseEvent(self, event: QtWidgets.QGraphicsSceneMouseEvent) -> None:
         application.instance().restoreOverrideCursor()
@@ -692,11 +667,9 @@ class Attribute(QtWidgets.QLabel):
 
 
 class Connection:
-
-    liste =[]
+    liste = []
 
     def __init__(self, attribute, right_proxy, text):
-
 
         self.label = None
         self.attribute = attribute
@@ -708,7 +681,6 @@ class Connection:
         self.create_text()
 
         Connection.liste.append(self)
-
 
     def __str__(self):
         return "Connection [{0}->{1}]".format(self.attribute, self.right_proxy)
@@ -795,8 +767,8 @@ class DragBox(QtWidgets.QGraphicsProxyWidget):
     def __init__(self, widget, top):
         super().__init__()
 
-        if isinstance(widget,EntityRepresentation):
-            widget.helper=self
+        if isinstance(widget, EntityRepresentation):
+            widget.helper = self
 
         self.setAcceptHoverEvents(True)
         self.setWidget(widget)
@@ -813,11 +785,11 @@ class DragBox(QtWidgets.QGraphicsProxyWidget):
             con = Connection(attribute, self, metric)
             self.connections.append(con)
             if isinstance(attribute, DragBox):
-                 attribute.connections.append(con)
+                attribute.connections.append(con)
             else:
-                 par = attribute.parent()
-                 proxy = par.helper
-                 proxy.connections.append(con)
+                par = attribute.parent()
+                proxy = par.helper
+                proxy.connections.append(con)
 
     def hoverEnterEvent(self, event):
         application.instance().setOverrideCursor(QtCore.Qt.OpenHandCursor)
@@ -830,9 +802,9 @@ class DragBox(QtWidgets.QGraphicsProxyWidget):
         pass
 
     def mouseMoveEvent(self, event: QtWidgets.QGraphicsSceneMouseEvent) -> None:
+
         orig_cursor_position = event.lastScenePos()
         updated_cursor_position = event.scenePos()
-
         orig_position = self.scenePos()
 
         x_dif = updated_cursor_position.x() - orig_cursor_position.x()
@@ -878,9 +850,9 @@ class DragBox(QtWidgets.QGraphicsProxyWidget):
 class EntityRepresentation(QFrame):
     """ Widget in DragBox"""
 
-    def __init__(self, title:str):
+    def __init__(self, title: str):
         super().__init__()
-        self.helper =None
+        self.helper = None
         self.title = title
         self.setLayout(QtWidgets.QVBoxLayout())
         self.setStyleSheet('QGroupBox:title {'
@@ -889,7 +861,7 @@ class EntityRepresentation(QFrame):
                            'padding-left: 10px;'
                            'padding-right: 10px; }')
 
-        self.setObjectName(str(random()*1000))
+        self.setObjectName(str(random() * 1000))
 
         self.title_widget = QtWidgets.QLabel(self.title)
         self.layout().addWidget(self.title_widget)
@@ -898,11 +870,10 @@ class EntityRepresentation(QFrame):
         return "[EntityRepresentation: {}]".format(self.title)
 
     def resizeEvent(self, event: QtGui.QResizeEvent) -> None:
-        #self.update_title(self.title)
+        # self.update_title(self.title)
         pass
 
     def add_attribute(self, data):
-
         text = data.has_for_attribute_name
         attrib = Attribute(text)
         self.layout().addWidget(attrib)
@@ -918,13 +889,7 @@ class LabelRepresentation(QtWidgets.QLabel):
         return "[Label: {0}]".format(self.text())
 
 
-
-
-
-
-
 class UiMainWindow(object):
-
 
     def setup_ui(self, main_window):
 
@@ -1013,7 +978,6 @@ class UiMainWindow(object):
 
         self.treeWidget.itemClicked.connect(self.on_tree_clicked)
 
-
     def on_tree_clicked(self, item):
 
         obj = item.konzept
@@ -1027,71 +991,18 @@ class UiMainWindow(object):
             for index, rules in enumerate(obj.has_template_rules):
                 self.loop_through_rules(rules, self.scene)
 
-
-    def print_tree(self):
-        for gv in self.scene.items():
-            if not isinstance(gv, (TitleBlock, QtWidgets.QGraphicsTextItem, QtWidgets.QGraphicsProxyWidget)):
-                print("{} Other Element {}".format("", gv))
-            if isinstance(gv, TitleBlock):
-                title_text = gv.text.toPlainText()
-
-            if isinstance(gv,QtWidgets.QGraphicsProxyWidget):
-                gv = gv.widget()
-
-                self.print_scenes(gv,"",title_text)
-        print("----------------------------")
-
-
-    def print_scenes(self, gv:TemplateRulesRectangle ,text,title_text):
-
-
-        print("{} {} Graphic View {}".format(text,title_text,gv))
-        text += "   "
-
-        title_text =""
-
-        for el in  gv.scene().items():
-
-            if not isinstance(el, TitleBlock | QtWidgets.QGraphicsTextItem | QtWidgets.QGraphicsProxyWidget):
-                print("{} Other Element {}".format(text, el))
-
-            if isinstance(el,TitleBlock):
-
-                title_text = el.text.toPlainText()
-
-            if isinstance(el,QtWidgets.QGraphicsProxyWidget) and isinstance(el.widget(), TemplateRulesRectangle):
-                el = el.widget()
-
-                if el is not None:
-                    pass
-                    #self.print_scenes(el,text,title_text)
-
-            elif(isinstance(el,QtWidgets.QGraphicsProxyWidget)):
-                if isinstance(el.widget(),TemplateRuleRectangle):
-                    el = el.widget()
-                    print("{}TEMPRULE {}".format(text,el.data.has_for_plain_text))
-                    print_template_rule_items(el,text)
-                else:
-                    print("{}PROXYWIDGET {}".format(text, el.widget()))
-
-
-
     def loop_through_rules(self, rules: Union[TemplateRule, TemplateRules], parent_scene):
         bbox = parent_scene.itemsBoundingRect()
 
-        item_count = int(len(parent_scene.items())/3)    #For every Rule exists 3 items (header,rule,title)
+        item_count = int(len(parent_scene.items()) / 3)  # For every Rule exists 3 items (header,rule,title)
 
-        position = QtCore.QPoint(BORDER, bbox.height() + (item_count+1) * BORDER + 25)
+        position = QtCore.QPoint(BORDER, bbox.height() + (item_count + 1) * BORDER + 25)
 
         if isinstance(rules, TemplateRule):
-            paths = rules.path_list
-            metrics = rules.metric_list
-            operators = rules.operator_list
-
-            template_rule_rectangle = TemplateRuleRectangle(parent_scene, position,rules)
+            template_rule_rectangle = TemplateRuleRectangle(parent_scene, position, rules)
             return template_rule_rectangle
 
-        elif isinstance(rules,TemplateRules):
+        elif isinstance(rules, TemplateRules):
             trr = TemplateRulesRectangle(parent_scene, position, rules)
 
             for i, rule in enumerate(rules.has_template_rules):
@@ -1107,49 +1018,14 @@ class UiMainWindow(object):
             height = trr.scene().itemsBoundingRect().height() + BORDER * 2
 
             trr.setGeometry(position.x(), position.y(), width, height)
-            trr.setSceneRect(-BORDER / 2, -BORDER / 2, width, height)
+            trr.setSceneRect(-BORDER, -BORDER, width, height)
             trr.add_title(trr.operator)
             trr.add_resize_elements()
 
             trr.centerOn(trr.sceneRect().center())
 
-def print_template_rule_items(tr: TemplateRuleRectangle, text):
-    text += " -->"
 
-    items = tr.scene().items()
-
-    text_list = []
-    path_list = []
-    else_list = []
-
-    for el in items:
-
-        if isinstance(el, QtWidgets.QGraphicsTextItem):
-            text_list.append(el)
-        elif isinstance(el, QtWidgets.QGraphicsPathItem):
-            path_list.append(el)
-        else:
-
-            else_list.append(el)
-    printall=False
-    if printall:
-
-        print("{} TEXTITEMS {} Stck.".format(text[:-3], len(text_list)))
-
-        for el in text_list:
-            print("   {} [TextItem] {}".format(text, el.toPlainText()))
-
-        print("{} PATHITEMS {} Stck.".format(text[:-3], len(path_list)))
-
-        for el in path_list:
-            print("   {} [PathItem] {}".format(text, ""))
-
-    print("{} ELSEITEMS {} Stck.".format(text[:-3], len(else_list)))
-    for el in else_list:
-        print("   {} {}".format(text, el))
-
-
-def main ():
+def main():
     global application
     global ui
     doc = "mvdXML_V1.1.xsd"
@@ -1166,6 +1042,7 @@ def main ():
     ui.setup_ui(window)
 
     sys.exit(application.exec())
+
 
 if __name__ == "__main__":
     exit(main())
