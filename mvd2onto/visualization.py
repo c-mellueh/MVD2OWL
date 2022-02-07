@@ -1140,7 +1140,7 @@ def main ():
     file3 = "../Examples/RelAssociatesMaterial.xml"
     file4 = "../Examples/IFC4precast_V1.01.mvdxml"
     file5 = "../Examples/kit2.mvdxml"
-    mvd = MvdXml(file=file5, doc=doc, validation=False)
+    mvd = MvdXml(file=file2, doc=doc, validation=False)
 
     application = QtWidgets.QApplication(sys.argv)
     window = QtWidgets.QMainWindow()
