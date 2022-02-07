@@ -235,8 +235,11 @@ class TemplateRuleRectangle(MovableRectangle):
         # size
         if last_block is not None and not isinstance(last_block, DragBox):
             xpos = last_block.parent().pos().x() + 220
+            ypos = last_block.y()
         elif isinstance(last_block, DragBox):
             xpos = last_block.pos().x() + 220
+            ypos = 0
+
         else:
             xpos = 0
         ypos = 0
@@ -262,7 +265,7 @@ class TemplateRuleRectangle(MovableRectangle):
         width = 100
         height = label_.height()
         xpos = connect_item.pos().x() + 225
-        ypos = 150
+        ypos = old_proxy.y()
 
         label_.setGeometry(xpos, ypos, width, height)
 
