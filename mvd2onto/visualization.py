@@ -8,6 +8,7 @@ from random import random
 # Constants 
 BORDER = 5
 RESIZE_BORDER_WIDTH = 10
+SCALING_FACTOR =0.1
 
 class testView(QGraphicsView):
 
@@ -20,11 +21,10 @@ class testView(QGraphicsView):
 
         if bool(modifier==QtCore.Qt.ControlModifier):
 
-
-            if val <0:
-                self.scale(0.9,0.9)
+            if val < 0:
+                self.scale(1-SCALING_FACTOR, 1-SCALING_FACTOR)
             else:
-                self.scale(1.1,1.1)
+                self.scale(1+SCALING_FACTOR, 1+SCALING_FACTOR)
 
         elif bool(modifier==QtCore.Qt.ShiftModifier):
 
