@@ -57,6 +57,9 @@ class MovableRectangle(QGraphicsView):
         self.movable_elements = []
         self.color = "grey"
         self.resize_elements = []
+        self.view = self.scene().views()[0]
+        self.view.setFrameStyle(QFrame.Box)
+
 
     def add_title(self,text):
         width = self.sceneRect().width()
@@ -82,11 +85,10 @@ class MovableRectangle(QGraphicsView):
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
 
     def change_border_color(self, color):
-        view = self.scene().views()[0]
-        view.setFrameStyle(QFrame.Box)
-        view.setLineWidth(2)
+
+        self.view.setLineWidth(2)
         style = "border: 2px solid {};".format(color)
-        view.setStyleSheet(style)
+        self.view.setStyleSheet(style)
 
     def resizeEvent(self, event):
 
