@@ -798,6 +798,9 @@ with onto:
             :rtype: (list,list)
             """
 
+            parent = self.get_parent()
+            concept_template = parent.refers
+            cr = parent.is_concept_of
             self.path_list = []
             self.metric_list = []
             self.operator_list = []
@@ -823,17 +826,6 @@ with onto:
                 self.operator_list.append(operator)
 
             return (self.path_list, self.metric_list,self.operator_list)
-
-        def get_referenced_concept(self) -> Concept:
-            """
-                   finds parent Concept
-
-                   :return: Parent Concept
-                   :rtype: Concept
-            """
-
-            parent = self.get_parent()
-            return parent
 
 
         def get_parent(self)-> Union[ConceptTemplate,Applicability]:
@@ -870,18 +862,6 @@ with onto:
             import_elements(self, xml_object, TemplateRules, has_template_rules, "TemplateRules")
             import_attribute(self,xml_object, has_for_operator, "operator", is_mandatory=False)
             # TODO: Add Description
-
-        def get_referenced_concept(self) -> Union[ConceptTemplate, Applicability]:
-            """
-                   finds parent Concept Template or parent Applicability
-
-                   :return: Parent ConceptTemplate or Parent Applicability
-                   :rtype: Union[ConceptTemplate, Applicability]
-            """
-
-            parent = self.get_parent()[0]
-            return parent
-            pass
 
         def get_parent(self):
             """loop up tree until Parent Concept Template/ Applicability is found
