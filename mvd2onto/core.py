@@ -205,23 +205,23 @@ def import_attribute(self, xml_object: etree._Element, prop, name: str, is_manda
         else:
             raise ValueError("datatype {} unknown".format(datatype))
 
-def import_identity_data(self, xml_object):
+def import_identity_data(python_object, xml_object):
     """
     Function Defintion
     --------
     imports all identity data specified by MVD Documentation
-
+    :param python_object: python Objekt
     :param xml_object: xml-object
     :type xml_object: etree._Element
     """
-    import_attribute(self,xml_object, has_for_uuid, "uuid", True)
-    import_attribute(self,xml_object, has_for_name, "name", False)
-    import_attribute(self,xml_object, has_for_code, "code", False)
-    import_attribute(self,xml_object, has_for_version, "version", False)
-    import_attribute(self,xml_object, has_for_status, "status", False)
-    import_attribute(self,xml_object, has_for_author, "author", False)
-    import_attribute(self,xml_object, has_for_owner, "owner", False)
-    import_attribute(self,xml_object, has_for_copyright, "copyright", False)
+    import_attribute(python_object,xml_object, has_for_uuid, "uuid", True)
+    import_attribute(python_object,xml_object, has_for_name, "name", False)
+    import_attribute(python_object,xml_object, has_for_code, "code", False)
+    import_attribute(python_object,xml_object, has_for_version, "version", False)
+    import_attribute(python_object,xml_object, has_for_status, "status", False)
+    import_attribute(python_object,xml_object, has_for_author, "author", False)
+    import_attribute(python_object,xml_object, has_for_owner, "owner", False)
+    import_attribute(python_object,xml_object, has_for_copyright, "copyright", False)
 
 
 
@@ -229,7 +229,7 @@ with onto:
     class MvdXml(Thing):
         """counterpart of 'MvdXml' (first Level of MVDxml)"""
 
-        def __init__(self, file: str = None, doc: str = None, validation=None) -> etree._Element:
+        def __init__(self, file: str ,validation=False, doc: str = None ) -> etree._Element:
 
             """
                Initial Startup of class (comparable to __init__)
@@ -242,21 +242,19 @@ with onto:
 
             super().__init__()
 
-            if not (file is None and doc is None and validation is None):
-                xml_object = self.import_xml(file, doc=doc, validation=validation)
+            xml_object = self.import_xml(file, doc=doc, validation=validation)
 
-                import_identity_data(self,xml_object)
-                import_items(self,xml_object, ConceptTemplate, has_concept_templates, "Templates")
+            import_identity_data(self,xml_object)
+            import_items(self,xml_object, ConceptTemplate, has_concept_templates, "Templates")
 
-                for entity_rule in EntityRule.instances():  # all Templates need to be imported befor it is possivle to find referenced templates
-                    entity_rule.reference_templates()
+            for entity_rule in EntityRule.instances():  # all Templates need to be imported befor it is possivle to find referenced templates
+                entity_rule.reference_templates()
 
-                import_items(self,xml_object, ModelView, has_model_views, "Views")
+            import_items(self,xml_object, ModelView, has_model_views, "Views")
 
-                for template_rule in TemplateRule.instances():  # all Rules needs to be imported, before it is possible to import them
-                    template_rule.get_linked_rules()
+            for template_rule in TemplateRule.instances():  # all Rules needs to be imported, before it is possible to import them
+                template_rule.get_linked_rules()
 
-            return None
 
         def import_xml(self, file: str, doc: str = None, validation=None) -> etree._Element:
             """
@@ -1083,7 +1081,7 @@ with onto:
         domain = [ConceptTemplate]
         range = [MvdXml]
         inverse_property = has_concept_templates
-        python_name = "mvdxml"
+        #python_name = "mvdxml"
         pass
 
 
@@ -1098,7 +1096,7 @@ with onto:
         domain = [ModelView]
         range = [MvdXml]
         inverse_property = has_model_views
-        python_name = "mvdxml"
+        #python_name = "mvdxml"
         pass
 
 
