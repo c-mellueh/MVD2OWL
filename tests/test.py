@@ -35,15 +35,16 @@ def main():
 
     print("START")
     print("")
-    tr = TemplateRule.instances()[0]
+    tr:TemplateRule = TemplateRule.instances()[0]
 
     print(tr.has_for_plain_text)
-    paths, metrics,operator = tr.get_linked_rules()
 
-    #print(len(tr.has_for_parameters))
-    #print(len(paths))
+    for i,parameter in enumerate(tr.has_for_parameters):
 
-    for i, path in enumerate(paths):
+        path = parameter.path
+        metric = parameter.has_for_metric
+        operator = parameter.has_for_parameter_operator
+
         # print(path)
         text = ""
         for el in path:
@@ -57,14 +58,14 @@ def main():
 
             elif isinstance(el, ConceptTemplate):
                 text += el.has_for_applicable_entity + "->"
-                print(el.has_for_applicable_entity)
+
             elif isinstance(el, ConceptRoot):
                 text += el.has_for_applicable_root_entity + "->"
 
             else:
                 text += str(el)
 
-        print("{0} ({1})".format(text, metrics[i]))
+        print("{0} {1} {2}".format(text,operator, metric))
 
     print()
     onto.save("onto_test.rdfxml")
