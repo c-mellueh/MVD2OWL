@@ -146,6 +146,95 @@ class MovableRectangle(QGraphicsView):
             self.movable_elements.append(el)
             el.setPen(pen)
 
+    def resize_top(self, y_dif):
+        proxy = self.graphicsProxyWidget()
+
+        x_dif = 0.0
+        for el in self.movable_elements:
+            if not isinstance(el, (ResizeEdge, ResizeBorder)):
+                el.moveBy(0, y_dif)
+
+            elif isinstance(el, ResizeEdge):
+                if el.orientation == "top_right" or el.orientation == "top_left":
+                    el.moveBy(0, y_dif)
+
+            elif isinstance(el, ResizeBorder):
+                if not el.orientation == "bottom":
+                    el.moveBy(0, y_dif)
+
+        proxy.moveBy(0, y_dif)
+
+        size = proxy.size()
+        size.setHeight(size.height() - y_dif)
+        proxy.resize(size)
+
+        for items in self.scene().items():
+            items.moveBy(0, -y_dif)
+
+    def resize_bottom(self,y_dif,):
+        proxy = self.graphicsProxyWidget()
+        for el in self.movable_elements:
+
+            if isinstance(el, ResizeEdge):
+                if el.orientation == "bottom_right" or el.orientation == "bottom_left":
+                    el.moveBy(0, y_dif)
+
+            if isinstance(el,ResizeBorder):
+                if el.orientation =="bottom":
+                    el.moveBy(0,y_dif)
+
+        size = proxy.size()
+        size.setHeight(size.height() + y_dif)
+        proxy.resize(size)
+
+    def resize_left(self,x_dif):
+        proxy = self.graphicsProxyWidget()
+        y_dif = 0.0
+        for el in self.movable_elements:
+            if not isinstance(el, (ResizeEdge, ResizeBorder)):
+                el.moveBy(x_dif, 0)
+
+            elif isinstance(el, ResizeEdge):
+                if el.orientation == "bottom_left" or el.orientation == "top_left":
+                    el.moveBy(x_dif, 0)
+
+            elif isinstance(el, ResizeBorder):
+                if not el.orientation == "right":
+                    el.moveBy(x_dif, 0)
+
+        proxy.moveBy(x_dif, 0)
+
+        size = proxy.size()
+        size.setWidth(size.width() - x_dif)
+        proxy.resize(size)
+
+        for items in self.scene().items():
+            items.moveBy(-x_dif, 0)
+
+    def resize_right(self,x_dif):
+        proxy = self.graphicsProxyWidget()
+        y_dif = 0.0
+        for el in self.movable_elements:
+
+            if isinstance(el, ResizeEdge):
+                if el.orientation == "bottom_right" or el.orientation == "top_right":
+                    el.moveBy(x_dif, 0)
+            if isinstance(el,ResizeBorder):
+                if el.orientation =="right":
+                    el.moveBy(x_dif,0)
+
+
+        size = proxy.size()
+        size.setWidth(size.width() + x_dif)
+        proxy.resize(size)
+
+    def resize_scene(self,x_dif,y_dif):
+        proxy = self.graphicsProxyWidget()
+        item: TemplateRuleRectangle = proxy.widget()
+        rec = item.scene().sceneRect()
+        rec.setWidth(rec.width() + x_dif)
+        rec.setHeight(rec.height() + y_dif)
+        item.scene().setSceneRect(rec)
 
 class TemplateRuleRectangle(MovableRectangle):
     def __init__(self, parent_scene, position: QPointF, data: TemplateRule):
@@ -345,121 +434,25 @@ class ResizeEdge(QtWidgets.QGraphicsRectItem):
         y_dif = updated_cursor_position.y() - orig_cursor_position.y()
 
         gv = self.graphical_view
-        proxy = gv.graphicsProxyWidget()
-
         self.scene().update()
 
         if self.orientation == "top_left":
-
-            for el in gv.movable_elements:
-                if not isinstance(el, (ResizeEdge, ResizeBorder)):
-
-                    el.moveBy(x_dif, y_dif)
-
-                elif isinstance(el, ResizeEdge):
-                    if el.orientation == "top_right":
-                        el.moveBy(0, y_dif)
-
-                    if el.orientation == "bottom_left":
-                        el.moveBy(x_dif, 0)
-                elif isinstance(el, ResizeBorder):
-                    if el.orientation == "top" or el.orientation == "left":
-                        el.moveBy(x_dif, y_dif)
-                    elif el.orientation == "right":
-                        el.moveBy(0, y_dif)
-                    elif el.orientation == "bottom":
-                        el.moveBy(x_dif, 0)
-
-            self.moveBy(x_dif, y_dif)
-
-            proxy.moveBy(x_dif, y_dif)
-
-            size = proxy.size()
-            size.setHeight(size.height() - y_dif)
-            size.setWidth(size.width() - x_dif)
-            proxy.resize(size)
-
-            for items in gv.scene().items():
-                items.moveBy(-x_dif, -y_dif)
+            gv.resize_left(x_dif)
+            gv.resize_top(y_dif)
 
         elif self.orientation == "top_right":
-            proxy.moveBy(0, y_dif)
-            for el in gv.movable_elements:
-                if not isinstance(el, (ResizeEdge, ResizeBorder)):
-                    el.moveBy(0, y_dif)
-                elif isinstance(el, ResizeEdge):
-                    if el.orientation == "top_left":
-                        el.moveBy(0, y_dif)
-                    elif el.orientation == "bottom_right":
-                        el.moveBy(x_dif, 0)
-                else:
-                    if el.orientation == "top":
-                        el.moveBy(0, y_dif)
-                    elif el.orientation == "right":
-                        el.moveBy(x_dif, y_dif)
-                    elif el.orientation == "left":
-                        el.moveBy(0, y_dif)
-
-            self.moveBy(x_dif, y_dif)
-
-            size = proxy.size()
-            size.setWidth(size.width() + x_dif)
-            size.setHeight(size.height() - y_dif)
-            proxy.resize(size)
-
-            for items in gv.scene().items():
-                items.moveBy(0, -y_dif)
+            gv.resize_top(y_dif)
+            gv.resize_right(x_dif)
 
         elif self.orientation == "bottom_left":
-            proxy.moveBy(x_dif, 0)
-            for el in gv.movable_elements:
-
-                if not isinstance(el, (ResizeEdge, ResizeBorder)):
-                    el.moveBy(x_dif, 0)
-                elif isinstance(el, ResizeEdge):
-                    if el.orientation == "top_left":
-                        el.moveBy(x_dif, 0)
-                    elif el.orientation == "bottom_right":
-                        el.moveBy(0, y_dif)
-                else:
-                    if el.orientation == "top":
-                        el.moveBy(x_dif, 0)
-                    elif el.orientation == "bottom":
-                        el.moveBy(x_dif, y_dif)
-                    elif el.orientation == "left":
-                        el.moveBy(x_dif, 0)
-
-            self.moveBy(x_dif, y_dif)
-
-            size = proxy.size()
-            size.setWidth(size.width() - x_dif)
-            size.setHeight(size.height() + y_dif)
-            proxy.resize(size)
-
-            for items in gv.scene().items():
-                items.moveBy(-x_dif, 0)
+            gv.resize_bottom(y_dif)
+            gv.resize_left(x_dif)
 
         elif self.orientation == "bottom_right":
-            # proxy.moveBy(x_dif,0)
-            for el in gv.movable_elements:
-                if isinstance(el, ResizeEdge):
-                    if el.orientation == "top_right":
-                        el.moveBy(x_dif, 0)
-                    elif el.orientation == "bottom_left":
-                        el.moveBy(0, y_dif)
+            gv.resize_bottom(y_dif)
+            gv.resize_right(x_dif)
 
-                if isinstance(el, ResizeBorder):
-                    if el.orientation == "bottom":
-                        el.moveBy(0, y_dif)
-                    if el.orientation == "right":
-                        el.moveBy(x_dif, 0)
-
-            self.moveBy(x_dif, y_dif)
-
-            size = proxy.size()
-            size.setWidth(size.width() + x_dif)
-            size.setHeight(size.height() + y_dif)
-            proxy.resize(size)
+        gv.resize_scene(x_dif,y_dif)
 
     def mouseReleaseEvent(self, event: QtWidgets.QGraphicsSceneMouseEvent) -> None:
         application.instance().restoreOverrideCursor()
@@ -508,6 +501,8 @@ class ResizeBorder(QtWidgets.QGraphicsRectItem):
         elif self.orientation == "left" or self.orientation == "right":
             application.instance().setOverrideCursor(QtCore.Qt.SizeHorCursor)
 
+
+
     def mouseMoveEvent(self, event: QtWidgets.QGraphicsSceneMouseEvent) -> None:
         orig_cursor_position = event.lastScenePos()
         updated_cursor_position = event.scenePos()
@@ -516,88 +511,25 @@ class ResizeBorder(QtWidgets.QGraphicsRectItem):
         y_dif = updated_cursor_position.y() - orig_cursor_position.y()
 
         gv = self.graphical_view
-        proxy = gv.graphicsProxyWidget()
 
         self.scene().update()
 
         if self.orientation == "top":
-
-            for el in gv.movable_elements:
-                if not isinstance(el, (ResizeEdge, ResizeBorder)):
-                    el.moveBy(0, y_dif)
-
-                elif isinstance(el, ResizeEdge):
-                    if el.orientation == "top_right" or el.orientation == "top_left":
-                        el.moveBy(0, y_dif)
-
-                elif isinstance(el, ResizeBorder):
-                    if not el.orientation == "bottom":
-                        el.moveBy(0, y_dif)
-
-            proxy.moveBy(0, y_dif)
-
-            size = proxy.size()
-            size.setHeight(size.height() - y_dif)
-            proxy.resize(size)
-
-            for items in gv.scene().items():
-                items.moveBy(0, -y_dif)
+            gv.resize_top(y_dif)
+            x_dif = x_dif =0.0
 
         if self.orientation == "bottom":
-
-            for el in gv.movable_elements:
-
-                if isinstance(el, ResizeEdge):
-                    if el.orientation == "bottom_right" or el.orientation == "bottom_left":
-                        el.moveBy(0, y_dif)
-
-            self.moveBy(0, y_dif)
-
-            size = proxy.size()
-            size.setHeight(size.height() + y_dif)
-            proxy.resize(size)
-
+            gv.resize_bottom(y_dif)
+            x_dif = 0.0
 
         elif self.orientation == "left":
-
-            for el in gv.movable_elements:
-                if not isinstance(el, (ResizeEdge, ResizeBorder)):
-                    el.moveBy(x_dif, 0)
-
-                elif isinstance(el, ResizeEdge):
-                    if el.orientation == "bottom_left" or el.orientation == "top_left":
-                        el.moveBy(x_dif, 0)
-
-                elif isinstance(el, ResizeBorder):
-                    if not el.orientation == "right":
-                        el.moveBy(x_dif, 0)
-
-            proxy.moveBy(x_dif, 0)
-
-            size = proxy.size()
-            size.setWidth(size.width() - x_dif)
-            proxy.resize(size)
-
-            for items in gv.scene().items():
-                items.moveBy(-x_dif, 0)
-
+            gv.resize_left(x_dif)
+            y_dif = 0.0
         elif self.orientation == "right":
+            gv.resize_right(x_dif)
+            y_dif = 0.0
 
-            for el in gv.movable_elements:
-
-                if isinstance(el, ResizeEdge):
-                    if el.orientation == "bottom_right" or el.orientation == "top_right":
-                        el.moveBy(x_dif, 0)
-
-            self.moveBy(x_dif, 0)
-
-            size = proxy.size()
-            size.setWidth(size.width() + x_dif)
-            proxy.resize(size)
-            item:TemplateRuleRectangle = proxy.widget()
-            rec = item.scene().sceneRect()
-            rec.setWidth(rec.width()+x_dif)
-            item.scene().setSceneRect(rec)
+        gv.resize_scene(x_dif,y_dif)
 
     def mouseReleaseEvent(self, event: QtWidgets.QGraphicsSceneMouseEvent) -> None:
         application.instance().restoreOverrideCursor()
