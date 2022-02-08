@@ -785,10 +785,10 @@ with onto:
             concept_template = parent.refers
             concept_root = parent.is_concept_of
             for parameter in self.has_for_parameters:
-                path = concept_template.find_rule_id(parameter.has_for_parameter_text)
+                path = concept_template.find_rule_id(parameter.parameter)
+                parameter.links_to_rule_id = path[-1]
                 path.insert(0, concept_root)
                 path.append(parameter.value)
-
                 parameter.path = path
 
         def get_parent(self) -> Union[ConceptTemplate, Applicability]:
@@ -1236,6 +1236,14 @@ with onto:
         inverse_property = has_links
         pass
 
+    class rule_id_is_linked_by(ObjectProperty,InverseFunctionalProperty):
+        domain = [Or([EntityRule, AttributeRule])]
+        range = [Parameter]
+
+    class links_to_rule_id(ObjectProperty,FunctionalProperty):
+        domain = [Parameter]
+        range = [Or([EntityRule,AttributeRule])]
+        inverse_property = rule_id_is_linked_by
 
     class has_for_applicable_schema(DataProperty, FunctionalProperty):
         domain = [Or([ConceptTemplate, ModelView])]
@@ -1385,7 +1393,6 @@ with onto:
     class has_for_id_prefix(DataProperty, FunctionalProperty):
         domain = [EntityRule]
         range = [str]
-
 
     class has_for_parameter_operator(DataProperty, FunctionalProperty):
         domain = [Parameter]
