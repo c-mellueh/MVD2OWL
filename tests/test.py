@@ -32,45 +32,39 @@ def main():
     #
     #
     # mvd.import_xml()
-
-    print("START")
-    print("")
     tr:TemplateRule = TemplateRule.instances()[0]
 
     print(tr.has_for_plain_text)
-
+    print("Path(s):")
     for i,parameter in enumerate(tr.has_for_parameters):
 
         path = parameter.path
-        metric = parameter.has_for_metric
-        operator = parameter.has_for_parameter_operator
+        metric = parameter.metric
+        operator = parameter.operator
 
         # print(path)
-        text = ""
+        text = []
         for el in path:
 
             if isinstance(el, AttributeRule):
-                text += el.has_for_attribute_name + "->"
-
+                text.append(str( el.has_for_attribute_name))
 
             elif isinstance(el, EntityRule):
-                text += el.has_for_entity_name + "->"
+                text.append(str(el.has_for_entity_name))
 
             elif isinstance(el, ConceptTemplate):
-                text += el.has_for_applicable_entity + "->"
+                text.append(str(el.has_for_applicable_entity))
 
             elif isinstance(el, ConceptRoot):
-                text += el.has_for_applicable_root_entity + "->"
-
+                text.append(str(el.has_for_applicable_root_entity ))
             else:
-                text += str(el)
+                text.append(str(el))
+        text.insert(len(text)-1, metric)
+        print("{} {} {}".format("->".join(text[:-1]),operator,text[-1]))
 
-        print("{0} {1} {2}".format(text,operator, metric))
-
-    print()
     onto.save("onto_test.rdfxml")
+    sync_reasoner()
 
-    close_world(MvdXml)
 
 if __name__ == "__main__":
         main()
