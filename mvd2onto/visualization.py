@@ -170,8 +170,8 @@ class TemplateRuleRectangle(MovableRectangle):
 
         for k, parameter in enumerate(data.has_for_parameters):
             path = parameter.path
-            metric = parameter.has_for_metric
-            operator = parameter.has_for_parameter_operator
+            metric = parameter.metric
+            operator = parameter.operator
 
             last_item = None
 
