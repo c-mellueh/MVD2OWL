@@ -206,7 +206,7 @@ with onto:
     class MvdXml(Thing):
         """counterpart of 'MvdXml' (first Level of MVDxml)"""
 
-        def __init__(self, file: str, validation=False, doc: str = None) -> etree._Element:
+        def __init__(self, file: str, validation=False, doc: str = None) -> None:
 
             """
                Initial Startup of class (comparable to __init__)
@@ -293,8 +293,7 @@ with onto:
 
             return None
 
-        def find_rule_id(self, ruleid: str, path: list = [], prefix="", entity_name=None) -> Union[
-            (None, None), (AttributeRule, list), (EntityRule, list)]:
+        def find_rule_id(self, ruleid: str, path: list = [], prefix="", entity_name=None) -> list[Union[ConceptTemplate,EntityRule,AttributeRule]]:
 
             """finds the path to an EntityRule/AttributeRule with matching ruleid
             :param ruleid: rule id searched rule
@@ -390,18 +389,7 @@ with onto:
             import_attribute(self, xml_object, has_for_lang, "lang", is_mandatory=False)
             import_attribute(self, xml_object, has_for_tags, "tags", is_mandatory=False)
 
-            self.import_content(xml_object)
-
-        def import_content(self, xml_object: etree._Element) -> None:
-            """
-            Imports Text of xml Object
-
-            :param xml_object: xml representation of MVDxml class
-            :type xml_object: etree._Element
-            """
-            content = xml_object.text
-            self.has_for_content = content
-
+            self.has_for_content = xml_object.text
 
     class Link(Thing):
         """Counterpart of 'Link' in MVDxml"""
@@ -447,8 +435,7 @@ with onto:
             import_attribute(self, xml_object, has_for_rule_id, "RuleID", is_mandatory=False)
             import_attribute(self, xml_object, has_for_description, "Description", is_mandatory=False)
 
-        def find_rule_id(self, ruleid: str, path: list = [], prefix="") -> Union[
-            (None, None), (AttributeRule, list), (EntityRule, list)]:
+        def find_rule_id(self, ruleid: str, path: list = [], prefix="") -> list[Union[ConceptTemplate,EntityRule,AttributeRule]]:
 
             """finds the path to an EntityRule/AttributeRule with matching ruleid
             :param ruleid: rule id searched rule
@@ -546,7 +533,7 @@ with onto:
                 if id_prefix is not None:
                     self.has_for_id_prefix = id_prefix
 
-        def link_referenced_template(self) -> ConceptTemplate:
+        def link_referenced_template(self) -> None:
             """
             This function needs to be called for every Entity Rule
                 after the whole MVD is initialized
@@ -562,8 +549,7 @@ with onto:
                     if uuid == concept_template.has_for_uuid:
                         self.refers = concept_template
 
-        def find_rule_id(self, ruleid: str, path: list = [], prefix: str = "") -> Union[
-            (None, None), (AttributeRule, list), (EntityRule, list)]:
+        def find_rule_id(self, ruleid: str, path: list = [], prefix: str = "") -> list[Union[ConceptTemplate,EntityRule,AttributeRule]]:
 
             """finds the path to an EntityRule/AttributeRule with matching ruleid
                 :param ruleid: rule id searched rule
@@ -907,16 +893,15 @@ with onto:
             """
 
             super().__init__()
-            self.has_for_text = text
-            self.has_for_parameter_text = None
-            self.has_for_metric = None
-            self.has_for_parameter_operator = None
+            self.has_for_plain_text = text
+            self.parameter = None
+            self.metric = None
+            self.oeprator = None
             self.value = None
-            self.deconstruct_parameter(self.has_for_text)
-
+            self.deconstruct_parameter()
             pass
 
-        def deconstruct_parameter(self, text: str):
+        def deconstruct_parameter(self):
             """
             Deconstructs Parameter and saves parts
 
@@ -926,21 +911,21 @@ with onto:
             :rtype: (str,str,str)
             """
 
-            text_helper = text.replace(" ", "")
+            text_helper = self.has_for_plain_text.replace(" ", "")
 
             pattern = re.compile("(.+)\\[(\D+)\\](=|>=|<=|>|<)(.+)")  # Deconstructs Parameter Text
             text_helper = re.search(pattern, text_helper)
             if text_helper is not None:
-                self.has_for_parameter_text = text_helper.group(1)
-                self.has_for_metric = self.import_metric(text_helper.group(2))
-                self.has_for_parameter_operator = text_helper.group(3)
+                self.parameter = text_helper.group(1)
+                self.metric = self.import_metric(text_helper.group(2))
+                self.operator = text_helper.group(3)
                 self.value = self.import_value(text_helper.group(4))
 
             else:
-                raise AttributeError("parameter is not correctly defined: " + str(text))
+                raise AttributeError("parameter is not correctly defined: " + str(self.has_for_plain_text))
 
-            return (self.has_for_parameter_text,
-                    self.has_for_metric,
+            return (self.parameter,
+                    self.metric,
                     self.value)
 
         @staticmethod
@@ -973,17 +958,17 @@ with onto:
 
             value = None
 
-            if self.has_for_metric == "Value":
+            if self.metric == "Value":
                 text = text.strip("'")
                 value = text.strip('"')
 
-            if self.has_for_metric == "Size":
+            if self.metric == "Size":
                 value = int(text)
 
-            if self.has_for_metric == "Type":
+            if self.metric == "Type":
                 value = text
 
-            if self.has_for_metric == "Unique" or self.has_for_metric == "Exists":
+            if self.metric == "Unique" or self.metric == "Exists":
 
                 if text.lower() in ["true"]:
                     value = True
@@ -1246,8 +1231,8 @@ with onto:
 
 
     class is_link_of(ObjectProperty, FunctionalProperty):
-        Domain = [Link]
-        Range = [Definition]
+        domain = [Link]
+        range = [Definition]
         inverse_property = has_links
         pass
 
@@ -1378,26 +1363,22 @@ with onto:
     class has_for_metric(DataProperty, FunctionalProperty):
         domain = [Parameter]
         range = [str]
+        python_name = "metric"
+
 
 
     class has_for_parameter_value(DataProperty, FunctionalProperty):
         domain = [Parameter]
         range = [Or([str, bool, int])]
-
-
-    class has_for_text(DataProperty, FunctionalProperty):
-        domain = [Parameter]
-        range = [str]
         python_name = "value"
 
-
-    class has_for_parameter_text(DataProperty, FunctionalProperty):
+    class has_for_parameter(DataProperty, FunctionalProperty):
         domain = [Parameter]
         range = [str]
-
+        python_name = "parameter"
 
     class has_for_plain_text(DataProperty, FunctionalProperty):
-        domain = [TemplateRule]
+        domain = [TemplateRule,Parameter]
         range = [str]
 
 
@@ -1409,7 +1390,7 @@ with onto:
     class has_for_parameter_operator(DataProperty, FunctionalProperty):
         domain = [Parameter]
         range = [str]
-
+        python_name = "operator"
 
     ## Identity Objects
     class has_for_uuid(DataProperty, FunctionalProperty):
