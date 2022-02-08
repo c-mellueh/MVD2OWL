@@ -312,9 +312,6 @@ with onto:
 
             path = path[:]  # else python will change the value of input
 
-            if entity_name != self.has_for_applicable_entity and self.is_sub_template_of is not None:  # if Concept Template is not called by Entity Rule
-                path.append(self)
-
             for concept_template in self.sub_templates:
 
                 new_path = concept_template.find_rule_id(ruleid, path=path, prefix=prefix)
