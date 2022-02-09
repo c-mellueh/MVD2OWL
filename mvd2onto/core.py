@@ -784,7 +784,6 @@ with onto:
                 path = concept_template.find_rule_id(parameter.parameter)
                 parameter.links_to_rule_id = path[-1]
                 path.insert(0, concept_root)
-                path.append(parameter.value)
                 parameter.path = path
 
         def get_parent(self) -> Union[ConceptTemplate, Applicability]:
