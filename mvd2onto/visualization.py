@@ -285,11 +285,10 @@ class TemplateRuleRectangle(MovableRectangle):
                         graphical_items_dict[path_item] = attribute_label
                         created_entities.append(path_item)
 
-                    else:
-                        graphical_items_dict[path_item] = self.add_label(template_rule_scene, path_item, last_block,
-                                                                         str(metric + operator))
-
                 last_item = path_item
+
+            last_block = graphical_items_dict.get(last_item)
+            self.add_label(template_rule_scene, parameter.value, last_block,str(metric + operator))
 
     def add_block(self, data, last_block):
 
