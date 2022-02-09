@@ -258,7 +258,7 @@ with onto:
                     raise ValueError("MVD entspricht nicht den Vorgaben der XSD")
                 else:
                     print("Dokument ist fehlerfrei")
-            elif doc is None:
+            elif validation and doc is None:
                 raise TypeError("attribute Doc needs to exist")  # TODO: richtiger Fehler raussuchen
 
             xml_object = xml_file.getroot()
