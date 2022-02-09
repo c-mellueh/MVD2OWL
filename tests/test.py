@@ -57,10 +57,8 @@ def main():
 
             elif isinstance(el, ConceptRoot):
                 text.append(str(el.has_for_applicable_root_entity ))
-            else:
-                text.append(str(el))
-        text.insert(len(text)-1, metric)
-        print("{} {} {}".format("->".join(text[:-1]),operator,text[-1]))
+
+        print("{} [{}] {} {}".format("->".join(text),metric,operator,parameter.value))
 
     onto.save("onto_test.rdfxml")
     sync_reasoner()
