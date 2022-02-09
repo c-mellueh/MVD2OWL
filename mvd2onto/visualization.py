@@ -884,7 +884,6 @@ class UiMainWindow(object):
         self.retranslate_ui(main_window)
         QtCore.QMetaObject.connectSlotsByName(main_window)
 
-        main_window.show()
 
         self.initialize()
 
@@ -894,6 +893,8 @@ class UiMainWindow(object):
         main_window.setWindowTitle(_translate("MainWindow", "MVD2Onto"))
 
     def initialize(self):
+        self.import_mvd()
+        self.main_window.show()
         self.treeWidget.setColumnCount(1)
         for concept_root in ConceptRoot.instances():
             name = concept_root.has_for_name
@@ -910,6 +911,12 @@ class UiMainWindow(object):
                 child.konzept = concept
 
         self.treeWidget.itemClicked.connect(self.on_tree_clicked)
+
+    def import_mvd(self):
+        file_path = QtWidgets.QFileDialog.getOpenFileName(caption="mvdXML Datei", filter="mvdXML (*xml);;All files (*.*)",
+                                              selectedFilter="mvdXML (*xml)")[0]
+
+        self.mvd =  MvdXml(file=file_path, validation=False)
 
     def on_tree_clicked(self, item):
 
@@ -961,14 +968,6 @@ class UiMainWindow(object):
 def main():
     global application
     global ui
-    doc = "mvdXML_V1.1.xsd"
-    file = "../Examples/mvdXML_V1-1-Final-Documentation.xml"
-    file2 = "../Examples/Prüfregeln.mvdxml"
-    file3 = "../Examples/RelAssociatesMaterial.xml"
-    file4 = "../Examples/IFC4precast_V1.01.mvdxml"
-    file5 = "../Examples/kit2.mvdxml"
-    mvd = MvdXml(file=file2, doc=doc, validation=False)
-
     application = QtWidgets.QApplication(sys.argv)
     window = QtWidgets.QMainWindow()
     ui = UiMainWindow()
