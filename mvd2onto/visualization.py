@@ -257,14 +257,14 @@ class TemplateRuleRectangle(MovableRectangle):
         graphical_items_dict = {}
         template_rule_scene = self.scene()
 
-        for k, parameter in enumerate(data.has_for_parameters):
+        for parameter in data.has_for_parameters:
             path = parameter.path
             metric = parameter.metric
             operator = parameter.operator
 
             last_item = None
 
-            for i, path_item in enumerate(path):
+            for path_item in path:
 
                 if path_item not in created_entities:
                     last_block = graphical_items_dict.get(last_item)
