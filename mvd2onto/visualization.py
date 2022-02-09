@@ -826,15 +826,17 @@ class UiMainWindow(object):
 
         # Fenster Aufbau
 
-        main_window.setObjectName("MainWindow")
-        main_window.resize(1920, 1080)
+        self.main_window = main_window
+
+        self.main_window.setObjectName("MainWindow")
+        self.main_window.resize(1920, 1080)
 
         # Base for Columns
         self.centralwidget = QtWidgets.QWidget(main_window)
         self.centralwidget.setObjectName("centralwidget")
         self.base_layout = QtWidgets.QGridLayout(self.centralwidget)
         self.base_layout.setObjectName("baseLayout")
-        main_window.setCentralWidget(self.centralwidget)
+        self.main_window.setCentralWidget(self.centralwidget)
 
         # Columns Layout for Treelist nad Object window
         self.horizontalLayout = QtWidgets.QHBoxLayout()
