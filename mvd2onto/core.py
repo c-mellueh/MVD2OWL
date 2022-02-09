@@ -293,7 +293,7 @@ with onto:
 
             return None
 
-        def find_rule_id(self, ruleid: str, path: list = [], prefix="", entity_name=None) -> list[Union[ConceptTemplate,EntityRule,AttributeRule]]:
+        def find_rule_id(self, ruleid: str, path: list = [], prefix="") -> list[Union[ConceptTemplate,EntityRule,AttributeRule]]:
 
             """finds the path to an EntityRule/AttributeRule with matching ruleid
             :param ruleid: rule id searched rule
@@ -576,8 +576,7 @@ with onto:
                         return new_path
 
                 if self.refers is not None:
-                    new_path = self.refers.find_rule_id(ruleid, path=path, prefix=prefix,
-                                                        entity_name=self.has_for_entity_name)
+                    new_path = self.refers.find_rule_id(ruleid, path=path, prefix=prefix)
                     if new_path is not None:
                         return new_path
 
