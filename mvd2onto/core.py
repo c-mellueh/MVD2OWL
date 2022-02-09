@@ -777,9 +777,9 @@ with onto:
             :rtype: (list,list)
             """
 
-            parent = self.get_parent()
-            concept_template = parent.refers
-            concept_root = parent.is_concept_of
+            parent_concept = self.get_parent()
+            concept_template = parent_concept.refers
+            concept_root = parent_concept.is_concept_of
             for parameter in self.has_for_parameters:
                 path = concept_template.find_rule_id(parameter.parameter)
                 parameter.links_to_rule_id = path[-1]
