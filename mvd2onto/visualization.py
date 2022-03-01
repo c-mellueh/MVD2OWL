@@ -4,12 +4,7 @@ from PySide6 import QtCore, QtGui, QtWidgets
 from PySide6.QtWidgets import *
 from PySide6.QtCore import QPointF, QPoint
 from random import random
-
-# Constants 
-BORDER = 5
-RESIZE_BORDER_WIDTH = 10
-SCALING_FACTOR =0.1
-
+import constants
 
 class MainView(QGraphicsView):
 
@@ -22,9 +17,9 @@ class MainView(QGraphicsView):
         if bool(modifier == QtCore.Qt.ControlModifier):
 
             if val < 0:
-                self.scale(1-SCALING_FACTOR, 1-SCALING_FACTOR)
+                self.scale(1-constants.SCALING_FACTOR, 1-constants.SCALING_FACTOR)
             else:
-                self.scale(1+SCALING_FACTOR, 1+SCALING_FACTOR)
+                self.scale(1+constants.SCALING_FACTOR, 1+constants.SCALING_FACTOR)
 
         elif bool(modifier == QtCore.Qt.ShiftModifier):
 
@@ -400,10 +395,10 @@ class ResizeEdge(QtWidgets.QGraphicsRectItem):
         self.orientation = orientation
         self.graphical_view = graphics_view
 
-        movement = QPoint(RESIZE_BORDER_WIDTH / 2, RESIZE_BORDER_WIDTH / 2)
+        movement = QPoint(constants.RESIZE_BORDER_WIDTH / 2, constants.RESIZE_BORDER_WIDTH / 2)
 
         position = position - movement
-        super().__init__(position.x(), position.y(), RESIZE_BORDER_WIDTH, RESIZE_BORDER_WIDTH)
+        super().__init__(position.x(), position.y(), constants.RESIZE_BORDER_WIDTH, constants.RESIZE_BORDER_WIDTH)
         self.setAcceptHoverEvents(True)
 
         self.setZValue(100)
@@ -900,7 +895,7 @@ class UiMainWindow(object):
             name = concept_root.has_for_name
 
             if name == "":
-                name = "undefined"
+                name = constants.UNDEFINED_ROOT_NAME
 
             item = QTreeWidgetItem(self.treeWidget, [name])
             item.konzept = concept_root
@@ -936,7 +931,7 @@ class UiMainWindow(object):
 
         item_count = int(len(parent_scene.items()) / 3)  # For every Rule exists 3 items (header,rule,title)
 
-        position = QtCore.QPoint(BORDER, bbox.height() + (item_count + 1) * BORDER + 25)
+        position = QtCore.QPoint(constants.BORDER, bbox.height() + (item_count + 1) * constants.BORDER + 25)
 
         if isinstance(rules, TemplateRule):
             template_rule_rectangle = TemplateRuleRectangle(parent_scene, position, rules)
@@ -954,11 +949,11 @@ class UiMainWindow(object):
 
             trr.parent_scene.addWidget(trr)
 
-            width = trr.scene().itemsBoundingRect().width() + BORDER * 2
-            height = trr.scene().itemsBoundingRect().height() + BORDER * 2
+            width = trr.scene().itemsBoundingRect().width() + constants.BORDER * 2
+            height = trr.scene().itemsBoundingRect().height() + constants.BORDER * 2
 
             trr.setGeometry(position.x(), position.y(), width, height)
-            trr.setSceneRect(-BORDER, -BORDER, width, height)
+            trr.setSceneRect(-constants.BORDER, -constants.BORDER, width, height)
             trr.add_title(trr.operator)
             trr.add_resize_elements()
 
