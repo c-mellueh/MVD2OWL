@@ -331,7 +331,7 @@ class TemplateRuleRectangle(RuleRectangle):
         label_.setSizePolicy(size_policy)
         proxy = DragBox(label_, self)
         scene.addItem(proxy)
-        width = 100
+        width = label_.width()+20
         height = label_.height()
         xpos = connect_item.pos().x() + 225
         ypos = old_proxy.y()-10
@@ -540,6 +540,9 @@ class TitleBlock(QtWidgets.QGraphicsRectItem):
         self.setAcceptHoverEvents(True)
         self.graphical_view = view
 
+        if text == None:
+            text = ""
+
         self.text = QtWidgets.QGraphicsTextItem(text.upper())
 
         self.graphical_view.parent_scene.addItem(self.text)
@@ -589,7 +592,7 @@ class Attribute(QtWidgets.QLabel):
         super().__init__()
         self.setText(text)
         self.connections = []
-        self.setFrameStyle(1)
+        self.setFrameShape(QtWidgets.QFrame.Shape.StyledPanel)
 
     def __str__(self):
         return "[Attribut] {0}".format(self.text())
@@ -827,6 +830,10 @@ class EntityRepresentation(QFrame):
 
 
 class LabelRepresentation(QtWidgets.QLabel):
+    def __init__(self):
+        super().__init__()
+        self.setAlignment(QtCore.Qt.AlignCenter)
+
     def __str__(self):
         return "[Label: {0}]".format(self.text())
 
