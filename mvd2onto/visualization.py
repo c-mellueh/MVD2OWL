@@ -85,9 +85,11 @@ class RuleRectangle(QGraphicsView):
     def resizeEvent(self, event):
 
         if self.title_block is not None:
-            bar_height = self.title_block.rect().height()
-            width = self.size().width()
+
+
             rec = self.title_block.rect()
+            bar_height = rec.height()
+            width = self.size().width()
             rec.setWidth(width)
             self.title_block.setRect(rec)
 
@@ -144,7 +146,6 @@ class RuleRectangle(QGraphicsView):
     def resize_top(self, y_dif):
         proxy = self.graphicsProxyWidget()
 
-        x_dif = 0.0
         for el in self.movable_elements:
             if not isinstance(el, (ResizeEdge, ResizeBorder)):
                 el.moveBy(0, y_dif)
@@ -183,8 +184,8 @@ class RuleRectangle(QGraphicsView):
         proxy.resize(size)
 
     def resize_left(self,x_dif):
-        proxy = self.graphicsProxyWidget()
-        y_dif = 0.0
+        proxy:QtWidgets.QGraphicsProxyWidget = self.graphicsProxyWidget()
+
         for el in self.movable_elements:
             if not isinstance(el, (ResizeEdge, ResizeBorder)):
                 el.moveBy(x_dif, 0)
@@ -197,6 +198,7 @@ class RuleRectangle(QGraphicsView):
                 if not el.orientation == "right":
                     el.moveBy(x_dif, 0)
 
+
         proxy.moveBy(x_dif, 0)
 
         size = proxy.size()
@@ -207,8 +209,8 @@ class RuleRectangle(QGraphicsView):
             items.moveBy(-x_dif, 0)
 
     def resize_right(self,x_dif):
-        proxy = self.graphicsProxyWidget()
-        y_dif = 0.0
+        proxy: QtWidgets.QGraphicsProxyWidget = self.graphicsProxyWidget()
+
         for el in self.movable_elements:
 
             if isinstance(el, ResizeEdge):
@@ -243,7 +245,7 @@ class TemplateRuleRectangle(RuleRectangle):
         height = self.sceneRect().height() + 20
 
         self.setGeometry(position.x(), position.y(), width, height)
-        self.setSceneRect(-10, -10, width, height)
+        #self.setSceneRect(0, 0, width, height)
         self.add_title("TemplateRule")
         self.turn_off_scrollbar()
 
@@ -271,7 +273,6 @@ class TemplateRuleRectangle(RuleRectangle):
                         template_rule_scene.addItem(block)
                         block.solve_collisions()
                         block.connect_to_entity(last_block)
-
                         graphical_items_dict[path_item] = block
                         created_entities.append(path_item)
                         pass
@@ -373,7 +374,7 @@ class TemplateRulesRectangle(RuleRectangle):
         self.title_block = None
 
     def wheelEvent(self, event: QtGui.QWheelEvent) -> None:
-        ui.graphicsView.wheelEvent(event)
+        ui.graphics_view.wheelEvent(event)
 
         pass
 
@@ -842,45 +843,45 @@ class UiMainWindow(object):
         self.main_window.resize(1920, 1080)
 
         # Base for Columns
-        self.centralwidget = QtWidgets.QWidget(main_window)
-        self.centralwidget.setObjectName("centralwidget")
-        self.base_layout = QtWidgets.QGridLayout(self.centralwidget)
+        self.central_widget = QtWidgets.QWidget(main_window)
+        self.central_widget.setObjectName("central_widget")
+        self.base_layout = QtWidgets.QGridLayout(self.central_widget)
         self.base_layout.setObjectName("baseLayout")
-        self.main_window.setCentralWidget(self.centralwidget)
+        self.main_window.setCentralWidget(self.central_widget)
 
         # Columns Layout for Treelist nad Object window
-        self.horizontalLayout = QtWidgets.QHBoxLayout()
-        self.horizontalLayout.setSpacing(5)
-        self.horizontalLayout.setObjectName("horizontalLayout")
+        self.horizontal_layout = QtWidgets.QHBoxLayout()
+        self.horizontal_layout.setSpacing(5)
+        self.horizontal_layout.setObjectName("horizontal_layout")
 
         # Inhalt in Fenster hinzufügen
-        self.base_layout.addLayout(self.horizontalLayout, 0, 0, 1, 1)
+        self.base_layout.addLayout(self.horizontal_layout, 0, 0, 1, 1)
 
         # Tree Widget
-        self.treeWidget = QtWidgets.QTreeWidget(self.centralwidget)
+        self.tree_widget = QtWidgets.QTreeWidget(self.central_widget)
 
         # Set Size Policy for TreeWidget
         size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         size_policy.setHorizontalStretch(1)
         size_policy.setVerticalStretch(1)
-        size_policy.setHeightForWidth(self.treeWidget.sizePolicy().hasHeightForWidth())
-        self.treeWidget.setSizePolicy(size_policy)
-        self.treeWidget.setObjectName("RuleBrowser")
-        self.treeWidget.headerItem().setText(0, "Regeln")
+        size_policy.setHeightForWidth(self.tree_widget.sizePolicy().hasHeightForWidth())
+        self.tree_widget.setSizePolicy(size_policy)
+        self.tree_widget.setObjectName("tree_widget")
+        self.tree_widget.headerItem().setText(0, "Regeln")
 
-        self.horizontalLayout.addWidget(self.treeWidget)
+        self.horizontal_layout.addWidget(self.tree_widget)
 
         # Object Window
         self.scene = QGraphicsScene()
-        self.graphicsView = MainView(self.scene)
+        self.graphics_view = MainView(self.scene)
         size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         size_policy.setHorizontalStretch(3)
         size_policy.setVerticalStretch(1)
-        size_policy.setHeightForWidth(self.graphicsView.sizePolicy().hasHeightForWidth())
-        self.graphicsView.setSizePolicy(size_policy)
-        self.graphicsView.setObjectName("graphicsView")
+        size_policy.setHeightForWidth(self.graphics_view.sizePolicy().hasHeightForWidth())
+        self.graphics_view.setSizePolicy(size_policy)
+        self.graphics_view.setObjectName("graphics_view")
 
-        self.horizontalLayout.addWidget(self.graphicsView)
+        self.horizontal_layout.addWidget(self.graphics_view)
 
         self.menubar = QtWidgets.QMenuBar(main_window)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 1527, 22))
@@ -895,36 +896,38 @@ class UiMainWindow(object):
         QtCore.QMetaObject.connectSlotsByName(main_window)
 
 
-        self.initialize()
 
-    @staticmethod
-    def retranslate_ui(main_window):
+    def retranslate_ui(self,main_window):
         _translate = QtCore.QCoreApplication.translate
         main_window.setWindowTitle(_translate("MainWindow", "MVD2Onto"))
+        self.initialize()
+
 
     def initialize(self):
         self.import_mvd()
         self.main_window.show()
-        self.treeWidget.setColumnCount(1)
+        self.tree_widget.setColumnCount(1)
         for concept_root in ConceptRoot.instances():
             name = concept_root.has_for_name
 
             if name == "":
                 name = constants.UNDEFINED_ROOT_NAME
 
-            item = QTreeWidgetItem(self.treeWidget, [name])
+            item = QTreeWidgetItem(self.tree_widget, [name])
             item.konzept = concept_root
-            self.treeWidget.addTopLevelItem(item)
+            self.tree_widget.addTopLevelItem(item)
 
             for concept in concept_root.has_concepts:
                 child = QTreeWidgetItem(item, [concept.has_for_name])
                 child.konzept = concept
 
-        self.treeWidget.itemClicked.connect(self.on_tree_clicked)
+        self.tree_widget.itemClicked.connect(self.on_tree_clicked)
 
     def import_mvd(self):
         file_path = QtWidgets.QFileDialog.getOpenFileName(caption="mvdXML Datei", filter="mvdXML (*xml);;All files (*.*)",
-                                              selectedFilter="mvdXML (*xml)")[0]
+                                               selectedFilter="mvdXML (*xml)")[0]
+
+        #file_path = "../Examples/RelAssociatesMaterial.xml"
 
         self.mvd =  MvdXml(file=file_path, validation=False)
 
