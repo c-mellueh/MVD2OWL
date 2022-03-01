@@ -269,6 +269,7 @@ class TemplateRuleRectangle(RuleRectangle):
 
                         block = self.add_block(path_item, last_block)
                         template_rule_scene.addItem(block)
+                        block.solve_collisions()
                         block.connect_to_entity(last_block)
 
                         graphical_items_dict[path_item] = block
@@ -332,7 +333,7 @@ class TemplateRuleRectangle(RuleRectangle):
         width = 100
         height = label_.height()
         xpos = connect_item.pos().x() + 225
-        ypos = old_proxy.y()
+        ypos = old_proxy.y()-10
 
         label_.setGeometry(xpos, ypos, width, height)
 
@@ -771,8 +772,21 @@ class DragBox(QtWidgets.QGraphicsProxyWidget):
     def mouseReleaseEvent(self, event: QtWidgets.QGraphicsSceneMouseEvent) -> None:
         application.instance().restoreOverrideCursor()
 
-    pass
+    def solve_collisions(self):
 
+        collisions = self.collidingItems()
+
+        t_bool = False
+
+        if any(isinstance(x,DragBox) for x in collisions):
+            t_bool = True
+
+        while any(isinstance(x,DragBox) for x in collisions):
+            self.moveBy(0.0,5.0)
+            collisions = self.collidingItems()
+
+        if t_bool:
+            self.moveBy(0,10)
 
 class EntityRepresentation(QFrame):
     """ Widget in DragBox"""
