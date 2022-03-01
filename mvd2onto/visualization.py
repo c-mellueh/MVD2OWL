@@ -35,7 +35,7 @@ class MainView(QGraphicsView):
         self.update()
 
 
-class MovableRectangle(QGraphicsView):
+class RuleRectangle(QGraphicsView):
     """parent class of TemplateRuleRectangle & TemplateRulesRectangle"""
 
     def __init__(self, position: QPointF, data: Union[TemplateRule, TemplateRules], parent_scene: QGraphicsScene):
@@ -231,7 +231,8 @@ class MovableRectangle(QGraphicsView):
         rec.setHeight(rec.height() + y_dif)
         item.scene().setSceneRect(rec)
 
-class TemplateRuleRectangle(MovableRectangle):
+
+class TemplateRuleRectangle(RuleRectangle):
     def __init__(self, parent_scene, position: QPointF, data: TemplateRule):
 
         super().__init__(position, data, parent_scene)
@@ -349,7 +350,7 @@ class TemplateRuleRectangle(MovableRectangle):
         return proxy
 
 
-class TemplateRulesRectangle(MovableRectangle):
+class TemplateRulesRectangle(RuleRectangle):
 
     def __init__(self, parent_scene: QGraphicsScene, position: QPointF, data: TemplateRules) -> object:
         """
