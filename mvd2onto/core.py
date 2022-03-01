@@ -258,7 +258,7 @@ with onto:
                     raise ValueError("MVD entspricht nicht den Vorgaben der XSD")
                 else:
                     print("Dokument ist fehlerfrei")
-            elif doc is None:
+            elif validation and doc is None:
                 raise TypeError("attribute Doc needs to exist")  # TODO: richtiger Fehler raussuchen
 
             xml_object = xml_file.getroot()
@@ -293,7 +293,7 @@ with onto:
 
             return None
 
-        def find_rule_id(self, ruleid: str, path: list = [], prefix="", entity_name=None) -> list[Union[ConceptTemplate,EntityRule,AttributeRule]]:
+        def find_rule_id(self, ruleid: str, path: list = [], prefix="") -> list[Union[ConceptTemplate,EntityRule,AttributeRule]]:
 
             """finds the path to an EntityRule/AttributeRule with matching ruleid
             :param ruleid: rule id searched rule
@@ -311,9 +311,6 @@ with onto:
             """
 
             path = path[:]  # else python will change the value of input
-
-            if entity_name != self.has_for_applicable_entity and self.is_sub_template_of is not None:  # if Concept Template is not called by Entity Rule
-                path.append(self)
 
             for concept_template in self.sub_templates:
 
@@ -579,8 +576,7 @@ with onto:
                         return new_path
 
                 if self.refers is not None:
-                    new_path = self.refers.find_rule_id(ruleid, path=path, prefix=prefix,
-                                                        entity_name=self.has_for_entity_name)
+                    new_path = self.refers.find_rule_id(ruleid, path=path, prefix=prefix)
                     if new_path is not None:
                         return new_path
 
@@ -781,14 +777,13 @@ with onto:
             :rtype: (list,list)
             """
 
-            parent = self.get_parent()
-            concept_template = parent.refers
-            concept_root = parent.is_concept_of
+            parent_concept = self.get_parent()
+            concept_template = parent_concept.refers
+            concept_root = parent_concept.is_concept_of
             for parameter in self.has_for_parameters:
                 path = concept_template.find_rule_id(parameter.parameter)
                 parameter.links_to_rule_id = path[-1]
                 path.insert(0, concept_root)
-                path.append(parameter.value)
                 parameter.path = path
 
         def get_parent(self) -> Union[ConceptTemplate, Applicability]:
