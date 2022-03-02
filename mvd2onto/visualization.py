@@ -1,3 +1,5 @@
+import time
+
 from core import *
 from typing import Union
 from PySide6 import QtCore, QtGui, QtWidgets
@@ -22,41 +24,36 @@ class MainView(QGraphicsView):
                 self.scale(1+constants.SCALING_FACTOR, 1+constants.SCALING_FACTOR)
 
         elif bool(modifier == QtCore.Qt.ShiftModifier):
-
             hor = self.horizontalScrollBar()
             hor.setValue(hor.value() - val)
 
         else:
-
             ver = self.verticalScrollBar()
-
             ver.setValue(ver.value() - val)
-
         self.update()
 
 
-class RuleRectangle(QGraphicsView):
-    """parent class of TemplateRuleRectangle & TemplateRulesRectangle"""
+class RuleGraphicsView(QGraphicsView):
+    """parent class of TemplateRuleGraphicsView & TemplateRulesGraphicsView"""
 
-    def __init__(self, position: QPointF, data: Union[TemplateRule, TemplateRules], parent_scene: QGraphicsScene):
+    def __init__(self, data: Union[TemplateRule, TemplateRules], parent_scene: QGraphicsScene):
         super().__init__()
         scene = QGraphicsScene()
         self.setScene(scene)
-        self.move(position)
         self.data = data
         self.parent_scene = parent_scene
         self.turn_off_scrollbar()
-        self.movable_elements = []
         self.color = "grey"
+        self.setFrameStyle(QFrame.Box)
+
+        #lists
+        self.movable_elements = []
         self.resize_elements = []
-        self.view = self.scene().views()[0]
-        self.view.setFrameStyle(QFrame.Box)
 
 
     def add_title(self, text):
-        width = self.sceneRect().width()
-        self.title_block = TitleBlock(self.pos().x(), self.pos().y() - 25,
-                                      width, 25, self, text)
+        width = self.width()
+        self.title_block = TitleBlock(width, constants.TITLE_BLOCK_HEIGHT, self, text)
 
         # Brush
         brush = QtGui.QBrush()
@@ -64,7 +61,7 @@ class RuleRectangle(QGraphicsView):
         brush.setColor(QtGui.QColor(self.color))
 
         self.title_block.setBrush(brush)
-        self.title_block.setZValue(0)
+        #self.title_block.setZValue(0)
 
         self.parent_scene.addItem(self.title_block)
         self.movable_elements.append(self.title_block)
@@ -78,9 +75,9 @@ class RuleRectangle(QGraphicsView):
 
     def change_border_color(self, color):
 
-        self.view.setLineWidth(2)
+        self.setLineWidth(2)
         style = "border: 2px solid {};".format(color)
-        self.view.setStyleSheet(style)
+        self.setStyleSheet(style)
 
     def resizeEvent(self, event):
 
@@ -226,28 +223,32 @@ class RuleRectangle(QGraphicsView):
         proxy.resize(size)
 
     def resize_scene(self,x_dif,y_dif):
-        proxy = self.graphicsProxyWidget()
-        item: TemplateRuleRectangle = proxy.widget()
-        rec = item.scene().sceneRect()
+        rec = self.scene().sceneRect()
         rec.setWidth(rec.width() + x_dif)
         rec.setHeight(rec.height() + y_dif)
-        item.scene().setSceneRect(rec)
+        self.scene().setSceneRect(rec)
+
+    def moveBy(self,x_dif,y_dif):
+        for el in self.movable_elements:
+            el.moveBy(x_dif, y_dif)
+
+        proxy = self.graphicsProxyWidget()
+        proxy.moveBy(x_dif, y_dif)
 
 
-class TemplateRuleRectangle(RuleRectangle):
-    def __init__(self, parent_scene, position: QPointF, data: TemplateRule):
+class TemplateRuleGraphicsView(RuleGraphicsView):
+    def __init__(self, parent_scene, data: TemplateRule):
 
-        super().__init__(position, data, parent_scene)
+        super().__init__(data, parent_scene)
 
+        self.setObjectName(str(data))
         self.import_visuals(data)
-
-        width = self.sceneRect().width() + 20
-        height = self.sceneRect().height() + 20
-
-        self.setGeometry(position.x(), position.y(), width, height)
-        #self.setSceneRect(0, 0, width, height)
         self.add_title("TemplateRule")
         self.turn_off_scrollbar()
+
+
+        new_rec = QtCore.QRectF( self.sceneRect().x(),self.sceneRect().y(),self.sceneRect().width()+constants.BORDER,self.sceneRect().height()+constants.BORDER)
+        self.setSceneRect(new_rec)
 
     def import_visuals(self, data: TemplateRule):
 
@@ -259,7 +260,6 @@ class TemplateRuleRectangle(RuleRectangle):
             path = parameter.path
             metric = parameter.metric
             operator = parameter.operator
-
             last_item = None
 
             for path_item in path:
@@ -287,6 +287,7 @@ class TemplateRuleRectangle(RuleRectangle):
 
             last_block = graphical_items_dict.get(last_item)
             self.add_label(template_rule_scene, parameter.value, last_block,str(metric + operator))
+
 
     def add_block(self, data, last_block):
 
@@ -352,9 +353,9 @@ class TemplateRuleRectangle(RuleRectangle):
         return proxy
 
 
-class TemplateRulesRectangle(RuleRectangle):
+class TemplateRulesGraphicsView(RuleGraphicsView):
 
-    def __init__(self, parent_scene: QGraphicsScene, position: QPointF, data: TemplateRules) -> object:
+    def __init__(self, parent_scene: QGraphicsScene, data: TemplateRules) -> object:
         """
 
         :param parent_scene:
@@ -365,17 +366,15 @@ class TemplateRulesRectangle(RuleRectangle):
         :type data:
         """
 
-        super().__init__(position, data, parent_scene)
-
+        super().__init__(data, parent_scene)
+        self.setObjectName(str(data))
         self.operator = self.data.has_for_operator
         self.color = self.get_color()
         self.change_border_color(self.color)
-
         self.title_block = None
 
     def wheelEvent(self, event: QtGui.QWheelEvent) -> None:
         ui.graphics_view.wheelEvent(event)
-
         pass
 
     def get_color(self):
@@ -392,7 +391,7 @@ class TemplateRulesRectangle(RuleRectangle):
 
 class ResizeEdge(QtWidgets.QGraphicsRectItem):
 
-    def __init__(self, graphics_view: TemplateRulesRectangle, parent: QGraphicsScene, position: QPointF,
+    def __init__(self, graphics_view: TemplateRulesGraphicsView, parent: QGraphicsScene, position: QPointF,
                  orientation: str):
 
         self.orientation = orientation
@@ -404,7 +403,7 @@ class ResizeEdge(QtWidgets.QGraphicsRectItem):
         super().__init__(position.x(), position.y(), constants.RESIZE_BORDER_WIDTH, constants.RESIZE_BORDER_WIDTH)
         self.setAcceptHoverEvents(True)
 
-        self.setZValue(100)
+        self.setZValue(10)
         parent.addItem(self)
 
     def hoverEnterEvent(self, event):
@@ -459,7 +458,7 @@ class ResizeEdge(QtWidgets.QGraphicsRectItem):
 
 class ResizeBorder(QtWidgets.QGraphicsRectItem):
 
-    def __init__(self, graphics_view: TemplateRulesRectangle, parent: QGraphicsScene, position: QPointF,
+    def __init__(self, graphics_view: TemplateRulesGraphicsView, parent: QGraphicsScene, position: QPointF,
                  orientation: str):
 
         self.orientation = orientation
@@ -535,8 +534,8 @@ class ResizeBorder(QtWidgets.QGraphicsRectItem):
 
 
 class TitleBlock(QtWidgets.QGraphicsRectItem):
-    def __init__(self, x, y, w, h, view: Union[TemplateRulesRectangle, TemplateRuleRectangle], text: str):
-        super().__init__(x, y, w, h)
+    def __init__(self, w, h, view: Union[TemplateRulesGraphicsView, TemplateRuleGraphicsView], text: str):
+        super().__init__(0, 0, w, h)
         self.setAcceptHoverEvents(True)
         self.graphical_view = view
 
@@ -546,7 +545,7 @@ class TitleBlock(QtWidgets.QGraphicsRectItem):
         self.text = QtWidgets.QGraphicsTextItem(text.upper())
 
         self.graphical_view.parent_scene.addItem(self.text)
-        self.text.setPos(x, y)
+        self.text.setPos(0, 0)
         self.text.setDefaultTextColor("white")
 
         font = QtGui.QFont()
@@ -901,7 +900,7 @@ class UiMainWindow(object):
 
         self.retranslate_ui(main_window)
         QtCore.QMetaObject.connectSlotsByName(main_window)
-
+        self.counter = 0
 
 
     def retranslate_ui(self,main_window):
@@ -931,59 +930,63 @@ class UiMainWindow(object):
         self.tree_widget.itemClicked.connect(self.on_tree_clicked)
 
     def import_mvd(self):
-        file_path = QtWidgets.QFileDialog.getOpenFileName(caption="mvdXML Datei", filter="mvdXML (*xml);;All files (*.*)",
-                                               selectedFilter="mvdXML (*xml)")[0]
+        #file_path = QtWidgets.QFileDialog.getOpenFileName(caption="mvdXML Datei", filter="mvdXML (*xml);;All files (*.*)",
+        #                                       selectedFilter="mvdXML (*xml)")[0]
 
         #file_path = "../Examples/RelAssociatesMaterial.xml"
+
+        file_path = "../Examples/Prüfregeln.mvdxml"
 
         self.mvd =  MvdXml(file=file_path, validation=False)
 
     def on_tree_clicked(self, item):
-
+        self.counter+=1
         obj = item.konzept
         self.scene.clear()
+        self.graphics_view.resetTransform()
+
+        self.graphics_view.horizontalScrollBar().setValue(0)
+        self.graphics_view.verticalScrollBar().setValue(0)
 
         if isinstance(obj, ConceptRoot):
+            applicability = obj.has_applicability
+            for index, rules in enumerate(applicability.has_template_rules):
+                self.loop_through_rules(rules, self.scene)
             pass
 
         if isinstance(obj, Concept):
-
             for index, rules in enumerate(obj.has_template_rules):
                 self.loop_through_rules(rules, self.scene)
 
+        self.graphics_view.setSceneRect(self.graphics_view.scene().itemsBoundingRect())
+
     def loop_through_rules(self, rules: Union[TemplateRule, TemplateRules], parent_scene):
-        bbox = parent_scene.itemsBoundingRect()
-
-        item_count = int(len(parent_scene.items()) / 3)  # For every Rule exists 3 items (header,rule,title)
-
-        position = QtCore.QPoint(constants.BORDER, bbox.height() + (item_count + 1) * constants.BORDER + 25)
-
         if isinstance(rules, TemplateRule):
-            template_rule_rectangle = TemplateRuleRectangle(parent_scene, position, rules)
+            template_rule_rectangle = TemplateRuleGraphicsView(parent_scene, rules)
             return template_rule_rectangle
 
         elif isinstance(rules, TemplateRules):
-            trr = TemplateRulesRectangle(parent_scene, position, rules)
+            trr = TemplateRulesGraphicsView(parent_scene, rules)
 
             for i, rule in enumerate(rules.has_template_rules):
                 template_rule = self.loop_through_rules(rule, trr.scene())
 
                 if template_rule is not None:
                     trr.scene().addWidget(template_rule)
+                    trr.scene()
+                    template_rule.graphicsProxyWidget().setY(constants.TITLE_BLOCK_HEIGHT)
                     template_rule.add_resize_elements()
 
-            trr.parent_scene.addWidget(trr)
 
-            width = trr.scene().itemsBoundingRect().width() + constants.BORDER * 2
-            height = trr.scene().itemsBoundingRect().height() + constants.BORDER * 2
+            bbox = parent_scene.itemsBoundingRect()
+            parent_scene.addWidget(trr)
 
-            trr.setGeometry(position.x(), position.y(), width, height)
-            trr.setSceneRect(-constants.BORDER, -constants.BORDER, width, height)
+            wid: QGraphicsProxyWidget=trr.graphicsProxyWidget()
+            wid.setMinimumHeight(trr.sceneRect().height())
+            wid.setY(constants.TITLE_BLOCK_HEIGHT)
             trr.add_title(trr.operator)
             trr.add_resize_elements()
-
-            trr.centerOn(trr.sceneRect().center())
-
+            trr.moveBy(0,bbox.height())
 
 def main():
     global application

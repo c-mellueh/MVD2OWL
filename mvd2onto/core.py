@@ -779,7 +779,13 @@ with onto:
 
             parent_concept = self.get_parent()
             concept_template = parent_concept.refers
-            concept_root = parent_concept.is_concept_of
+
+            if isinstance(parent_concept,Applicability):
+                concept_root = parent_concept.is_applicability_of
+
+            elif isinstance(parent_concept,Concept):
+                concept_root = parent_concept.is_concept_of
+
             for parameter in self.has_for_parameters:
                 path = concept_template.find_rule_id(parameter.parameter)
                 parameter.links_to_rule_id = path[-1]
