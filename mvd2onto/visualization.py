@@ -49,7 +49,7 @@ class RuleGraphicsView(QGraphicsView):
         #lists
         self.movable_elements = []
         self.resize_elements = []
-
+        self.title_block = None
 
     def add_title(self, text):
         width = self.width()
@@ -243,7 +243,6 @@ class TemplateRuleGraphicsView(RuleGraphicsView):
 
         self.setObjectName(str(data))
         self.import_visuals(data)
-        self.add_title("TemplateRule")
         self.turn_off_scrollbar()
 
 
@@ -1005,9 +1004,11 @@ class UiMainWindow(object):
                 template_rule = self.loop_through_rules(rule, trr.scene())
 
                 if template_rule is not None:
+                    bbox = trr.scene().itemsBoundingRect()
                     trr.scene().addWidget(template_rule)
-                    trr.scene()
                     template_rule.graphicsProxyWidget().setY(constants.TITLE_BLOCK_HEIGHT)
+                    template_rule.add_title("TemplateRule")
+                    template_rule.moveBy(0,bbox.height())
                     template_rule.add_resize_elements()
 
 
