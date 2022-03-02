@@ -972,11 +972,15 @@ class UiMainWindow(object):
 
         if isinstance(obj, ConceptRoot):
             applicability = obj.has_applicability
-            for index, rules in enumerate(applicability.has_template_rules):
-                self.loop_through_rules(rules, self.scene)
+
+            if applicability is not None:
+                for index, rules in enumerate(applicability.has_template_rules):
+                    self.loop_through_rules(rules, self.scene)
 
             rule_type = "Applicability"
 
+            else:
+                rule_type = "Appilcability does not exist"
 
         if isinstance(obj, Concept):
             for index, rules in enumerate(obj.has_template_rules):
