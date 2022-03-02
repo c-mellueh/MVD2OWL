@@ -857,7 +857,7 @@ class UiMainWindow(object):
 
         # Columns Layout for Treelist nad Object window
         self.horizontal_layout = QtWidgets.QHBoxLayout()
-        self.horizontal_layout.setSpacing(5)
+        self.horizontal_layout.setSpacing(constants.LAYOUT_SPACING)
         self.horizontal_layout.setObjectName("horizontal_layout")
 
         # Inhalt in Fenster hinzufügen
@@ -867,15 +867,37 @@ class UiMainWindow(object):
         self.tree_widget = QtWidgets.QTreeWidget(self.central_widget)
 
         # Set Size Policy for TreeWidget
-        size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
-        size_policy.setHorizontalStretch(1)
+        size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
+        size_policy.setHorizontalStretch(0)
         size_policy.setVerticalStretch(1)
         size_policy.setHeightForWidth(self.tree_widget.sizePolicy().hasHeightForWidth())
         self.tree_widget.setSizePolicy(size_policy)
         self.tree_widget.setObjectName("tree_widget")
-        self.tree_widget.headerItem().setText(0, "Regeln")
+        self.tree_widget.headerItem().setText(0, "ConceptRoot,Concept")
 
         self.horizontal_layout.addWidget(self.tree_widget)
+
+        #Vertical Layout
+        self.vertical_layout = QtWidgets.QVBoxLayout()
+        self.vertical_layout.setSpacing(constants.LAYOUT_SPACING)
+        self.vertical_layout.setObjectName("vertical_layout")
+        self.horizontal_layout.addLayout(self.vertical_layout)
+
+        #Title
+        self.title = QtWidgets.QLabel()
+        self.title.setText(""
+        )
+        self.vertical_layout.addWidget(self.title)
+
+        self.type = QtWidgets.QLabel()
+        self.type.setText("")
+        font= QtGui.QFont()
+        font.setBold(True)
+        font.setFamily("Open Sans")
+        font.setPointSize(10)
+
+        self.type.setFont(font)
+        self.vertical_layout.addWidget(self.type)
 
         # Object Window
         self.scene = QGraphicsScene()
@@ -887,7 +909,7 @@ class UiMainWindow(object):
         self.graphics_view.setSizePolicy(size_policy)
         self.graphics_view.setObjectName("graphics_view")
 
-        self.horizontal_layout.addWidget(self.graphics_view)
+        self.vertical_layout.addWidget(self.graphics_view)
 
         self.menubar = QtWidgets.QMenuBar(main_window)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 1527, 22))
@@ -952,11 +974,18 @@ class UiMainWindow(object):
             applicability = obj.has_applicability
             for index, rules in enumerate(applicability.has_template_rules):
                 self.loop_through_rules(rules, self.scene)
-            pass
+
+            rule_type = "Applicability"
+
 
         if isinstance(obj, Concept):
             for index, rules in enumerate(obj.has_template_rules):
                 self.loop_through_rules(rules, self.scene)
+                rule_type = "Rules"
+
+
+        self.title.setText(obj.has_for_name)
+        self.type.setText(rule_type)
 
         self.graphics_view.setSceneRect(self.graphics_view.scene().itemsBoundingRect())
 
