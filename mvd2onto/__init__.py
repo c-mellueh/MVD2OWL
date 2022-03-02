@@ -14,5 +14,6 @@ Misc variables:
     None
 '''
 
-import visualization
-exit(visualization.main())
+if __name__ == "__main__":
+    import visualization
+    exit(visualization.main())

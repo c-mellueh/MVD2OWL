@@ -32,36 +32,41 @@ def main():
     #
     #
     # mvd.import_xml()
-    tr:TemplateRule = TemplateRule.instances()[0]
 
-    print(tr.has_for_plain_text)
-    print("Path(s):")
-    for i,parameter in enumerate(tr.has_for_parameters):
+    app:Applicability = Applicability.instances()[0]
 
-        path = parameter.path
-        metric = parameter.metric
-        operator = parameter.operator
+    print(app.has_template_rules)
 
-        # print(path)
-        text = []
-        for el in path:
-
-            if isinstance(el, AttributeRule):
-                text.append(str( el.has_for_attribute_name))
-
-            elif isinstance(el, EntityRule):
-                text.append(str(el.has_for_entity_name))
-
-            elif isinstance(el, ConceptTemplate):
-                text.append(str(el.has_for_applicable_entity))
-
-            elif isinstance(el, ConceptRoot):
-                text.append(str(el.has_for_applicable_root_entity ))
-
-        print("{} [{}] {} {}".format("->".join(text),metric,operator,parameter.value))
-
-    onto.save("onto_test.rdfxml")
-    sync_reasoner()
+    # tr:TemplateRule = TemplateRule.instances()[0]
+    #
+    # print(tr.has_for_plain_text)
+    # print("Path(s):")
+    # for i,parameter in enumerate(tr.has_for_parameters):
+    #
+    #     path = parameter.path
+    #     metric = parameter.metric
+    #     operator = parameter.operator
+    #
+    #     # print(path)
+    #     text = []
+    #     for el in path:
+    #
+    #         if isinstance(el, AttributeRule):
+    #             text.append(str( el.has_for_attribute_name))
+    #
+    #         elif isinstance(el, EntityRule):
+    #             text.append(str(el.has_for_entity_name))
+    #
+    #         elif isinstance(el, ConceptTemplate):
+    #             text.append(str(el.has_for_applicable_entity))
+    #
+    #         elif isinstance(el, ConceptRoot):
+    #             text.append(str(el.has_for_applicable_root_entity ))
+    #
+    #     print("{} [{}] {} {}".format("->".join(text),metric,operator,parameter.value))
+    #
+    # onto.save("onto_test.rdfxml")
+    # sync_reasoner()
 
 
 if __name__ == "__main__":

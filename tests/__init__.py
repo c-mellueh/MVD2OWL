@@ -14,5 +14,7 @@ Misc variables:
     None
 '''
 
-import test
-test.main()
+if __name__ == "__main__":
+
+    import test
+    test.main()
