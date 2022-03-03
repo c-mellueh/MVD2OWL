@@ -48,7 +48,7 @@ class RuleGraphicsView(QGraphicsView):
         #lists
         self.title = "Empty"
         self.movable_elements = []
-        self.resize_elements: Union[ResizeEdge,ResizeBorder] = []
+        self.resize_elements: list(Union[ResizeEdge,ResizeBorder]) = []
         self.title_block:TitleBlock = None
 
     def add_title_block(self):
@@ -87,9 +87,7 @@ class RuleGraphicsView(QGraphicsView):
         self.add_resize_elements()
 
     def resizeEvent(self, event):
-
         if self.title_block is not None:
-
 
             rec = self.title_block.rect()
             bar_height = rec.height()
@@ -97,7 +95,9 @@ class RuleGraphicsView(QGraphicsView):
             rec.setWidth(width)
             self.title_block.setRect(rec)
 
-            gpw = self.graphicsProxyWidget()
+            gpw:QGraphicsProxyWidget = self.graphicsProxyWidget()
+            gpw.setMinimumHeight(0)
+            gpw.setMinimumWidth(0)
             scene_pos = gpw.scenePos()
             gpw_rect = gpw.rect()
 
@@ -109,35 +109,25 @@ class RuleGraphicsView(QGraphicsView):
 
             for el in self.movable_elements:
                 if isinstance(el, ResizeBorder):
-                    if el.orientation == "top" or el.orientation == "bottom":
+                    if el.orientation == ResizeBorder.TOP or el.orientation == ResizeBorder.BOTTOM:
                         rect = el.rect()
                         rect.setWidth(self.width())
                         el.setRect(rect)
-                    if el.orientation == "left" or el.orientation == "right":
+                    if el.orientation ==ResizeBorder.LEFT or el.orientation == ResizeBorder.RIGHT:
                         rect = el.rect()
                         rect.setHeight(self.height() + self.title_block.rect().height())
                         el.setRect(rect)
 
     def add_resize_elements(self):
 
-        gpw = self.graphicsProxyWidget()
 
-        pos = self.title_block.pos()
-        self.resize_elements.append(ResizeEdge(self, self.parent_scene, pos, "top_left"))
-        self.resize_elements.append(ResizeBorder(self, self.parent_scene, pos, "top"))
-        self.resize_elements.append(ResizeBorder(self, self.parent_scene, pos, "left"))
+        for el in ResizeEdge.POSSIBLE_ORIENTATIONS:
+            edge = ResizeEdge(self,el)
+            self.resize_elements.append(edge)
 
-        pos = self.title_block.pos()
-        pos.setX(pos.x()+self.title_block.rect().width())
-        self.resize_elements.append(ResizeEdge(self, self.parent_scene, pos, "top_right"))
-        self.resize_elements.append(ResizeBorder(self, self.parent_scene, pos, "right"))
-
-        pos = gpw.scenePos() + gpw.rect().bottomLeft()
-        self.resize_elements.append(ResizeEdge(self, self.parent_scene, pos, "bottom_left"))
-        self.resize_elements.append(ResizeBorder(self, self.parent_scene, pos, "bottom"))
-
-        pos = gpw.scenePos() + gpw.rect().bottomRight()
-        self.resize_elements.append(ResizeEdge(self, self.parent_scene, pos, "bottom_right"))
+        for el in ResizeBorder.POSSIBLE_ORIENTATIONS:
+            border = ResizeBorder(self,el)
+            self.resize_elements.append(border)
 
         color = QtGui.QColor("black")
         color.setAlpha(0)      #Turn Invisible
@@ -150,17 +140,17 @@ class RuleGraphicsView(QGraphicsView):
 
     def resize_top(self, y_dif):
         proxy = self.graphicsProxyWidget()
-
         for el in self.movable_elements:
             if not isinstance(el, (ResizeEdge, ResizeBorder)):
                 el.moveBy(0, y_dif)
 
             elif isinstance(el, ResizeEdge):
-                if el.orientation == "top_right" or el.orientation == "top_left":
+                if el.orientation == ResizeEdge.TOP_RIGHT or el.orientation == ResizeEdge.TOP_LEFT:
                     el.moveBy(0, y_dif)
 
+
             elif isinstance(el, ResizeBorder):
-                if not el.orientation == "bottom":
+                if not el.orientation == ResizeBorder.BOTTOM:
                     el.moveBy(0, y_dif)
 
         proxy.moveBy(0, y_dif)
@@ -177,11 +167,11 @@ class RuleGraphicsView(QGraphicsView):
         for el in self.movable_elements:
 
             if isinstance(el, ResizeEdge):
-                if el.orientation == "bottom_right" or el.orientation == "bottom_left":
+                if el.orientation == ResizeEdge.BOTTOM_RIGHT or el.orientation == ResizeEdge.BOTTOM_LEFT:
                     el.moveBy(0, y_dif)
 
             if isinstance(el,ResizeBorder):
-                if el.orientation =="bottom":
+                if el.orientation ==ResizeBorder.BOTTOM:
                     el.moveBy(0,y_dif)
 
         size = proxy.size()
@@ -196,11 +186,11 @@ class RuleGraphicsView(QGraphicsView):
                 el.moveBy(x_dif, 0)
 
             elif isinstance(el, ResizeEdge):
-                if el.orientation == "bottom_left" or el.orientation == "top_left":
+                if el.orientation == ResizeEdge.BOTTOM_LEFT or el.orientation == ResizeEdge.TOP_LEFT:
                     el.moveBy(x_dif, 0)
 
             elif isinstance(el, ResizeBorder):
-                if not el.orientation == "right":
+                if not el.orientation == ResizeBorder.RIGHT:
                     el.moveBy(x_dif, 0)
 
 
@@ -219,10 +209,10 @@ class RuleGraphicsView(QGraphicsView):
         for el in self.movable_elements:
 
             if isinstance(el, ResizeEdge):
-                if el.orientation == "bottom_right" or el.orientation == "top_right":
+                if el.orientation == ResizeEdge.BOTTOM_RIGHT or el.orientation == ResizeEdge.TOP_RIGHT:
                     el.moveBy(x_dif, 0)
             if isinstance(el,ResizeBorder):
-                if el.orientation =="right":
+                if el.orientation ==ResizeBorder.RIGHT:
                     el.moveBy(x_dif,0)
 
 
@@ -261,6 +251,25 @@ class RuleGraphicsView(QGraphicsView):
                 elif isinstance(el,ResizeEdge):
                     el.setZValue(max_z+2)
 
+    def get_bottom_left(self):
+        gpw: QGraphicsProxyWidget = self.graphicsProxyWidget()
+        bottom_left = gpw.scenePos() + gpw.rect().bottomLeft()
+        return bottom_left
+
+    def get_bottom_right(self):
+        gpw: QGraphicsProxyWidget = self.graphicsProxyWidget()
+        bottom_right = gpw.scenePos() + gpw.rect().bottomRight()
+        return bottom_right
+
+    def get_top_left(self):
+        tb: TitleBlock = self.title_block
+        top_left = tb.scenePos()
+        return top_left
+
+    def get_top_right(self):
+        tb: TitleBlock = self.title_block
+        top_right = tb.scenePos() + tb.rect().topRight()
+        return top_right
 
 class TemplateRuleGraphicsView(RuleGraphicsView):
     def __init__(self, data: TemplateRule):
@@ -421,11 +430,33 @@ class TemplateRulesGraphicsView(RuleGraphicsView):
 
 
 class ResizeEdge(QtWidgets.QGraphicsRectItem):
+    TOP_LEFT = 7
+    TOP_RIGHT = 4
+    BOTTOM_LEFT = 8
+    BOTTOM_RIGHT = 5
 
-    def __init__(self, graphics_view: TemplateRulesGraphicsView, parent: QGraphicsScene, position: QPointF,
-                 orientation: str):
+    POSSIBLE_ORIENTATIONS=[TOP_LEFT,TOP_RIGHT,BOTTOM_LEFT,BOTTOM_RIGHT]
 
-        self.orientation = orientation
+
+    def __init__(self, graphics_view: RuleGraphicsView, orientation: int,orientation_2:int = 0):
+
+        self.orientation = orientation+orientation_2
+        if self.orientation not in self.POSSIBLE_ORIENTATIONS:
+            raise ValueError("orientation not allowed")
+
+        if self.orientation == self.TOP_LEFT:
+            position = graphics_view.get_top_left()
+
+        elif self.orientation == self.TOP_RIGHT:
+            position = graphics_view.get_top_right()
+
+        elif self.orientation == self.BOTTOM_LEFT:
+            position = graphics_view.get_bottom_left()
+
+        elif self.orientation == self.BOTTOM_RIGHT:
+            position = graphics_view.get_bottom_right()
+
+
         self.graphical_view = graphics_view
 
         movement = QPoint(constants.RESIZE_BORDER_WIDTH / 2, constants.RESIZE_BORDER_WIDTH / 2)
@@ -435,22 +466,22 @@ class ResizeEdge(QtWidgets.QGraphicsRectItem):
         self.setAcceptHoverEvents(True)
 
         self.setZValue(10)
-        parent.addItem(self)
+        graphics_view.parent_scene.addItem(self)
 
     def hoverEnterEvent(self, event):
 
-        if self.orientation == "top_left" or self.orientation == "bottom_right":
+        if self.orientation == self.TOP_LEFT or self.orientation == self.BOTTOM_RIGHT:
             application.instance().setOverrideCursor(QtCore.Qt.SizeFDiagCursor)
-        elif self.orientation == "top_right" or self.orientation == "bottom_left":
+        elif self.orientation == self.TOP_RIGHT or self.orientation == self.BOTTOM_LEFT:
             application.instance().setOverrideCursor(QtCore.Qt.SizeBDiagCursor)
 
     def hoverLeaveEvent(self, event):
         application.instance().restoreOverrideCursor()
 
     def mousePressEvent(self, event: QtWidgets.QGraphicsSceneMouseEvent) -> None:
-        if self.orientation == "top_left" or self.orientation == "bottom_right":
+        if self.orientation == self.TOP_LEFT or self.orientation == self.BOTTOM_RIGHT:
             application.instance().setOverrideCursor(QtCore.Qt.SizeFDiagCursor)
-        elif self.orientation == "top_right" or self.orientation == "bottom_left":
+        elif self.orientation == self.TOP_RIGHT or self.orientation == self.BOTTOM_LEFT:
             application.instance().setOverrideCursor(QtCore.Qt.SizeBDiagCursor)
 
     def mouseMoveEvent(self, event: QtWidgets.QGraphicsSceneMouseEvent) -> None:
@@ -463,19 +494,19 @@ class ResizeEdge(QtWidgets.QGraphicsRectItem):
         gv = self.graphical_view
         self.scene().update()
 
-        if self.orientation == "top_left":
+        if self.orientation == self.TOP_LEFT:
             gv.resize_left(x_dif)
             gv.resize_top(y_dif)
 
-        elif self.orientation == "top_right":
+        elif self.orientation == self.TOP_RIGHT:
             gv.resize_top(y_dif)
             gv.resize_right(x_dif)
 
-        elif self.orientation == "bottom_left":
+        elif self.orientation == self.BOTTOM_LEFT:
             gv.resize_bottom(y_dif)
             gv.resize_left(x_dif)
 
-        elif self.orientation == "bottom_right":
+        elif self.orientation == self.BOTTOM_RIGHT:
             gv.resize_bottom(y_dif)
             gv.resize_right(x_dif)
 
@@ -483,48 +514,68 @@ class ResizeEdge(QtWidgets.QGraphicsRectItem):
 
     def mouseReleaseEvent(self, event: QtWidgets.QGraphicsSceneMouseEvent) -> None:
         application.instance().restoreOverrideCursor()
-
+        print("HIER")
         pass
 
 
 class ResizeBorder(QtWidgets.QGraphicsRectItem):
 
-    def __init__(self, graphics_view: TemplateRulesGraphicsView, parent: QGraphicsScene, position: QPointF,
-                 orientation: str):
+    TOP= 1
+    RIGHT =3
+    BOTTOM = 2
+    LEFT = 6
+
+    POSSIBLE_ORIENTATIONS=[TOP,RIGHT,LEFT,BOTTOM]
+
+
+    def __init__(self, graphics_view: TemplateRulesGraphicsView, orientation: int):
+
         self.orientation = orientation
-        self.graphical_view = graphics_view
+        if self.orientation not in self.POSSIBLE_ORIENTATIONS:
+            raise ValueError("orientation not allowed")
 
-        self.graphical_view.height()
+        position = None
+        if self.orientation == self.TOP or self.orientation == self.LEFT:
+            position = graphics_view.get_top_left()
 
-        self.width = 10
+        elif self.orientation == self.BOTTOM:
+            position = graphics_view.get_bottom_left()
 
-        if self.orientation == "top" or self.orientation == "bottom":
+        elif self.orientation == self.RIGHT:
+            position = graphics_view.get_top_right()
+
+        self.graphics_view = graphics_view
+        self.width = constants.RESIZE_BORDER_WIDTH
+
+        if self.orientation == self.TOP or self.orientation == self.BOTTOM:
             position.setY(position.y() - self.width / 2)
-            super().__init__(position.x(), position.y(), self.graphical_view.width(), self.width)
+            super().__init__(position.x(), position.y(), self.graphics_view.width(), self.width)
 
-        elif self.orientation == "left" or self.orientation == "right":
+        elif self.orientation == self.LEFT or self.orientation == self.RIGHT:
             position.setX(position.x() - self.width / 2)
             super().__init__(position.x(), position.y(), self.width,
-                             self.graphical_view.height() + self.graphical_view.title_block.rect().height())
+                             self.graphics_view.height() + self.graphics_view.title_block.rect().height())
 
         self.setAcceptHoverEvents(True)
 
-        parent.addItem(self)
+        self.graphics_view.parent_scene.addItem(self)
+
+
 
     def hoverEnterEvent(self, event):
 
-        if self.orientation == "top" or self.orientation == "bottom":
+        if self.orientation == self.TOP or self.orientation == self.BOTTOM:
             application.instance().setOverrideCursor(QtCore.Qt.SizeVerCursor)
-        elif self.orientation == "left" or self.orientation == "right":
+        elif self.orientation == self.LEFT or self.orientation == self.RIGHT:
             application.instance().setOverrideCursor(QtCore.Qt.SizeHorCursor)
 
     def hoverLeaveEvent(self, event):
         application.instance().restoreOverrideCursor()
 
     def mousePressEvent(self, event: QtWidgets.QGraphicsSceneMouseEvent) -> None:
-        if self.orientation == "top" or self.orientation == "bottom":
+        if self.orientation == self.TOP or self.orientation == self.BOTTOM:
             application.instance().setOverrideCursor(QtCore.Qt.SizeVerCursor)
-        elif self.orientation == "left" or self.orientation == "right":
+        elif self.orientation == self.LEFT or self.orientation == self.RIGHT:
             application.instance().setOverrideCursor(QtCore.Qt.SizeHorCursor)
 
 
@@ -536,22 +587,22 @@ class ResizeBorder(QtWidgets.QGraphicsRectItem):
         x_dif = updated_cursor_position.x() - orig_cursor_position.x()
         y_dif = updated_cursor_position.y() - orig_cursor_position.y()
 
-        gv = self.graphical_view
+        gv = self.graphics_view
 
         self.scene().update()
 
-        if self.orientation == "top":
+        if self.orientation == self.TOP:
             gv.resize_top(y_dif)
             x_dif = x_dif =0.0
 
-        if self.orientation == "bottom":
+        if self.orientation == self.BOTTOM:
             gv.resize_bottom(y_dif)
             x_dif = 0.0
 
-        elif self.orientation == "left":
+        elif self.orientation == self.LEFT:
             gv.resize_left(x_dif)
             y_dif = 0.0
-        elif self.orientation == "right":
+        elif self.orientation == self.RIGHT:
             gv.resize_right(x_dif)
             y_dif = 0.0
 
