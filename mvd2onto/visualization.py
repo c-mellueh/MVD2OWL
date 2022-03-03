@@ -992,35 +992,30 @@ class UiMainWindow(object):
 
         self.graphics_view.setSceneRect(self.graphics_view.scene().itemsBoundingRect())
 
-    def loop_through_rules(self, rules: Union[TemplateRule, TemplateRules], parent_scene):
-        if isinstance(rules, TemplateRule):
-            template_rule_rectangle = TemplateRuleGraphicsView(parent_scene, rules)
-            return template_rule_rectangle
+    def loop_through_rules(self, rule: Union[TemplateRule, TemplateRules], parent_scene):
 
-        elif isinstance(rules, TemplateRules):
-            trr = TemplateRulesGraphicsView(parent_scene, rules)
+        if isinstance(rule, TemplateRule):
+            self.add_template_rule(rule,parent_scene)
+        else:
+            self.add_templates_rule(rule,parent_scene)
 
-            for i, rule in enumerate(rules.has_template_rules):
-                template_rule = self.loop_through_rules(rule, trr.scene())
+    def add_template_rule(self,rule,scene):
+        graphics_view = TemplateRuleGraphicsView(rule)
+        graphics_view.add_to_scene(scene)
 
-                if template_rule is not None:
-                    bbox = trr.scene().itemsBoundingRect()
-                    trr.scene().addWidget(template_rule)
-                    template_rule.graphicsProxyWidget().setY(constants.TITLE_BLOCK_HEIGHT)
-                    template_rule.add_title("TemplateRule")
-                    template_rule.moveBy(0,bbox.height())
-                    template_rule.add_resize_elements()
+    def add_templates_rule(self,rule,scene):
+        graphics_view = TemplateRulesGraphicsView(rule)
 
+        for sub_rule in rule.has_template_rules:
+            if isinstance(sub_rule,TemplateRule):
+                self.add_template_rule(sub_rule,graphics_view.scene())
+            else:
+                self.add_templates_rule(sub_rule,graphics_view.scene())
+        graphics_view.add_to_scene(scene)
 
-            bbox = parent_scene.itemsBoundingRect()
-            parent_scene.addWidget(trr)
+        wid: QGraphicsProxyWidget = graphics_view.graphicsProxyWidget()
+        wid.setMinimumHeight(graphics_view.sceneRect().height())
 
-            wid: QGraphicsProxyWidget=trr.graphicsProxyWidget()
-            wid.setMinimumHeight(trr.sceneRect().height())
-            wid.setY(constants.TITLE_BLOCK_HEIGHT)
-            trr.add_title(trr.operator)
-            trr.add_resize_elements()
-            trr.moveBy(0,bbox.height())
 
 def main():
     global application
