@@ -32,28 +32,27 @@ class MainView(QGraphicsView):
             ver.setValue(ver.value() - val)
         self.update()
 
-
 class RuleGraphicsView(QGraphicsView):
     """parent class of TemplateRuleGraphicsView & TemplateRulesGraphicsView"""
 
-    def __init__(self, data: Union[TemplateRule, TemplateRules], parent_scene: QGraphicsScene):
+    def __init__(self, data: Union[TemplateRule, TemplateRules]):
         super().__init__()
         scene = QGraphicsScene()
         self.setScene(scene)
         self.data = data
-        self.parent_scene = parent_scene
+        self.parent_scene = None
         self.turn_off_scrollbar()
         self.color = "grey"
         self.setFrameStyle(QFrame.Box)
 
         #lists
+        self.title = "Empty"
         self.movable_elements = []
-        self.resize_elements = []
-        self.title_block = None
+        self.resize_elements: Union[ResizeEdge,ResizeBorder] = []
+        self.title_block:TitleBlock = None
 
-    def add_title(self, text):
-        width = self.width()
-        self.title_block = TitleBlock(width, constants.TITLE_BLOCK_HEIGHT, self, text)
+    def add_title_block(self):
+        self.title_block = TitleBlock(self)
 
         # Brush
         brush = QtGui.QBrush()
@@ -61,7 +60,6 @@ class RuleGraphicsView(QGraphicsView):
         brush.setColor(QtGui.QColor(self.color))
 
         self.title_block.setBrush(brush)
-        #self.title_block.setZValue(0)
 
         self.parent_scene.addItem(self.title_block)
         self.movable_elements.append(self.title_block)
@@ -78,6 +76,15 @@ class RuleGraphicsView(QGraphicsView):
         self.setLineWidth(2)
         style = "border: 2px solid {};".format(color)
         self.setStyleSheet(style)
+
+    def add_to_scene(self,scene:QGraphicsScene):
+        self.parent_scene = scene
+        bbox = scene.itemsBoundingRect()
+        scene.addWidget(self)
+        self.graphicsProxyWidget().setY(constants.TITLE_BLOCK_HEIGHT)
+        self.add_title_block()
+        self.moveBy(0,bbox.height())
+        self.add_resize_elements()
 
     def resizeEvent(self, event):
 
@@ -115,12 +122,13 @@ class RuleGraphicsView(QGraphicsView):
 
         gpw = self.graphicsProxyWidget()
 
-        pos = self.title_block.rect().topLeft()
+        pos = self.title_block.pos()
         self.resize_elements.append(ResizeEdge(self, self.parent_scene, pos, "top_left"))
         self.resize_elements.append(ResizeBorder(self, self.parent_scene, pos, "top"))
         self.resize_elements.append(ResizeBorder(self, self.parent_scene, pos, "left"))
 
-        pos = self.title_block.rect().topRight()
+        pos = self.title_block.pos()
+        pos.setX(pos.x()+self.title_block.rect().width())
         self.resize_elements.append(ResizeEdge(self, self.parent_scene, pos, "top_right"))
         self.resize_elements.append(ResizeBorder(self, self.parent_scene, pos, "right"))
 
@@ -132,7 +140,7 @@ class RuleGraphicsView(QGraphicsView):
         self.resize_elements.append(ResizeEdge(self, self.parent_scene, pos, "bottom_right"))
 
         color = QtGui.QColor("black")
-        color.setAlpha(0)
+        color.setAlpha(0)      #Turn Invisible
         pen = QtGui.QPen()
         pen.setColor(color)
 
@@ -229,25 +237,43 @@ class RuleGraphicsView(QGraphicsView):
         self.scene().setSceneRect(rec)
 
     def moveBy(self,x_dif,y_dif):
+
         for el in self.movable_elements:
             el.moveBy(x_dif, y_dif)
-
         proxy = self.graphicsProxyWidget()
         proxy.moveBy(x_dif, y_dif)
 
+    def bring_to_front(self):
+
+        gpwidget:QGraphicsProxyWidget = self.graphicsProxyWidget()
+
+        max_z = max(items.zValue() for items in gpwidget.scene().items())
+
+        if gpwidget.zValue() <max_z-2:
+
+            self.title_block.setZValue(max_z)
+            self.title_block.text.setZValue(max_z+1)
+            gpwidget.setZValue(max_z)
+
+            for el in self.resize_elements:
+                if isinstance(el,ResizeBorder):
+                    el.setZValue(max_z+1)
+                elif isinstance(el,ResizeEdge):
+                    el.setZValue(max_z+2)
+
 
 class TemplateRuleGraphicsView(RuleGraphicsView):
-    def __init__(self, parent_scene, data: TemplateRule):
+    def __init__(self, data: TemplateRule):
 
-        super().__init__(data, parent_scene)
+        super().__init__(data)
 
         self.setObjectName(str(data))
         self.import_visuals(data)
         self.turn_off_scrollbar()
-
-
         new_rec = QtCore.QRectF( self.sceneRect().x(),self.sceneRect().y(),self.sceneRect().width()+constants.BORDER,self.sceneRect().height()+constants.BORDER)
         self.setSceneRect(new_rec)
+        self.title = constants.TEMPLATE_RULE_TITLE
+
 
     def import_visuals(self, data: TemplateRule):
 
@@ -354,7 +380,7 @@ class TemplateRuleGraphicsView(RuleGraphicsView):
 
 class TemplateRulesGraphicsView(RuleGraphicsView):
 
-    def __init__(self, parent_scene: QGraphicsScene, data: TemplateRules) -> object:
+    def __init__(self, data: TemplateRules) -> object:
         """
 
         :param parent_scene:
@@ -365,11 +391,17 @@ class TemplateRulesGraphicsView(RuleGraphicsView):
         :type data:
         """
 
-        super().__init__(data, parent_scene)
+        super().__init__(data)
         self.setObjectName(str(data))
         self.operator = self.data.has_for_operator
         self.color = self.get_color()
         self.change_border_color(self.color)
+
+        if self.operator is None:
+            self.title = "TemplateRules"
+        else:
+            self.title = self.operator
+
         self.title_block = None
 
     def wheelEvent(self, event: QtGui.QWheelEvent) -> None:
@@ -459,7 +491,6 @@ class ResizeBorder(QtWidgets.QGraphicsRectItem):
 
     def __init__(self, graphics_view: TemplateRulesGraphicsView, parent: QGraphicsScene, position: QPointF,
                  orientation: str):
-
         self.orientation = orientation
         self.graphical_view = graphics_view
 
@@ -533,17 +564,18 @@ class ResizeBorder(QtWidgets.QGraphicsRectItem):
 
 
 class TitleBlock(QtWidgets.QGraphicsRectItem):
-    def __init__(self, w, h, view: Union[TemplateRulesGraphicsView, TemplateRuleGraphicsView], text: str):
-        super().__init__(0, 0, w, h)
+    def __init__(self, graphics_view: Union[TemplateRulesGraphicsView, TemplateRuleGraphicsView]):
+        super().__init__(0, 0, graphics_view.width(), constants.TITLE_BLOCK_HEIGHT)
+
         self.setAcceptHoverEvents(True)
-        self.graphical_view = view
+        self.graphics_view = graphics_view
 
-        if text == None:
-            text = ""
+        if graphics_view.title == None:
+            self.text = QtWidgets.QGraphicsTextItem("")
+        else:
+            self.text = QtWidgets.QGraphicsTextItem(graphics_view.title.upper())
 
-        self.text = QtWidgets.QGraphicsTextItem(text.upper())
-
-        self.graphical_view.parent_scene.addItem(self.text)
+        graphics_view.parent_scene.addItem(self.text)
         self.text.setPos(0, 0)
         self.text.setDefaultTextColor("white")
 
@@ -552,8 +584,9 @@ class TitleBlock(QtWidgets.QGraphicsRectItem):
 
         self.text.setFont(font)
         self.text.setZValue(1)
-
     pass
+
+
 
     def hoverEnterEvent(self, event):
         application.instance().setOverrideCursor(QtCore.Qt.OpenHandCursor)
@@ -566,17 +599,15 @@ class TitleBlock(QtWidgets.QGraphicsRectItem):
         pass
 
     def mouseMoveEvent(self, event: QtWidgets.QGraphicsSceneMouseEvent) -> None:
+        self.graphics_view.bring_to_front()
+
         orig_cursor_position = event.lastScenePos()
         updated_cursor_position = event.scenePos()
 
         x_dif = updated_cursor_position.x() - orig_cursor_position.x()
         y_dif = updated_cursor_position.y() - orig_cursor_position.y()
 
-        for el in self.graphical_view.movable_elements:
-            el.moveBy(x_dif, y_dif)
-
-        proxy = self.graphical_view.graphicsProxyWidget()
-        proxy.moveBy(x_dif, y_dif)
+        self.graphics_view.moveBy(x_dif,y_dif)
 
     def mouseReleaseEvent(self, event: QtWidgets.QGraphicsSceneMouseEvent) -> None:
         application.instance().restoreOverrideCursor()
@@ -921,12 +952,13 @@ class UiMainWindow(object):
 
         self.retranslate_ui(main_window)
         QtCore.QMetaObject.connectSlotsByName(main_window)
-        self.counter = 0
-
 
     def retranslate_ui(self,main_window):
         _translate = QtCore.QCoreApplication.translate
         main_window.setWindowTitle(_translate("MainWindow", "MVD2Onto"))
+
+        icon_path = "../Graphics/icon.ico"
+        main_window.setWindowIcon(QtGui.QIcon(icon_path))
         self.initialize()
 
 
@@ -951,17 +983,16 @@ class UiMainWindow(object):
         self.tree_widget.itemClicked.connect(self.on_tree_clicked)
 
     def import_mvd(self):
-        #file_path = QtWidgets.QFileDialog.getOpenFileName(caption="mvdXML Datei", filter="mvdXML (*xml);;All files (*.*)",
+        # file_path = QtWidgets.QFileDialog.getOpenFileName(caption="mvdXML Datei", filter="mvdXML (*xml);;All files (*.*)",
         #                                       selectedFilter="mvdXML (*xml)")[0]
 
-        #file_path = "../Examples/RelAssociatesMaterial.xml"
+        # file_path = "../Examples/RelAssociatesMaterial.xml"
 
         file_path = "../Examples/Prüfregeln.mvdxml"
 
         self.mvd =  MvdXml(file=file_path, validation=False)
 
     def on_tree_clicked(self, item):
-        self.counter+=1
         obj = item.konzept
         self.scene.clear()
         self.graphics_view.resetTransform()
@@ -973,18 +1004,16 @@ class UiMainWindow(object):
             applicability = obj.has_applicability
 
             if applicability is not None:
-                for index, rules in enumerate(applicability.has_template_rules):
+                rule_type = constants.APPLICABILITY
+                for rules in applicability.has_template_rules:
                     self.loop_through_rules(rules, self.scene)
-
-            rule_type = "Applicability"
-
             else:
-                rule_type = "Appilcability does not exist"
+                rule_type = constants.APPLICABILITYDNE
 
-        if isinstance(obj, Concept):
-            for index, rules in enumerate(obj.has_template_rules):
+        else:
+            for rules in obj.has_template_rules:
                 self.loop_through_rules(rules, self.scene)
-                rule_type = "Rules"
+            rule_type = constants.RULES
 
 
         self.title.setText(obj.has_for_name)
