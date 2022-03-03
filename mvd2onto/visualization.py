@@ -40,10 +40,13 @@ class RuleGraphicsView(QGraphicsView):
         scene = QGraphicsScene()
         self.setScene(scene)
         self.data = data
-        self.parent_scene = None
+        self.parent_scene:QGraphicsScene = None
         self.turn_off_scrollbar()
         self.color = "grey"
         self.setFrameStyle(QFrame.Box)
+        self.border_color = constants.ELSE_BORDER_COLOR
+        self.infill_color = constants.ELSE_INFILL_COLOR
+
 
         #lists
         self.title = "Empty"
@@ -57,7 +60,7 @@ class RuleGraphicsView(QGraphicsView):
         # Brush
         brush = QtGui.QBrush()
         brush.setStyle(QtCore.Qt.BrushStyle.SolidPattern)
-        brush.setColor(QtGui.QColor(self.color))
+        brush.setColor(QtGui.QColor(self.border_color[0],self.border_color[1],self.border_color[2]))
 
         self.title_block.setBrush(brush)
 
@@ -71,10 +74,13 @@ class RuleGraphicsView(QGraphicsView):
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
 
-    def change_border_color(self, color):
+    def update_style(self, border_color, infill_color):
 
         self.setLineWidth(2)
-        style = "border: 2px solid {};".format(color)
+        style = "border: 2px solid rgb{}; " \
+                "background-color: rgb{}; " \
+                "border-bottom-left-radius: 10px; " \
+                "border-bottom-right-radius: 10px;".format(border_color,infill_color)#,constants.BORDER_RADIUS,constants.BORDER_RADIUS)
         self.setStyleSheet(style)
 
     def add_to_scene(self,scene:QGraphicsScene):
@@ -139,10 +145,13 @@ class RuleGraphicsView(QGraphicsView):
             el.setPen(pen)
 
     def resize_top(self, y_dif):
-        proxy = self.graphicsProxyWidget()
-        for el in self.movable_elements:
-            if not isinstance(el, (ResizeEdge, ResizeBorder)):
-                el.moveBy(0, y_dif)
+        proxy:QGraphicsProxyWidget = self.graphicsProxyWidget()
+        proxy.setMinimumHeight(0)
+        new_height = proxy.size().height()-y_dif
+        if new_height > constants.MIN_RECT_SIZE:
+            for el in self.movable_elements:
+                if not isinstance(el, (ResizeEdge, ResizeBorder)):
+                    el.moveBy(0, y_dif)
 
             elif isinstance(el, ResizeEdge):
                 if el.orientation == ResizeEdge.TOP_RIGHT or el.orientation == ResizeEdge.TOP_LEFT:
@@ -162,9 +171,13 @@ class RuleGraphicsView(QGraphicsView):
         for items in self.scene().items():
             items.moveBy(0, -y_dif)
 
-    def resize_bottom(self,y_dif,):
+    def resize_bottom(self,y_dif):
         proxy = self.graphicsProxyWidget()
-        for el in self.movable_elements:
+        proxy.setMinimumHeight(0)
+
+        new_height = proxy.size().height()+y_dif
+        if new_height > constants.MIN_RECT_SIZE:
+            for el in self.movable_elements:
 
             if isinstance(el, ResizeEdge):
                 if el.orientation == ResizeEdge.BOTTOM_RIGHT or el.orientation == ResizeEdge.BOTTOM_LEFT:
@@ -180,6 +193,7 @@ class RuleGraphicsView(QGraphicsView):
 
     def resize_left(self,x_dif):
         proxy:QtWidgets.QGraphicsProxyWidget = self.graphicsProxyWidget()
+        proxy.setMinimumWidth(0)
 
         for el in self.movable_elements:
             if not isinstance(el, (ResizeEdge, ResizeBorder)):
@@ -205,8 +219,12 @@ class RuleGraphicsView(QGraphicsView):
 
     def resize_right(self,x_dif):
         proxy: QtWidgets.QGraphicsProxyWidget = self.graphicsProxyWidget()
+        proxy.setMinimumWidth(0)
 
-        for el in self.movable_elements:
+        new_width = proxy.size().width() + x_dif
+
+        if new_width > constants.MIN_RECT_SIZE:
+            for el in self.movable_elements:
 
             if isinstance(el, ResizeEdge):
                 if el.orientation == ResizeEdge.BOTTOM_RIGHT or el.orientation == ResizeEdge.TOP_RIGHT:
@@ -262,13 +280,14 @@ class RuleGraphicsView(QGraphicsView):
         return bottom_right
 
     def get_top_left(self):
-        tb: TitleBlock = self.title_block
-        top_left = tb.scenePos()
+        gpw: QGraphicsProxyWidget = self.graphicsProxyWidget()
+
+        top_left = gpw.scenePos()+QtCore.QPointF(0,-constants.TITLE_BLOCK_HEIGHT)
         return top_left
 
     def get_top_right(self):
-        tb: TitleBlock = self.title_block
-        top_right = tb.scenePos() + tb.rect().topRight()
+        gpw: QGraphicsProxyWidget = self.graphicsProxyWidget()
+        top_right = gpw.scenePos() + gpw.rect().topRight()+QtCore.QPointF(0,-constants.TITLE_BLOCK_HEIGHT)
         return top_right
 
 class TemplateRuleGraphicsView(RuleGraphicsView):
@@ -282,7 +301,7 @@ class TemplateRuleGraphicsView(RuleGraphicsView):
         new_rec = QtCore.QRectF( self.sceneRect().x(),self.sceneRect().y(),self.sceneRect().width()+constants.BORDER,self.sceneRect().height()+constants.BORDER)
         self.setSceneRect(new_rec)
         self.title = constants.TEMPLATE_RULE_TITLE
-
+        self.update_style(self.border_color,self.infill_color)
 
     def import_visuals(self, data: TemplateRule):
 
@@ -403,8 +422,8 @@ class TemplateRulesGraphicsView(RuleGraphicsView):
         super().__init__(data)
         self.setObjectName(str(data))
         self.operator = self.data.has_for_operator
-        self.color = self.get_color()
-        self.change_border_color(self.color)
+        self.border_color,self.infill_color = self.get_color(self.operator)
+        self.update_style(self.border_color, self.infill_color)
 
         if self.operator is None:
             self.title = "TemplateRules"
@@ -417,17 +436,20 @@ class TemplateRulesGraphicsView(RuleGraphicsView):
         ui.graphics_view.wheelEvent(event)
         pass
 
-    def get_color(self):
-        if self.operator == "or":
-            color = "blue"
-        elif self.operator == "and":
-            color = "green"
-        elif self.operator == "nor":
-            color = "red"
+    def get_color(self, text):
+        if text == "or":
+            border_color = constants.OR_BORDER_COLOR
+            infill_color = constants.OR_INFILL_COLOR
+        elif text == "and":
+            border_color = constants.AND_BORDER_COLOR
+            infill_color = constants.AND_INFILL_COLOR
+        elif text == "nor":
+            border_color = constants.NOR_BORDER_COLOR
+            infill_color = constants.NOR_INFILL_COLOR
         else:
-            color = "grey"
-        return color
-
+            border_color = constants.ELSE_BORDER_COLOR
+            infill_color = constants.ELSE_INFILL_COLOR
+        return border_color, infill_color
 
 class ResizeEdge(QtWidgets.QGraphicsRectItem):
     TOP_LEFT = 7
@@ -514,7 +536,6 @@ class ResizeEdge(QtWidgets.QGraphicsRectItem):
 
     def mouseReleaseEvent(self, event: QtWidgets.QGraphicsSceneMouseEvent) -> None:
         application.instance().restoreOverrideCursor()
-        print("HIER")
         pass
 
 
@@ -593,7 +614,7 @@ class ResizeBorder(QtWidgets.QGraphicsRectItem):
 
         if self.orientation == self.TOP:
             gv.resize_top(y_dif)
-            x_dif = x_dif =0.0
+            x_dif =0.0
 
         if self.orientation == self.BOTTOM:
             gv.resize_bottom(y_dif)
@@ -1040,6 +1061,8 @@ class UiMainWindow(object):
         # file_path = "../Examples/RelAssociatesMaterial.xml"
 
         file_path = "../Examples/Prüfregeln.mvdxml"
+
+        file_path = "../Examples/IFC4precast_V1.01.mvdxml"
 
         self.mvd =  MvdXml(file=file_path, validation=False)
 
