@@ -47,7 +47,6 @@ class RuleGraphicsView(QGraphicsView):
         self.border_color = constants.ELSE_BORDER_COLOR
         self.infill_color = constants.ELSE_INFILL_COLOR
 
-
         #lists
         self.title = "Empty"
         self.movable_elements = []
@@ -136,7 +135,7 @@ class RuleGraphicsView(QGraphicsView):
             self.resize_elements.append(border)
 
         color = QtGui.QColor("black")
-        #color.setAlpha(0)      #Turn Invisible
+        color.setAlpha(0)      #Turn Invisible
         pen = QtGui.QPen()
         pen.setColor(color)
 
@@ -375,6 +374,11 @@ class TemplateRuleGraphicsView(RuleGraphicsView):
             last_block = graphical_items_dict.get(last_item)
             self.add_label(template_rule_scene, parameter.value, last_block,str(metric + operator))
 
+        for el in DragBox._registry:
+            wid: EntityRepresentation = el.widget()
+
+            if isinstance(wid,EntityRepresentation):
+                wid.update_line()
 
     def add_block(self, data, last_block):
 
@@ -741,6 +745,8 @@ class Attribute(QtWidgets.QLabel):
         self.setText(text)
         self.connections = []
         self.setFrameShape(QtWidgets.QFrame.Shape.StyledPanel)
+        self.setStyleSheet("border-color: black; border-width: 1px; border-style: solid;border-radius:0px;")
+
 
     def __str__(self):
         return "[Attribut] {0}".format(self.text())
@@ -841,12 +847,16 @@ class Connection:
         return self.points
 
 
+
 class DragBox(QtWidgets.QGraphicsProxyWidget):
+
+    _registry = []
+
     # is needed to house QGroupBox (EntityRepresentation)
 
     def __init__(self, widget, top):
         super().__init__()
-
+        self._registry.append(self)
         if isinstance(widget, EntityRepresentation):
             widget.helper = self
 
@@ -854,6 +864,7 @@ class DragBox(QtWidgets.QGraphicsProxyWidget):
         self.setWidget(widget)
         self.connections = []
         self.top = top
+
 
     def __str__(self):
         w = self.widget()
@@ -948,16 +959,39 @@ class EntityRepresentation(QFrame):
         self.helper = None
         self.title = title
         self.setLayout(QtWidgets.QVBoxLayout())
-        self.setStyleSheet('QGroupBox:title {'
-                           'subcontrol-origin: margin;'
-                           'subcontrol-position: top center;'
-                           'padding-left: 10px;'
-                           'padding-right: 10px; }')
 
-        self.setObjectName(str(random() * 1000))
+        layout:QVBoxLayout = self.layout()
+
+        self.setLineWidth(2)
+        self.setFrameStyle(QFrame.Raised)
+
+        style = """subcontrol-origin:margin; 
+                           subcontrol-position: top center; 
+                           padding-left: 0px; 
+                           padding-right: 0px; 
+                           border-color: black; 
+                           border-width: 1px; 
+                           border-style: solid;
+                           border-radius:10px;
+                           background-color:{}""".format(constants.ELSE_INFILL_COLOR)
+
+        self.setStyleSheet(style)
+
+        self.setObjectName(self.title)
 
         self.title_widget = QtWidgets.QLabel(self.title)
-        self.layout().addWidget(self.title_widget)
+
+        self.title_widget.setStyleSheet("border-style: none")
+        print(layout.setContentsMargins(10,10,5,5))
+
+        layout.addWidget(self.title_widget)
+        self.line = QFrame()
+        self.line.setFrameShape(QFrame.HLine)
+        self.line.setFrameShadow(QFrame.Sunken)
+        self.line.setLineWidth(3)
+        self.line.setStyleSheet("color: grey ;border-width: 2px; border-style: solid;")
+
+        layout.addWidget(self.line)
 
     def __str__(self):
         return "[EntityRepresentation: {}]".format(self.title)
@@ -975,6 +1009,13 @@ class EntityRepresentation(QFrame):
 
     def update_title(self, title):
         self.title = title
+
+    def update_line(self):
+
+        geo = self.line.geometry()
+        geo.setWidth(self.helper.rect().width())
+        geo.setX(0)
+        self.line.setGeometry(geo)
 
 
 class LabelRepresentation(QtWidgets.QLabel):
