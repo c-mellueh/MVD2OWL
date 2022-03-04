@@ -79,8 +79,8 @@ class RuleGraphicsView(QGraphicsView):
         self.setLineWidth(2)
         style = "border: 2px solid rgb{}; " \
                 "background-color: rgb{}; " \
-                "border-bottom-left-radius: 10px; " \
-                "border-bottom-right-radius: 10px;".format(border_color,infill_color)#,constants.BORDER_RADIUS,constants.BORDER_RADIUS)
+                "border-bottom-left-radius: {}px; " \
+                "border-bottom-right-radius: {}px;".format(border_color,infill_color,constants.BORDER_RADIUS,constants.BORDER_RADIUS)
         self.setStyleSheet(style)
 
     def add_to_scene(self,scene:QGraphicsScene):
