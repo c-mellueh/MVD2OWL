@@ -153,23 +153,23 @@ class RuleGraphicsView(QGraphicsView):
                 if not isinstance(el, (ResizeEdge, ResizeBorder)):
                     el.moveBy(0, y_dif)
 
-            elif isinstance(el, ResizeEdge):
-                if el.orientation == ResizeEdge.TOP_RIGHT or el.orientation == ResizeEdge.TOP_LEFT:
-                    el.moveBy(0, y_dif)
+                elif isinstance(el, ResizeEdge):
+                    if el.orientation == ResizeEdge.TOP_RIGHT or el.orientation == ResizeEdge.TOP_LEFT:
+                        el.moveBy(0, y_dif)
 
 
-            elif isinstance(el, ResizeBorder):
-                if not el.orientation == ResizeBorder.BOTTOM:
-                    el.moveBy(0, y_dif)
+                elif isinstance(el, ResizeBorder):
+                    if not el.orientation == ResizeBorder.BOTTOM:
+                        el.moveBy(0, y_dif)
 
-        proxy.moveBy(0, y_dif)
+            proxy.moveBy(0, y_dif)
 
-        size = proxy.size()
-        size.setHeight(size.height() - y_dif)
-        proxy.resize(size)
+            size = proxy.size()
+            size.setHeight(size.height() - y_dif)
+            proxy.resize(size)
 
-        for items in self.scene().items():
-            items.moveBy(0, -y_dif)
+            for items in self.scene().items():
+                items.moveBy(0, -y_dif)
 
     def resize_bottom(self,y_dif):
         proxy = self.graphicsProxyWidget()
@@ -179,17 +179,17 @@ class RuleGraphicsView(QGraphicsView):
         if new_height > constants.MIN_RECT_SIZE:
             for el in self.movable_elements:
 
-            if isinstance(el, ResizeEdge):
-                if el.orientation == ResizeEdge.BOTTOM_RIGHT or el.orientation == ResizeEdge.BOTTOM_LEFT:
-                    el.moveBy(0, y_dif)
+                if isinstance(el, ResizeEdge):
+                    if el.orientation == ResizeEdge.BOTTOM_RIGHT or el.orientation == ResizeEdge.BOTTOM_LEFT:
+                        el.moveBy(0, y_dif)
 
-            if isinstance(el,ResizeBorder):
-                if el.orientation ==ResizeBorder.BOTTOM:
-                    el.moveBy(0,y_dif)
+                if isinstance(el,ResizeBorder):
+                    if el.orientation ==ResizeBorder.BOTTOM:
+                        el.moveBy(0,y_dif)
 
-        size = proxy.size()
-        size.setHeight(size.height() + y_dif)
-        proxy.resize(size)
+            size = proxy.size()
+            size.setHeight(size.height() + y_dif)
+            proxy.resize(size)
 
     def resize_left(self,x_dif):
         proxy:QtWidgets.QGraphicsProxyWidget = self.graphicsProxyWidget()
@@ -226,12 +226,12 @@ class RuleGraphicsView(QGraphicsView):
         if new_width > constants.MIN_RECT_SIZE:
             for el in self.movable_elements:
 
-            if isinstance(el, ResizeEdge):
-                if el.orientation == ResizeEdge.BOTTOM_RIGHT or el.orientation == ResizeEdge.TOP_RIGHT:
-                    el.moveBy(x_dif, 0)
-            if isinstance(el,ResizeBorder):
-                if el.orientation ==ResizeBorder.RIGHT:
-                    el.moveBy(x_dif,0)
+                if isinstance(el, ResizeEdge):
+                    if el.orientation == ResizeEdge.BOTTOM_RIGHT or el.orientation == ResizeEdge.TOP_RIGHT:
+                        el.moveBy(x_dif, 0)
+                if isinstance(el,ResizeBorder):
+                    if el.orientation ==ResizeBorder.RIGHT:
+                        el.moveBy(x_dif,0)
 
 
         size = proxy.size()
@@ -1001,16 +1001,13 @@ class UiMainWindow(object):
         self.type.setFont(font)
         self.vertical_layout.addWidget(self.type)
 
-        # Object Window
-        self.scene = QGraphicsScene()
-        self.graphics_view = MainView(self.scene)
+        self.graphics_view = MainView()
         size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         size_policy.setHorizontalStretch(3)
         size_policy.setVerticalStretch(1)
         size_policy.setHeightForWidth(self.graphics_view.sizePolicy().hasHeightForWidth())
         self.graphics_view.setSizePolicy(size_policy)
-        self.graphics_view.setObjectName("graphics_view")
-
+        self.graphics_view.setObjectName("Mainview")
         self.vertical_layout.addWidget(self.graphics_view)
 
         self.menubar = QtWidgets.QMenuBar(main_window)
@@ -1036,8 +1033,12 @@ class UiMainWindow(object):
 
     def initialize(self):
         self.import_mvd()
+        self.active_item = None
         self.main_window.show()
         self.tree_widget.setColumnCount(1)
+        self.scene_dict={}
+        self.add_scene()
+
         for concept_root in ConceptRoot.instances():
             name = concept_root.has_for_name
 
@@ -1066,34 +1067,78 @@ class UiMainWindow(object):
 
         self.mvd =  MvdXml(file=file_path, validation=False)
 
-    def on_tree_clicked(self, item):
-        obj = item.konzept
-        self.scene.clear()
-        self.graphics_view.resetTransform()
+    def add_scene(self,item:QtWidgets.QTreeWidgetItem=None):
 
-        self.graphics_view.horizontalScrollBar().setValue(0)
-        self.graphics_view.verticalScrollBar().setValue(0)
+        for key, i in self.scene_dict.items():
+            print("{}:{}".format(key, i))
 
-        if isinstance(obj, ConceptRoot):
-            applicability = obj.has_applicability
+        known_scene:QGraphicsScene = self.scene_dict.get(item)
+        print("NEW SCENE {}".format(known_scene))
+        # Object Window
+        print()
 
-            if applicability is not None:
-                rule_type = constants.APPLICABILITY
-                for rules in applicability.has_template_rules:
-                    self.loop_through_rules(rules, self.scene)
+
+        if known_scene is None:
+            scene = QGraphicsScene()
+            if item is None:
+                scene.setObjectName("Mainview")
             else:
-                rule_type = constants.APPLICABILITYDNE
+                scene.setObjectName(item.text(0))
+
+            self.graphics_view.setScene(scene)
+            self.scene = scene
+            self.scene_dict[item]= scene
+            return True
 
         else:
-            for rules in obj.has_template_rules:
-                self.loop_through_rules(rules, self.scene)
-            rule_type = constants.RULES
+            self.graphics_view.setScene(known_scene)
+            self.scene = known_scene
+            return False
 
 
-        self.title.setText(obj.has_for_name)
-        self.type.setText(rule_type)
+    def on_tree_clicked(self, item):
+        obj = item.konzept
 
-        self.graphics_view.setSceneRect(self.graphics_view.scene().itemsBoundingRect())
+        print("OTC ITEM : {}".format(item))
+
+        view_is_new = self.add_scene(item)
+
+
+        for el in range(self.vertical_layout.count()):
+            wi: QtWidgets.QWidgetItem = self.vertical_layout.itemAt(el)
+            print(wi.widget())
+            if isinstance(wi.widget(),MainView):
+                print(wi.widget().scene())
+        print("--------")
+
+        if view_is_new:
+            self.scene.clear()
+            self.graphics_view.resetTransform()
+
+            self.graphics_view.horizontalScrollBar().setValue(0)
+            self.graphics_view.verticalScrollBar().setValue(0)
+
+            if isinstance(obj, ConceptRoot):
+                applicability = obj.has_applicability
+
+                if applicability is not None:
+                    rule_type = constants.APPLICABILITY
+                    for rules in applicability.has_template_rules:
+                        self.loop_through_rules(rules, self.scene)
+                else:
+                    rule_type = constants.APPLICABILITYDNE
+
+            else:
+                for rules in obj.has_template_rules:
+                    self.loop_through_rules(rules, self.scene)
+                rule_type = constants.RULES
+
+
+            self.title.setText(obj.has_for_name)
+            self.type.setText(rule_type)
+
+            self.graphics_view.setSceneRect(self.graphics_view.scene().itemsBoundingRect())
+            self.active_item = item
 
     def loop_through_rules(self, rule: Union[TemplateRule, TemplateRules], parent_scene):
 
