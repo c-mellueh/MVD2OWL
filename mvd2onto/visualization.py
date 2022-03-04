@@ -136,7 +136,7 @@ class RuleGraphicsView(QGraphicsView):
             self.resize_elements.append(border)
 
         color = QtGui.QColor("black")
-        color.setAlpha(0)      #Turn Invisible
+        #color.setAlpha(0)      #Turn Invisible
         pen = QtGui.QPen()
         pen.setColor(color)
 
@@ -148,7 +148,13 @@ class RuleGraphicsView(QGraphicsView):
         proxy:QGraphicsProxyWidget = self.graphicsProxyWidget()
         proxy.setMinimumHeight(0)
         new_height = proxy.size().height()-y_dif
-        if new_height > constants.MIN_RECT_SIZE:
+
+        min_items = min(item.y() for item in self.items())
+
+        if min_items < 0 and y_dif > 0:
+            pass
+
+        elif new_height > constants.MIN_RECT_SIZE:
             for el in self.movable_elements:
                 if not isinstance(el, (ResizeEdge, ResizeBorder)):
                     el.moveBy(0, y_dif)
@@ -174,9 +180,22 @@ class RuleGraphicsView(QGraphicsView):
     def resize_bottom(self,y_dif):
         proxy = self.graphicsProxyWidget()
         proxy.setMinimumHeight(0)
-
         new_height = proxy.size().height()+y_dif
-        if new_height > constants.MIN_RECT_SIZE:
+
+        max_y=[]
+        for item in self.items():
+            if isinstance(item,ResizeEdge):
+
+                scene_pos = item.mapToScene(item.rect().bottomLeft())
+                max_y.append(scene_pos.y()+constants.RESIZE_BORDER_WIDTH)
+
+            elif isinstance(item,DragBox):
+                scene_pos = item.mapToScene(item.rect().bottomLeft())
+                max_y.append(scene_pos.y()+constants.RESIZE_BORDER_WIDTH)
+
+        max_items = max(max_y)
+
+        if new_height > constants.MIN_RECT_SIZE and new_height>max_items:
             for el in self.movable_elements:
 
                 if isinstance(el, ResizeEdge):
@@ -194,28 +213,36 @@ class RuleGraphicsView(QGraphicsView):
     def resize_left(self,x_dif):
         proxy:QtWidgets.QGraphicsProxyWidget = self.graphicsProxyWidget()
         proxy.setMinimumWidth(0)
+        new_width = proxy.size().width() - x_dif
 
-        for el in self.movable_elements:
-            if not isinstance(el, (ResizeEdge, ResizeBorder)):
-                el.moveBy(x_dif, 0)
 
-            elif isinstance(el, ResizeEdge):
-                if el.orientation == ResizeEdge.BOTTOM_LEFT or el.orientation == ResizeEdge.TOP_LEFT:
+        min_items = min(item.x() for item in self.items())
+
+        if min_items < 0 and x_dif > 0:
+           pass
+
+        elif new_width > constants.MIN_RECT_SIZE:
+            for el in self.movable_elements:
+                if not isinstance(el, (ResizeEdge, ResizeBorder)):
                     el.moveBy(x_dif, 0)
 
-            elif isinstance(el, ResizeBorder):
-                if not el.orientation == ResizeBorder.RIGHT:
-                    el.moveBy(x_dif, 0)
+                elif isinstance(el, ResizeEdge):
+                    if el.orientation == ResizeEdge.BOTTOM_LEFT or el.orientation == ResizeEdge.TOP_LEFT:
+                        el.moveBy(x_dif, 0)
+
+                elif isinstance(el, ResizeBorder):
+                    if not el.orientation == ResizeBorder.RIGHT:
+                        el.moveBy(x_dif, 0)
 
 
-        proxy.moveBy(x_dif, 0)
+            proxy.moveBy(x_dif, 0)
 
-        size = proxy.size()
-        size.setWidth(size.width() - x_dif)
-        proxy.resize(size)
+            size = proxy.size()
+            size.setWidth(size.width() - x_dif)
+            proxy.resize(size)
 
-        for items in self.scene().items():
-            items.moveBy(-x_dif, 0)
+            for items in self.scene().items():
+                items.moveBy(-x_dif, 0)
 
     def resize_right(self,x_dif):
         proxy: QtWidgets.QGraphicsProxyWidget = self.graphicsProxyWidget()
@@ -223,7 +250,20 @@ class RuleGraphicsView(QGraphicsView):
 
         new_width = proxy.size().width() + x_dif
 
-        if new_width > constants.MIN_RECT_SIZE:
+        max_x = []
+        for item in self.items():
+            if isinstance(item, ResizeEdge):
+
+                scene_pos = item.mapToScene(item.rect().bottomRight())
+                max_x.append(scene_pos.x() + constants.RESIZE_BORDER_WIDTH)
+
+            elif isinstance(item, DragBox):
+                scene_pos = item.mapToScene(item.rect().bottomRight())
+                max_x.append(scene_pos.x() + constants.RESIZE_BORDER_WIDTH)
+
+        max_items = max(max_x)
+
+        if new_width > constants.MIN_RECT_SIZE and new_width> max_items:
             for el in self.movable_elements:
 
                 if isinstance(el, ResizeEdge):
@@ -234,15 +274,9 @@ class RuleGraphicsView(QGraphicsView):
                         el.moveBy(x_dif,0)
 
 
-        size = proxy.size()
-        size.setWidth(size.width() + x_dif)
-        proxy.resize(size)
-
-    def resize_scene(self,x_dif,y_dif):
-        rec = self.scene().sceneRect()
-        rec.setWidth(rec.width() + x_dif)
-        rec.setHeight(rec.height() + y_dif)
-        self.scene().setSceneRect(rec)
+            size = proxy.size()
+            size.setWidth(size.width() + x_dif)
+            proxy.resize(size)
 
     def moveBy(self,x_dif,y_dif):
 
@@ -506,6 +540,9 @@ class ResizeEdge(QtWidgets.QGraphicsRectItem):
         elif self.orientation == self.TOP_RIGHT or self.orientation == self.BOTTOM_LEFT:
             application.instance().setOverrideCursor(QtCore.Qt.SizeBDiagCursor)
 
+
+
+
     def mouseMoveEvent(self, event: QtWidgets.QGraphicsSceneMouseEvent) -> None:
         orig_cursor_position = event.lastScenePos()
         updated_cursor_position = event.scenePos()
@@ -514,7 +551,7 @@ class ResizeEdge(QtWidgets.QGraphicsRectItem):
         y_dif = updated_cursor_position.y() - orig_cursor_position.y()
 
         gv = self.graphical_view
-        self.scene().update()
+        #self.scene().update()
 
         if self.orientation == self.TOP_LEFT:
             gv.resize_left(x_dif)
@@ -532,7 +569,9 @@ class ResizeEdge(QtWidgets.QGraphicsRectItem):
             gv.resize_bottom(y_dif)
             gv.resize_right(x_dif)
 
-        gv.resize_scene(x_dif,y_dif)
+        #gv.resize_scene(x_dif,y_dif)
+        gv.scene().update()
+        gv.update()
 
     def mouseReleaseEvent(self, event: QtWidgets.QGraphicsSceneMouseEvent) -> None:
         application.instance().restoreOverrideCursor()
@@ -555,33 +594,40 @@ class ResizeBorder(QtWidgets.QGraphicsRectItem):
         if self.orientation not in self.POSSIBLE_ORIENTATIONS:
             raise ValueError("orientation not allowed")
 
-        position = None
-        if self.orientation == self.TOP or self.orientation == self.LEFT:
-            position = graphics_view.get_top_left()
-
-        elif self.orientation == self.BOTTOM:
-            position = graphics_view.get_bottom_left()
-
-        elif self.orientation == self.RIGHT:
-            position = graphics_view.get_top_right()
-
-        self.graphics_view = graphics_view
         self.width = constants.RESIZE_BORDER_WIDTH
+        self.graphics_view = graphics_view
+        position = self.get_pos()
+
 
         if self.orientation == self.TOP or self.orientation == self.BOTTOM:
-            position.setY(position.y() - self.width / 2)
             super().__init__(position.x(), position.y(), self.graphics_view.width(), self.width)
 
         elif self.orientation == self.LEFT or self.orientation == self.RIGHT:
-            position.setX(position.x() - self.width / 2)
             super().__init__(position.x(), position.y(), self.width,
                              self.graphics_view.height() + self.graphics_view.title_block.rect().height())
 
         self.setAcceptHoverEvents(True)
-
         self.graphics_view.parent_scene.addItem(self)
 
 
+    def get_pos(self) -> QtCore.QPointF:
+        position = None
+        if self.orientation == self.TOP or self.orientation == self.LEFT:
+            position = self.graphics_view.get_top_left()
+
+        elif self.orientation == self.BOTTOM:
+            position = self.graphics_view.get_bottom_left()
+
+        elif self.orientation == self.RIGHT:
+            position = self.graphics_view.get_top_right()
+
+        if self.orientation == self.TOP or self.orientation == self.BOTTOM:
+            position.setY(position.y() - self.width / 2)
+
+        elif self.orientation == self.LEFT or self.orientation == self.RIGHT:
+            position.setX(position.x() - self.width / 2)
+
+        return position
 
     def hoverEnterEvent(self, event):
 
@@ -627,11 +673,12 @@ class ResizeBorder(QtWidgets.QGraphicsRectItem):
             gv.resize_right(x_dif)
             y_dif = 0.0
 
-        gv.resize_scene(x_dif,y_dif)
+        #gv.resize_scene(x_dif,y_dif)
+        self.scene().update()
+        self.graphics_view.update()
 
     def mouseReleaseEvent(self, event: QtWidgets.QGraphicsSceneMouseEvent) -> None:
         application.instance().restoreOverrideCursor()
-
         pass
 
 
@@ -1069,13 +1116,10 @@ class UiMainWindow(object):
 
     def add_scene(self,item:QtWidgets.QTreeWidgetItem=None):
 
-        for key, i in self.scene_dict.items():
-            print("{}:{}".format(key, i))
+
 
         known_scene:QGraphicsScene = self.scene_dict.get(item)
-        print("NEW SCENE {}".format(known_scene))
-        # Object Window
-        print()
+
 
 
         if known_scene is None:
@@ -1098,18 +1142,7 @@ class UiMainWindow(object):
 
     def on_tree_clicked(self, item):
         obj = item.konzept
-
-        print("OTC ITEM : {}".format(item))
-
         view_is_new = self.add_scene(item)
-
-
-        for el in range(self.vertical_layout.count()):
-            wi: QtWidgets.QWidgetItem = self.vertical_layout.itemAt(el)
-            print(wi.widget())
-            if isinstance(wi.widget(),MainView):
-                print(wi.widget().scene())
-        print("--------")
 
         if view_is_new:
             self.scene.clear()
