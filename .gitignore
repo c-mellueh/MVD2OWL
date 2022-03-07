@@ -1,0 +1,13 @@
+**/Qt
+**/_build
+**/_static
+**/_templates
+**/build
+**/dist
+**/mvd2onto/dist
+**/mvd2onto/build
+*.spec
+**/tests
+!/test.test.py
+**/.idea
+
