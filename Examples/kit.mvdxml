@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mvdXML
+    xmlns="http://buildingsmart-tech.org/mvd/XML/1.1"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema" xsi:schemaLocation="http://buildingsmart-tech.org/mvd/XML/1.1 https://standards.buildingsmart.org/MVD/RELEASE/mvdXML/v1-1/mvdXML_V1.1.xsd" uuid="731be20e-c55b-4618-bcab-66013e32da99" name="KIT/IAI mvdXML Editor" author="Geiger, Andreas (IAI)">
+    <Templates>
+        <!-- IfcBuildingElement -->
+        <ConceptTemplate uuid="6d70aadb-bd68-41b3-8b0f-0b56c5c09e86" name="Template BuildingElement" applicableSchema="IFC4X1" applicableEntity="IfcBuildingElement">
+            <Definitions>
+                <Definition>
+                    <Body lang="en">
+                        <![CDATA[Concept Template for any BuildingElement]]>
+                    </Body>
+                </Definition>
+            </Definitions>
+            <Rules>
+                <AttributeRule RuleID="IsDefinedBy" AttributeName="IsDefinedBy">
+                    <EntityRules>
+                        <EntityRule RuleID="RelDefinesProperties" EntityName="IfcRelDefinesByProperties">
+                            <AttributeRules>
+                                <AttributeRule RuleID="RelatingPropertyDefinition" AttributeName="RelatingPropertyDefinition">
+                                    <EntityRules>
+                                        <EntityRule RuleID="PropertySet" EntityName="IfcPropertySet">
+                                            <AttributeRules>
+                                                <AttributeRule RuleID="PropertySetName" AttributeName="Name"/>
+                                                <AttributeRule RuleID="HasProperties" AttributeName="HasProperties">
+                                                    <EntityRules>
+                                                        <EntityRule EntityName="IfcSimpleProperty">
+                                                            <References>
+                                                                <Template ref="a54dd595-4a27-48b9-91fb-126afc0d8bff"/>
+                                                            </References>
+                                                        </EntityRule>
+                                                    </EntityRules>
+                                                </AttributeRule>
+                                            </AttributeRules>
+                                        </EntityRule>
+                                    </EntityRules>
+                                </AttributeRule>
+                            </AttributeRules>
+                        </EntityRule>
+                    </EntityRules>
+                </AttributeRule>
+            </Rules>
+        </ConceptTemplate>
+        <!-- IfcSimpleProperty -->
+        <ConceptTemplate uuid="a54dd595-4a27-48b9-91fb-126afc0d8bff" name="Template SimpleProperty" applicableSchema="IFC4X1" applicableEntity="IfcSimpleProperty">
+            <Definitions>
+                <Definition/>
+            </Definitions>
+            <Rules>
+                <AttributeRule RuleID="SimplePropertyName" AttributeName="Name">
+                    <EntityRules>
+                        <EntityRule EntityName="IfcIdentifier"/>
+                    </EntityRules>
+                </AttributeRule>
+                <AttributeRule RuleID="SimplePropertyDescription" AttributeName="Description">
+                    <EntityRules>
+                        <EntityRule EntityName="IfcText"/>
+                    </EntityRules>
+                </AttributeRule>
+                <AttributeRule RuleID="NominalValue" AttributeName="NominalValue">
+                    <EntityRules>
+                        <EntityRule EntityName="IfcValue"/>
+                    </EntityRules>
+                </AttributeRule>
+            </Rules>
+        </ConceptTemplate>
+    </Templates>
+    <Views>
+        <ModelView uuid="77d67338-4758-475c-8063-da6358bdca8e" name="IFC4 import test" author="Geiger, Andreas (IAI)" applicableSchema="IFC4X1">
+            <Definitions>
+                <Definition>
+                    <Body>
+                        <![CDATA[Test rules]]>
+                    </Body>
+                </Definition>
+            </Definitions>
+            <ExchangeRequirements>
+                <ExchangeRequirement uuid="92f50b6b-557f-4e5a-9b27-7034e7b6f3b6" name="Building energy simulation requirements" applicability="import">
+                    <Definitions>
+                        <Definition>
+                            <Body>
+                                <![CDATA[Check import]]>
+                            </Body>
+                        </Definition>
+                    </Definitions>
+                </ExchangeRequirement>
+            </ExchangeRequirements>
+            <Roots>
+                <!-- IfcBuildingElement -->
+                <ConceptRoot uuid="cbe696fb-1119-48c0-a715-53ac8395690f" name="Test for common properties of IfcObject" applicableRootEntity="IfcBuildingElement">
+                    <Definitions>
+                        <Definition/>
+                    </Definitions>
+                    <Concepts>
+                        <Concept uuid="c60c66f7-ae7a-43f9-baca-3d214d19bd32" name="Check common properties">
+                            <Definitions>
+                                <Definition>
+                                    <Body lang="en">
+                                        <![CDATA[Checking the existence of common property set and the property 'ThermalTransmittance'. The test is not applied to a 'IfcRailing']]>
+                                    </Body>
+                                </Definition>
+                            </Definitions>
+                            <Template ref="6d70aadb-bd68-41b3-8b0f-0b56c5c09e86"/>
+                            <Requirements>
+                                <Requirement applicability="import" exchangeRequirement="92f50b6b-557f-4e5a-9b27-7034e7b6f3b6" requirement="mandatory"/>
+                            </Requirements>
+                            <TemplateRules operator="and">
+                                <TemplateRule Parameters="PropertySetName[Value]=reg'Pset_.*([A-Z]|[a-z])Common' AND SimplePropertyName[Value]='ThermalTransmittance' AND NominalValue[Value] > '0.0'"/>
+                            </TemplateRules>
+                        </Concept>
+                    </Concepts>
+                </ConceptRoot>
+            </Roots>
+        </ModelView>
+    </Views>
+</mvdXML>

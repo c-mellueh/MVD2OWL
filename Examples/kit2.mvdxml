@@ -1,0 +1,268 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mvdXML
+    xmlns="http://buildingsmart-tech.org/mvd/XML/1.1"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema" xsi:schemaLocation="http://buildingsmart-tech.org/mvd/XML/1.1 https://standards.buildingsmart.org/MVD/RELEASE/mvdXML/v1-1/mvdXML_V1.1.xsd" uuid="fde47d8b-288f-4df0-b0c8-83763e7782e1" name="KIT/IAI mvdXML Editor" author="Geiger, Andreas (IAI)">
+    <Templates>
+        <!-- IfcBuildingElement -->
+        <ConceptTemplate uuid="39a4420d-ab6f-4dd1-b4ce-a4a85bd2bd13" name="Template BuildingElement" applicableSchema="IFC4X1" applicableEntity="IfcBuildingElement">
+            <Definitions>
+                <Definition>
+                    <Body lang="en">
+                        <![CDATA[Concept Template for any BuildingElement]]>
+                    </Body>
+                </Definition>
+            </Definitions>
+            <Rules>
+                <AttributeRule RuleID="BuildingElementName" AttributeName="Name"/>
+                <AttributeRule AttributeName="HasAssociations">
+                    <EntityRules>
+                        <EntityRule RuleID="MaterialRelation" EntityName="IfcRelAssociatesMaterial">
+                            <References>
+                                <Template ref="4986a18f-70c4-43bc-a18c-b2083697c987"/>
+                            </References>
+                        </EntityRule>
+                    </EntityRules>
+                </AttributeRule>
+            </Rules>
+        </ConceptTemplate>
+        <!-- IfcRelAssociatesMaterial -->
+        <ConceptTemplate uuid="4986a18f-70c4-43bc-a18c-b2083697c987" name="Template RelAssociatesMaterial" applicableSchema="IFC4X1" applicableEntity="IfcRelAssociatesMaterial">
+            <Definitions>
+                <Definition>
+                    <Body lang="en">
+                        <![CDATA[Concept Template for IfcRelAssociatesMaterial]]>
+                    </Body>
+                </Definition>
+            </Definitions>
+            <Rules>
+                <AttributeRule RuleID="RelationGlobalId" AttributeName="GlobalId"/>
+                <AttributeRule RuleID="RelationOwnerHistory" AttributeName="OwnerHistory"/>
+                <AttributeRule RuleID="RelationName" AttributeName="Name"/>
+                <AttributeRule RuleID="RelationDescription" AttributeName="Description"/>
+                <AttributeRule RuleID="RelatedObjects" AttributeName="RelatedObjects"/>
+                <AttributeRule RuleID="RelatingMaterial" AttributeName="RelatingMaterial">
+                    <EntityRules>
+                        <EntityRule RuleID="RelatingMaterialLayerSet" EntityName="IfcMaterialLayerSet">
+                            <References IdPrefix="LayerSet_">
+                                <Template ref="67b18133-db31-4568-858a-98a0bdbbc12c"/>
+                            </References>
+                        </EntityRule>
+                        <EntityRule RuleID="RelatingMaterialLayerSetUsage" EntityName="IfcMaterialLayerSetUsage">
+                            <References>
+                                <Template ref="f9c0df2a-2179-4a2a-8e9f-c54534a31dc8"/>
+                            </References>
+                        </EntityRule>
+                    </EntityRules>
+                </AttributeRule>
+            </Rules>
+        </ConceptTemplate>
+        <!-- IfcMaterialLayerSetUsage -->
+        <ConceptTemplate uuid="f9c0df2a-2179-4a2a-8e9f-c54534a31dc8" name="Template MaterialLayerSetUsage" applicableSchema="IFC4X1" applicableEntity="IfcMaterialLayerSetUsage">
+            <Rules>
+                <AttributeRule AttributeName="ForLayerSet">
+                    <EntityRules>
+                        <EntityRule EntityName="IfcMaterialLayerSet">
+                            <References>
+                                <Template ref="67b18133-db31-4568-858a-98a0bdbbc12c"/>
+                            </References>
+                        </EntityRule>
+                    </EntityRules>
+                </AttributeRule>
+            </Rules>
+        </ConceptTemplate>
+        <!-- IfcMaterialLayerSet -->
+        <ConceptTemplate uuid="67b18133-db31-4568-858a-98a0bdbbc12c" name="Template MaterialLayerSet" applicableSchema="IFC4X1" applicableEntity="IfcMaterialLayerSet">
+            <Rules>
+                <AttributeRule RuleID="MaterialLayers" AttributeName="MaterialLayers">
+                    <EntityRules>
+                        <EntityRule EntityName="IfcMaterialLayer">
+                            <AttributeRules>
+                                <AttributeRule RuleID="Material" AttributeName="Material">
+                                    <EntityRules>
+                                        <EntityRule EntityName="IfcMaterial">
+                                            <References>
+                                                <Template ref="ab22b73c-9e39-4548-8075-c5e6cd47374a"/>
+                                            </References>
+                                        </EntityRule>
+                                    </EntityRules>
+                                </AttributeRule>
+                            </AttributeRules>
+                        </EntityRule>
+                    </EntityRules>
+                </AttributeRule>
+                <AttributeRule RuleID="LayerSetName" AttributeName="LayerSetName"/>
+            </Rules>
+        </ConceptTemplate>
+        <!-- IfcMaterialLayer -->
+        <ConceptTemplate uuid="a9cc5d17-8e52-4e2c-93ff-e9e3c8e82f8b" name="Template MaterialLayer" applicableSchema="IFC4X1" applicableEntity="IfcMaterialLayer">
+            <Definitions>
+                <Definition>
+                    <Body lang="en">
+                        <![CDATA[Concept Template for checking existance of material properties]]>
+                    </Body>
+                </Definition>
+            </Definitions>
+            <Rules>
+                <AttributeRule RuleID="MaterialName" AttributeName="Name"/>
+                <AttributeRule RuleID="MaterialProperties" AttributeName="HasProperties">
+                    <EntityRules>
+                        <EntityRule EntityName="IfcMaterialProperties">
+                            <AttributeRules>
+                                <AttributeRule RuleID="PropertyName" AttributeName="Name"/>
+                                <AttributeRule RuleID="Properties" AttributeName="Properties">
+                                    <EntityRules>
+                                        <EntityRule EntityName="IfcSimpleProperty">
+                                            <References>
+                                                <Template ref="a54dd595-4a27-48b9-91fb-126afc0d8bff"/>
+                                            </References>
+                                        </EntityRule>
+                                    </EntityRules>
+                                </AttributeRule>
+                            </AttributeRules>
+                        </EntityRule>
+                    </EntityRules>
+                </AttributeRule>
+            </Rules>
+        </ConceptTemplate>
+        <!-- IfcMaterial -->
+        <ConceptTemplate uuid="ab22b73c-9e39-4548-8075-c5e6cd47374a" name="Template Material" applicableSchema="IFC4X1" applicableEntity="IfcMaterial">
+            <Definitions>
+                <Definition>
+                    <Body lang="en">
+                        <![CDATA[Concept Template for checking existance of material properties]]>
+                    </Body>
+                </Definition>
+            </Definitions>
+            <Rules>
+                <AttributeRule RuleID="MaterialName" AttributeName="Name"/>
+                <AttributeRule RuleID="MaterialProperties" AttributeName="HasProperties">
+                    <EntityRules>
+                        <EntityRule EntityName="IfcMaterialProperties">
+                            <AttributeRules>
+                                <AttributeRule RuleID="PropertySetName" AttributeName="Name"/>
+                                <AttributeRule RuleID="PropertySetDescription" AttributeName="Description"/>
+                                <AttributeRule RuleID="Properties" AttributeName="Properties">
+                                    <EntityRules>
+                                        <EntityRule EntityName="IfcSimpleProperty">
+                                            <References>
+                                                <Template ref="a54dd595-4a27-48b9-91fb-126afc0d8bff"/>
+                                            </References>
+                                        </EntityRule>
+                                    </EntityRules>
+                                </AttributeRule>
+                            </AttributeRules>
+                        </EntityRule>
+                    </EntityRules>
+                </AttributeRule>
+            </Rules>
+        </ConceptTemplate>
+        <!-- IfcSimpleProperty -->
+        <ConceptTemplate uuid="a54dd595-4a27-48b9-91fb-126afc0d8bff" name="Template SimpleProperty" applicableSchema="IFC4X1" applicableEntity="IfcSimpleProperty">
+            <Rules>
+                <AttributeRule RuleID="SimplePropertyName" AttributeName="Name">
+                    <EntityRules>
+                        <EntityRule EntityName="IfcIdentifier"/>
+                    </EntityRules>
+                </AttributeRule>
+                <AttributeRule RuleID="SimplePropertyDescription" AttributeName="Description">
+                    <EntityRules>
+                        <EntityRule EntityName="IfcText"/>
+                    </EntityRules>
+                </AttributeRule>
+                <AttributeRule RuleID="NominalValue" AttributeName="NominalValue">
+                    <EntityRules>
+                        <EntityRule EntityName="IfcValue"/>
+                    </EntityRules>
+                </AttributeRule>
+            </Rules>
+            <SubTemplates>
+                <!-- IfcPropertySingleValue -->
+                <ConceptTemplate uuid="e50c5e88-9a80-4a60-99e7-e3fa975fbfde" name="PropertySingleValueConceptTemplate" applicableSchema="IFC4X1" applicableEntity="IfcPropertySingleValue">
+                    <Rules>
+                        <AttributeRule RuleID="PropertyName" AttributeName="Name">
+                            <EntityRules>
+                                <EntityRule EntityName="IfcIdentifier"/>
+                            </EntityRules>
+                        </AttributeRule>
+                        <AttributeRule RuleID="PropertyDescription" AttributeName="Description">
+                            <EntityRules>
+                                <EntityRule EntityName="IfcText"/>
+                            </EntityRules>
+                        </AttributeRule>
+                        <AttributeRule RuleID="NominalValue" AttributeName="NominalValue">
+                            <EntityRules>
+                                <EntityRule EntityName="IfcValue"/>
+                            </EntityRules>
+                        </AttributeRule>
+                        <AttributeRule RuleID="PropertyUnit" AttributeName="Unit"/>
+                    </Rules>
+                </ConceptTemplate>
+            </SubTemplates>
+        </ConceptTemplate>
+    </Templates>
+    <Views>
+        <ModelView uuid="77d67338-4758-475c-8063-da6358bdca8e" name="IFC4 import test" author="Geiger, Andreas (IAI)" applicableSchema="IFC4X1">
+            <Definitions>
+                <Definition>
+                    <Body>
+                        <![CDATA[Test rules]]>
+                    </Body>
+                </Definition>
+            </Definitions>
+            <ExchangeRequirements>
+                <ExchangeRequirement uuid="92f50b6b-557f-4e5a-9b27-7034e7b6f3b6" name="Building energy simulation requirements" applicability="import">
+                    <Definitions>
+                        <Definition>
+                            <Body>
+                                <![CDATA[Check import]]>
+                            </Body>
+                        </Definition>
+                    </Definitions>
+                </ExchangeRequirement>
+            </ExchangeRequirements>
+            <Roots>
+                <!-- IfcBuildingElement -->
+                <ConceptRoot uuid="eaeb7fa2-33f6-4149-ae23-a5e8ad9f432a" name="Test for Material properties of IfcBuildingElement" applicableRootEntity="IfcBuildingElement">
+                    <Concepts>
+                        <Concept uuid="d5fe9c9c-258b-4f1a-b6a1-ec987bb22e4a" name="Check material properties for building elements">
+                            <Definitions>
+                                <Definition>
+                                    <Body lang="en">
+                                        <![CDATA[Checking the existence of material relation with material properties]]>
+                                    </Body>
+                                </Definition>
+                            </Definitions>
+                            <Template ref="39a4420d-ab6f-4dd1-b4ce-a4a85bd2bd13"/>
+                            <Requirements>
+                                <Requirement applicability="import" exchangeRequirement="92f50b6b-557f-4e5a-9b27-7034e7b6f3b6" requirement="mandatory"/>
+                            </Requirements>
+                            <TemplateRules operator="and">
+                                <TemplateRule Parameters="MaterialRelation[Size]=1"/>
+                                <TemplateRules operator="and">
+                                    <TemplateRule Parameters="RelatingMaterialLayerSetUsage[Type]='IfcMaterialLayerSetUsage'"/>
+                                    <TemplateRules operator="and">
+                                        <TemplateRule Parameters="LayerSetName[Exists]=TRUE"/>
+                                        <TemplateRule Parameters="MaterialLayers[Size]>=1"/>
+                                        <TemplateRules operator="and">
+                                            <TemplateRule Parameters="Material[Exists]=TRUE"/>
+                                            <TemplateRules operator="and">
+                                                <TemplateRule Parameters="MaterialName[Exists]=TRUE"/>
+                                                <TemplateRule Parameters="MaterialProperties[Size]>=3"/>
+                                                <TemplateRules operator="and">
+                                                    <TemplateRule Parameters="PropertySetName[Value]='Pset_MaterialThermal' and SimplePropertyName[Value]='ThermalConductivity' and NominalValue[Value] > '0.0'"/>
+                                                    <TemplateRule Parameters="PropertySetName[Value]='Pset_MaterialThermal' and SimplePropertyName[Value]='SpecificHeatCapacity' and NominalValue[Value] > '0.0'"/>
+                                                    <TemplateRule Parameters="PropertySetName[Value]='Pset_MaterialCommon' and SimplePropertyName[Value]='MassDensity' and NominalValue[Value] > '0.0'"/>
+                                                </TemplateRules>
+                                            </TemplateRules>
+                                        </TemplateRules>
+                                    </TemplateRules>
+                                </TemplateRules>
+                            </TemplateRules>
+                        </Concept>
+                    </Concepts>
+                </ConceptRoot>
+            </Roots>
+        </ModelView>
+    </Views>
+</mvdXML>
