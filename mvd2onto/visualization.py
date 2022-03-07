@@ -1147,7 +1147,6 @@ class UiMainWindow(object):
 
     def initialize(self):
         self.import_mvd()
-        self.active_item = None
         self.main_window.show()
         self.tree_widget.setColumnCount(1)
         self.scene_dict={}
@@ -1226,7 +1225,6 @@ class UiMainWindow(object):
             self.type.setText(rule_type)
 
             self.graphics_view.setSceneRect(self.graphics_view.scene().itemsBoundingRect())
-            self.active_item = item
 
         else:
             self.graphics_view.setScene(known_scene)
