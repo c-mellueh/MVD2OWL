@@ -901,36 +901,62 @@ class DragBox(QtWidgets.QGraphicsProxyWidget):
         x_dif = updated_cursor_position.x() - orig_cursor_position.x()
         y_dif = updated_cursor_position.y() - orig_cursor_position.y()
 
-        if self.check_for_exit(x_dif + orig_position.x(), "x"):
-            x_dif = 0
-        if self.check_for_exit( y_dif + orig_position.y(), "y"):
-            y_dif = 0
+
+
+
+        x_dif,y_dif = self.check_for_exit(x_dif,y_dif)
+
 
 
         updated_cursor_x = x_dif + orig_position.x()
         updated_cursor_y = y_dif + orig_position.y()
 
+        self.moveBy(x_dif,y_dif)
 
-
-        self.setPos(QPointF(updated_cursor_x, updated_cursor_y))
+        #self.setPos(QPointF(updated_cursor_x, updated_cursor_y))
 
         for el in self.connections:
             el.update()
 
-    def check_for_exit(self, value, direction: str):
+    def check_for_exit(self, x_dif,y_dif):
 
-        x_right = value+self.geometry().width()
-        y_bottom = value+self.geometry().height()
-        if value < 0:
-            return True
-        elif direction == "x":
-            if x_right > self.scene().width():
-                return True
-        elif direction == "y":
-            if y_bottom > self.scene().height():
-                return True
-        else:
-            return False
+
+        top_left = self.mapToScene(self.rect().topLeft())
+        top_right = self.mapToScene(self.rect().topRight())
+        bottom_left = self.mapToScene(self.rect().bottomLeft())
+        bottom_right = self.mapToScene(self.rect().bottomRight())
+
+        print("{}:{} | {}:{}".format(top_left.x(),top_left.y(),bottom_right.x(),bottom_right.y()))
+        visible_width= self.scene().views()[0].graphicsProxyWidget().rect().width()
+        visible_height= self.scene().views()[0].graphicsProxyWidget().rect().height()
+        print(visible_height)
+
+        if top_left.x() <0 and x_dif <0:
+            x_dif = 0
+        if top_left.y() <0 and y_dif <0:
+            y_dif= 0
+
+        if bottom_right.x()> visible_width and x_dif >0:
+            x_dif = 0
+
+        if bottom_right.y()> visible_height and y_dif >0:
+            y_dif = 0
+
+
+        return x_dif,y_dif
+
+        # x_right = value+self.geometry().width()
+        # y_bottom = value+self.geometry().height()
+        # if value < 0:
+        #     return True
+        # elif direction == "x":
+        #     if x_right > self.scene().width():
+        #         return True
+        # elif direction == "y":
+        #     if y_bottom > self.scene().height():
+        #         return True
+        # else:
+        #     return False
 
     def mouseReleaseEvent(self, event: QtWidgets.QGraphicsSceneMouseEvent) -> None:
         application.instance().restoreOverrideCursor()
@@ -1158,39 +1184,28 @@ class UiMainWindow(object):
     def add_scene(self,item:QtWidgets.QTreeWidgetItem=None):
 
 
-
-        known_scene:QGraphicsScene = self.scene_dict.get(item)
-
-
-
-        if known_scene is None:
-            scene = QGraphicsScene()
-            if item is None:
-                scene.setObjectName("Mainview")
-            else:
-                scene.setObjectName(item.text(0))
-
-            self.graphics_view.setScene(scene)
-            self.scene = scene
-            self.scene_dict[item]= scene
-            return True
-
+        scene = QGraphicsScene()
+        if item is None:
+            scene.setObjectName("Mainview")
         else:
-            self.graphics_view.setScene(known_scene)
-            self.scene = known_scene
-            return False
+            scene.setObjectName(item.text(0))
+
+        self.graphics_view.setScene(scene)
+        self.scene = scene
+        self.scene_dict[item]= scene
+
+        self.graphics_view.resetTransform()
+        self.graphics_view.horizontalScrollBar().setValue(0)
+        self.graphics_view.verticalScrollBar().setValue(0)
 
 
     def on_tree_clicked(self, item):
         obj = item.konzept
-        view_is_new = self.add_scene(item)
 
-        if view_is_new:
-            self.scene.clear()
-            self.graphics_view.resetTransform()
+        known_scene: QGraphicsScene = self.scene_dict.get(item)
 
-            self.graphics_view.horizontalScrollBar().setValue(0)
-            self.graphics_view.verticalScrollBar().setValue(0)
+        if known_scene is None:
+            self.add_scene(item)
 
             if isinstance(obj, ConceptRoot):
                 applicability = obj.has_applicability
@@ -1207,12 +1222,16 @@ class UiMainWindow(object):
                     self.loop_through_rules(rules, self.scene)
                 rule_type = constants.RULES
 
-
             self.title.setText(obj.has_for_name)
             self.type.setText(rule_type)
 
             self.graphics_view.setSceneRect(self.graphics_view.scene().itemsBoundingRect())
             self.active_item = item
+
+        else:
+            self.graphics_view.setScene(known_scene)
+            self.scene = known_scene
+
 
     def loop_through_rules(self, rule: Union[TemplateRule, TemplateRules], parent_scene):
 
