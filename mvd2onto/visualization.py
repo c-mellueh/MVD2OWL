@@ -44,13 +44,11 @@ class RuleGraphicsView(QGraphicsView):
         self.data = data
         self.parent_scene: QGraphicsScene = None
         self.turn_off_scrollbar()
-        self.color = "grey"
         self.setFrameStyle(QFrame.Box)
         self.frame_color = constants.FRAME_COLOR_DICT["ELSE"]
         self.infill_color = constants.INFILL_COLOR_DICT["ELSE"]
 
         # lists
-        self.title = "Empty"
         self.movable_elements = []
         self.resize_elements: list(Union[ResizeEdge, ResizeBorder]) = []
         self.title_block: TitleBlock = None
@@ -75,7 +73,7 @@ class RuleGraphicsView(QGraphicsView):
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
 
-    def update_style(self, border_color, infill_color):
+    def update_style(self, border_color:tuple[int,int,int], infill_color:tuple[int,int,int]):
 
         self.setLineWidth(2)
         style = "border: 2px solid rgb{}; " \
@@ -106,14 +104,6 @@ class RuleGraphicsView(QGraphicsView):
             gpw: QGraphicsProxyWidget = self.graphicsProxyWidget()
             gpw.setMinimumHeight(0)
             gpw.setMinimumWidth(0)
-            scene_pos = gpw.scenePos()
-            gpw_rect = gpw.rect()
-
-            shift = QPointF(0, -bar_height)
-            self.top_left = scene_pos + gpw_rect.topLeft() + shift
-            self.top_right = rec.topRight() + shift
-            self.bottom_left = scene_pos + gpw_rect.bottomLeft()
-            self.bottom_right = scene_pos + gpw_rect.bottomRight()
 
             for el in self.movable_elements:
                 if isinstance(el, ResizeBorder):
@@ -322,6 +312,9 @@ class RuleGraphicsView(QGraphicsView):
         top_right = gpw.scenePos() + gpw.rect().topRight() + QtCore.QPointF(0, -constants.TITLE_BLOCK_HEIGHT)
         return top_right
 
+    def wheelEvent(self, event: QtGui.QWheelEvent) -> None:
+        ui.graphics_view.wheelEvent(event)
+        pass
 
 class TemplateRuleGraphicsView(RuleGraphicsView):
     def __init__(self, data: TemplateRule):
@@ -392,7 +385,7 @@ class TemplateRuleGraphicsView(RuleGraphicsView):
         elif isinstance(data, ConceptRoot):
             name = data.has_for_applicable_root_entity
 
-        block = DragBox(EntityRepresentation(name), self)
+        block = DragBox(EntityRepresentation(name))
 
         # size
         if last_block is not None and not isinstance(last_block, DragBox):
@@ -422,7 +415,7 @@ class TemplateRuleGraphicsView(RuleGraphicsView):
         size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred,
                                             type=QtWidgets.QSizePolicy.Label)
         label_.setSizePolicy(size_policy)
-        proxy = DragBox(label_, self)
+        proxy = DragBox(label_)
         scene.addItem(proxy)
         width = label_.width() + 20
         height = label_.height()
@@ -471,9 +464,7 @@ class TemplateRulesGraphicsView(RuleGraphicsView):
 
         self.title_block = None
 
-    def wheelEvent(self, event: QtGui.QWheelEvent) -> None:
-        ui.graphics_view.wheelEvent(event)
-        pass
+
 
     def get_color(self, text:str):
 
@@ -840,16 +831,12 @@ class DragBox(QtWidgets.QGraphicsProxyWidget):
 
     # is needed to house QGroupBox (EntityRepresentation)
 
-    def __init__(self, widget, top):
+    def __init__(self, widget):
         super().__init__()
         self._registry.append(self)
-        if isinstance(widget, EntityRepresentation):
-            widget.helper = self
-
         self.setAcceptHoverEvents(True)
         self.setWidget(widget)
         self.connections = []
-        self.top = top
 
     def __str__(self):
         w = self.widget()
@@ -863,8 +850,8 @@ class DragBox(QtWidgets.QGraphicsProxyWidget):
             if isinstance(attribute, DragBox):
                 attribute.connections.append(con)
             else:
-                par = attribute.parent()
-                proxy = par.helper
+                par:EntityRepresentation = attribute.parent()
+                proxy = par.graphicsProxyWidget()
                 proxy.connections.append(con)
 
     def hoverEnterEvent(self, event):
@@ -898,10 +885,8 @@ class DragBox(QtWidgets.QGraphicsProxyWidget):
         top_left = self.mapToScene(self.rect().topLeft())
         bottom_right = self.mapToScene(self.rect().bottomRight())
 
-        print("{}:{} | {}:{}".format(top_left.x(), top_left.y(), bottom_right.x(), bottom_right.y()))
         visible_width = self.scene().views()[0].graphicsProxyWidget().rect().width()
         visible_height = self.scene().views()[0].graphicsProxyWidget().rect().height()
-        print(visible_height)
 
         if top_left.x() < 0 and x_dif < 0:
             x_dif = 0
@@ -941,7 +926,7 @@ class EntityRepresentation(QFrame):
 
     def __init__(self, title: str):
         super().__init__()
-        self.helper = None
+
         self.title = title
         self.setLayout(QtWidgets.QVBoxLayout())
 
@@ -967,7 +952,7 @@ class EntityRepresentation(QFrame):
         self.title_widget = QtWidgets.QLabel(self.title)
 
         self.title_widget.setStyleSheet("border-style: none")
-        print(layout.setContentsMargins(10, 10, 5, 5))
+        layout.setContentsMargins(10, 10, 5, 5)
 
         layout.addWidget(self.title_widget)
         self.line = QFrame()
@@ -997,7 +982,7 @@ class EntityRepresentation(QFrame):
 
     def update_line(self):
         geo = self.line.geometry()
-        geo.setWidth(self.helper.rect().width())
+        geo.setWidth(self.graphicsProxyWidget().rect().width())
         geo.setX(0)
         self.line.setGeometry(geo)
 
