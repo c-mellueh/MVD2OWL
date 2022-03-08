@@ -97,9 +97,14 @@ class RuleGraphicsView(QGraphicsView):
 
     @parent_scene.setter
     def parent_scene(self,value:QtWidgets.QGraphicsScene):
-        gpw: QGraphicsProxyWidget = self.graphicsProxyWidget()
-        value.addWidget(gpw)
-        pass
+
+        if self.graphicsProxyWidget() is not None:
+
+            gpw: QGraphicsProxyWidget = self.graphicsProxyWidget()
+            value.addWidget(gpw)
+
+        else:
+            value.addWidget(self)
 
     def add_title_block(self):
         self.title_block = TitleBlock(self)
@@ -132,9 +137,15 @@ class RuleGraphicsView(QGraphicsView):
         self.setStyleSheet(style)
 
     def add_to_scene(self, scene: QGraphicsScene):
-        self.parent_scene = scene
+        """
+        initially Add View to ParentScene
+        :param scene:
+        :type scene:
+        :return:
+        :rtype:
+        """
         bbox = scene.itemsBoundingRect()
-        scene.addWidget(self)
+        self.parent_scene = scene
         self.graphicsProxyWidget().setY(constants.TITLE_BLOCK_HEIGHT)
         self.add_title_block()
         self.moveBy(0, bbox.height())
