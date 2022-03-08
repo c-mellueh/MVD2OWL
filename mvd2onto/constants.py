@@ -8,7 +8,7 @@ RULES = "Rules"
 APPLICABILITY = "Applicability"
 APPLICABILITYDNE = "Appilcability does not exist"
 TEMPLATE_RULE_TITLE = "TemplateRule"
-
+OPERATOR_DNE = "Operator Does not exists"
 # geometrical constants
 BORDER_RADIUS = 10
 OUTER_BORDER = 50

@@ -169,7 +169,7 @@ class RuleGraphicsView(QGraphicsView):
     def title(self,value):
         self._title = value
         if self.title_block is not None:
-            self.title_block.txt = value
+            self.title_block.text = value
 
     def turn_off_scrollbar(self):
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
@@ -528,19 +528,16 @@ class TemplateRulesGraphicsView(RuleGraphicsView):
         super().__init__(data)
         self.setObjectName(str(data))
         self.operator = self.data.has_for_operator
-        self.frame_color, self.infill_color = self.get_color(self.operator)
+        self.frame_color, self.infill_color = self.get_color()
         self.update_style(self.frame_color, self.infill_color)
 
         if self.operator is None:
-            self.title = "Operator does not Exist"
+            self.title = constants.OPERATOR_DNE
         else:
             self.title = self.operator
 
-
-
-
-    def get_color(self, text:str):
-
+    def get_color(self):
+        text = self.operator
         if text is None:
             text = ""
         text = text.upper()
@@ -750,13 +747,13 @@ class ResizeBorder(QtWidgets.QGraphicsRectItem):
         self.setRect(rect)
 
 class TitleBlock(QtWidgets.QGraphicsRectItem):
-    def __init__(self, graphics_view: Union[TemplateRulesGraphicsView, TemplateRuleGraphicsView]):
+    def __init__(self, graphics_view: RuleGraphicsView):
         super().__init__(0, 0, graphics_view.width(), constants.TITLE_BLOCK_HEIGHT)
 
         self.setAcceptHoverEvents(True)
         self.graphics_view = graphics_view
 
-        if graphics_view.title == None:
+        if self.graphics_view.title == None:
             self.text_item = QtWidgets.QGraphicsTextItem("")
         else:
             self.text_item = QtWidgets.QGraphicsTextItem(graphics_view.title.upper())
