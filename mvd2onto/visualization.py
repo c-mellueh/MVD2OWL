@@ -1127,14 +1127,14 @@ class UiMainWindow(object):
         self.tree_widget.itemClicked.connect(self.on_tree_clicked)
 
     def import_mvd(self):
-        # file_path = QtWidgets.QFileDialog.getOpenFileName(caption="mvdXML Datei", filter="mvdXML (*xml);;All files (*.*)",
-        #                                       selectedFilter="mvdXML (*xml)")[0]
+        file_path = QtWidgets.QFileDialog.getOpenFileName(caption="mvdXML Datei", filter="mvdXML (*xml);;All files (*.*)",
+                                              selectedFilter="mvdXML (*xml)")[0]
 
-        # file_path = "../Examples/RelAssociatesMaterial.xml"
-
-        file_path = "../Examples/Prüfregeln.mvdxml"
-
-        file_path = "../Examples/IFC4precast_V1.01.mvdxml"
+        # # file_path = "../Examples/RelAssociatesMaterial.xml"
+        #
+        # file_path = "../Examples/Prüfregeln.mvdxml"
+        #
+        # file_path = "../Examples/IFC4precast_V1.01.mvdxml"
 
         self.mvd = MvdXml(file=file_path, validation=False)
 
