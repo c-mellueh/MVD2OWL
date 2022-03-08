@@ -50,7 +50,7 @@ class RuleGraphicsView(QGraphicsView):
         super().__init__()
         scene = QGraphicsScene()
         self.setScene(scene)
-        self.data = data
+        self._data = data
         self.parent_scene: QGraphicsScene = None
         self.turn_off_scrollbar()
         self.setFrameStyle(QFrame.Box)
@@ -61,6 +61,30 @@ class RuleGraphicsView(QGraphicsView):
         self.movable_elements = []
         self.resize_elements: list(Union[ResizeEdge, ResizeBorder]) = []
         self.title_block: TitleBlock = None
+
+    @property
+    def data(self):
+        """
+        Return Referenced Ontology Element
+        :return:
+        :rtype:
+        """
+        return self._data
+
+    @data.setter
+    def data(self,value:Union[TemplateRule,TemplateRules]):
+        """
+        Refer to Ontology Element to GraphicsView
+        :param value:
+        :type value:
+        :return:
+        :rtype:
+        """
+        if isinstance(value,(TemplateRules,TemplateRule)):
+            self._data = value
+        else:
+            raise ValueError(f"Data needs to be a TemplateRules or TemplateRule \n Data is {value.__class__.__name__}")
+
 
     def add_title_block(self):
         self.title_block = TitleBlock(self)
@@ -462,7 +486,7 @@ class TemplateRulesGraphicsView(RuleGraphicsView):
 
         super().__init__(data)
         self.setObjectName(str(data))
-        self.operator = self.data.has_for_operator
+        self.operator = self._data.has_for_operator
         self.frame_color, self.infill_color = self.get_color(self.operator)
         self.update_style(self.frame_color, self.infill_color)
 
