@@ -53,6 +53,7 @@ class RuleGraphicsView(QGraphicsView):
         self.movable_elements: list[Union[ResizeEdge, ResizeBorder, TitleBlock]] = []
         self.resize_elements: list[Union[ResizeEdge, ResizeBorder]] = []
         self._title_block = None
+        self._title = ""
 
         #Functions
         self.setScene(QtWidgets.QGraphicsScene())
@@ -134,7 +135,7 @@ class RuleGraphicsView(QGraphicsView):
 
         self.parent_scene.addItem(self.title_block)
         self.movable_elements.append(self.title_block)
-        self.movable_elements.append(self.title_block.text)
+        self.movable_elements.append(self.title_block.text_item)
 
     @property
     def bottom_left(self)-> QPointF:
@@ -160,12 +161,21 @@ class RuleGraphicsView(QGraphicsView):
         top_right = gpw.scenePos() + gpw.rect().topRight() + QtCore.QPointF(0, -constants.TITLE_BLOCK_HEIGHT)
         return top_right
 
+    @property
+    def title(self):
+        return self._title
+
+    @title.setter
+    def title(self,value):
+        self._title = value
+        if self.title_block is not None:
+            self.title_block.txt = value
 
     def turn_off_scrollbar(self):
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
 
-    def update_style(self, border_color:tuple[int,int,int], infill_color:tuple[int,int,int]):
+    def update_style(self, border_color:tuple[int], infill_color:tuple[int]):
 
         self.setLineWidth(2)
         style = "border: 2px solid rgb{}; " \
@@ -368,7 +378,7 @@ class RuleGraphicsView(QGraphicsView):
         if gpwidget.zValue() < max_z - 2:
 
             self.title_block.setZValue(max_z)
-            self.title_block.text.setZValue(max_z + 1)
+            self.title_block.text_item.setZValue(max_z + 1)
             gpwidget.setZValue(max_z)
 
             for el in self.resize_elements:
@@ -388,11 +398,10 @@ class TemplateRuleGraphicsView(RuleGraphicsView):
 
         self.setObjectName(str(data))
         self.import_visuals(data)
-        self.turn_off_scrollbar()
         new_rec = QtCore.QRectF(self.sceneRect().x(), self.sceneRect().y(), self.sceneRect().width() + constants.BORDER,
                                 self.sceneRect().height() + constants.BORDER)
         self.setSceneRect(new_rec)
-        self.title = constants.TEMPLATE_RULE_TITLE
+        self._title = constants.TEMPLATE_RULE_TITLE
         self.update_style(self.frame_color, self.infill_color)
 
     def import_visuals(self, data: TemplateRule):
@@ -748,21 +757,29 @@ class TitleBlock(QtWidgets.QGraphicsRectItem):
         self.graphics_view = graphics_view
 
         if graphics_view.title == None:
-            self.text = QtWidgets.QGraphicsTextItem("")
+            self.text_item = QtWidgets.QGraphicsTextItem("")
         else:
-            self.text = QtWidgets.QGraphicsTextItem(graphics_view.title.upper())
+            self.text_item = QtWidgets.QGraphicsTextItem(graphics_view.title.upper())
 
-        graphics_view.parent_scene.addItem(self.text)
-        self.text.setPos(0, 0)
-        self.text.setDefaultTextColor("white")
+        graphics_view.parent_scene.addItem(self.text_item)
+        self.text_item.setPos(0, 0)
+        self.text_item.setDefaultTextColor("white")
 
         font = QtGui.QFont()
         font.setBold(True)
 
-        self.text.setFont(font)
-        self.text.setZValue(1)
+        self.text_item.setFont(font)
+        self.text_item.setZValue(1)
 
     pass
+
+    @property
+    def text(self):
+        return self.text_item.toPlainText()
+
+    @text.setter
+    def text(self,value):
+        self.text_item.setPlainText(value)
 
     def hoverEnterEvent(self, event):
         application.instance().setOverrideCursor(QtCore.Qt.OpenHandCursor)
@@ -772,7 +789,6 @@ class TitleBlock(QtWidgets.QGraphicsRectItem):
 
     def mousePressEvent(self, event: QtWidgets.QGraphicsSceneMouseEvent) -> None:
         application.instance().setOverrideCursor(QtCore.Qt.ClosedHandCursor)
-        pass
 
     def mouseMoveEvent(self, event: QtWidgets.QGraphicsSceneMouseEvent) -> None:
         self.graphics_view.bring_to_front()
