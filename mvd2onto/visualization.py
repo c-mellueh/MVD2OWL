@@ -955,13 +955,13 @@ class EntityRepresentation(QFrame):
         layout.setContentsMargins(10, 10, 5, 5)
 
         layout.addWidget(self.title_widget)
-        self.line = QFrame()
-        self.line.setFrameShape(QFrame.HLine)
-        self.line.setFrameShadow(QFrame.Sunken)
-        self.line.setLineWidth(3)
-        self.line.setStyleSheet("color: grey ;border-width: 2px; border-style: solid;")
+        self.horizontal_line = QFrame()
+        self.horizontal_line.setFrameShape(QFrame.HLine)
+        self.horizontal_line.setFrameShadow(QFrame.Sunken)
+        self.horizontal_line.setLineWidth(3)
+        self.horizontal_line.setStyleSheet("color: grey ;border-width: 2px; border-style: solid;")
 
-        layout.addWidget(self.line)
+        layout.addWidget(self.horizontal_line)
 
     def __str__(self):
         return "[EntityRepresentation: {}]".format(self.title)
@@ -969,21 +969,19 @@ class EntityRepresentation(QFrame):
     def resizeEvent(self, event: QtGui.QResizeEvent) -> None:
         pass
 
-    def add_attribute(self, data):
+    def add_attribute(self, data: Union[TemplateRule,TemplateRules]):
         text = data.has_for_attribute_name
         attrib = Attribute(text)
         self.layout().addWidget(attrib)
         attrib.show()
         return attrib
 
-    def update_title(self, title):
-        self.title = title
 
     def update_line(self):
-        geo = self.line.geometry()
+        geo = self.horizontal_line.geometry()
         geo.setWidth(self.graphicsProxyWidget().rect().width())
         geo.setX(0)
-        self.line.setGeometry(geo)
+        self.horizontal_line.setGeometry(geo)
 
 
 class LabelRepresentation(QtWidgets.QLabel):
