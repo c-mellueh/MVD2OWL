@@ -12,6 +12,15 @@ import constants
 class MainView(QGraphicsView):
 
     def wheelEvent(self, event: QtGui.QWheelEvent) -> None:
+
+        """
+        Resizes the MainView based on Scrollwheel and Keyboard Input
+        :param event:
+        :type event:
+        :return:
+        :rtype:
+        """
+
         point = event.angleDelta() / 4
         val = point.y()
 
