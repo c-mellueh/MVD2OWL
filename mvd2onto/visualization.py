@@ -465,7 +465,7 @@ class TemplateRulesGraphicsView(RuleGraphicsView):
         self.update_style(self.frame_color, self.infill_color)
 
         if self.operator is None:
-            self.title = "TemplateRules"
+            self.title = "Operator does not Exist"
         else:
             self.title = self.operator
 
@@ -1133,7 +1133,7 @@ class UiMainWindow(object):
         #
         # file_path = "../Examples/Prüfregeln.mvdxml"
         #
-        file_path = "../Examples/IFC4precast_V1.01.mvdxml"
+        #file_path = "../Examples/IFC4precast_V1.01.mvdxml"
 
         self.mvd = MvdXml(file=file_path, validation=False)
 
