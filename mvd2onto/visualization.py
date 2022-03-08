@@ -106,10 +106,26 @@ class RuleGraphicsView(QGraphicsView):
         else:
             value.addWidget(self)
 
-    def add_title_block(self):
-        self.title_block = TitleBlock(self)
+    @property
+    def title_block(self):
+        """
+        Return own TitleBlock
+        :return:
+        :rtype:
+        """
+        return self._title_block
 
-        # Brush
+    @title_block.setter
+    def title_block(self,value):
+        """
+        Reformat TitleBlock and set as own
+        :param value:
+        :type value:
+        :return:
+        :rtype:
+        """
+        self._title_block = value
+
         brush = QtGui.QBrush()
         brush.setStyle(QtCore.Qt.BrushStyle.SolidPattern)
         brush.setColor(QtGui.QColor(self.frame_color[0], self.frame_color[1], self.frame_color[2]))
@@ -120,7 +136,6 @@ class RuleGraphicsView(QGraphicsView):
         self.movable_elements.append(self.title_block)
         self.movable_elements.append(self.title_block.text)
 
-        return self.title_block
 
     def turn_off_scrollbar(self):
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
@@ -147,7 +162,7 @@ class RuleGraphicsView(QGraphicsView):
         bbox = scene.itemsBoundingRect()
         self.parent_scene = scene
         self.graphicsProxyWidget().setY(constants.TITLE_BLOCK_HEIGHT)
-        self.add_title_block()
+        self.title_block = TitleBlock(self)
         self.moveBy(0, bbox.height())
         self.add_resize_elements()
 
@@ -521,7 +536,6 @@ class TemplateRulesGraphicsView(RuleGraphicsView):
         else:
             self.title = self.operator
 
-        self.title_block = None
 
 
 
