@@ -48,18 +48,18 @@ class RuleGraphicsView(QGraphicsView):
 
     def __init__(self, data: Union[TemplateRule, TemplateRules]):
         super().__init__()
+        #Variables
         self._data = data
-        self.setScene(QtWidgets.QGraphicsScene())
+        self.movable_elements: list[Union[ResizeEdge, ResizeBorder, TitleBlock]] = []
+        self.resize_elements: list[Union[ResizeEdge, ResizeBorder]] = []
+        self._title_block = None
 
+        #Functions
+        self.setScene(QtWidgets.QGraphicsScene())
         self.turn_off_scrollbar()
         self.setFrameStyle(QFrame.Box)
-        self.frame_color = constants.FRAME_COLOR_DICT["ELSE"]
-        self.infill_color = constants.INFILL_COLOR_DICT["ELSE"]
-
-        # lists
-        self.movable_elements = []
-        self.resize_elements: list(Union[ResizeEdge, ResizeBorder]) = []
-        self.title_block: TitleBlock = None
+        self.frame_color:tuple[int] = constants.FRAME_COLOR_DICT["ELSE"]
+        self.infill_color:tuple[int] = constants.INFILL_COLOR_DICT["ELSE"]
 
     @property
     def data(self) -> Union[TemplateRule,TemplateRules]:
@@ -96,15 +96,15 @@ class RuleGraphicsView(QGraphicsView):
         return gpw.scene()
 
     @parent_scene.setter
-    def parent_scene(self,value:QtWidgets.QGraphicsScene):
+    def parent_scene(self,scene:QtWidgets.QGraphicsScene):
 
         if self.graphicsProxyWidget() is not None:
 
             gpw: QGraphicsProxyWidget = self.graphicsProxyWidget()
-            value.addWidget(gpw)
+            scene.addWidget(gpw)
 
         else:
-            value.addWidget(self)
+            scene.addWidget(self)
 
     @property
     def title_block(self):
@@ -135,6 +135,30 @@ class RuleGraphicsView(QGraphicsView):
         self.parent_scene.addItem(self.title_block)
         self.movable_elements.append(self.title_block)
         self.movable_elements.append(self.title_block.text)
+
+    @property
+    def bottom_left(self)-> QPointF:
+        gpw: QGraphicsProxyWidget = self.graphicsProxyWidget()
+        bottom_left = gpw.scenePos() + gpw.rect().bottomLeft()
+        return bottom_left
+
+    @property
+    def bottom_right(self)-> QPointF:
+        gpw: QGraphicsProxyWidget = self.graphicsProxyWidget()
+        bottom_right = gpw.scenePos() + gpw.rect().bottomRight()
+        return bottom_right
+    @property
+    def top_left(self)-> QPointF:
+        gpw: QGraphicsProxyWidget = self.graphicsProxyWidget()
+
+        top_left = gpw.scenePos() + QtCore.QPointF(0, -constants.TITLE_BLOCK_HEIGHT)
+        return top_left
+
+    @property
+    def top_right(self)-> QPointF:
+        gpw: QGraphicsProxyWidget = self.graphicsProxyWidget()
+        top_right = gpw.scenePos() + gpw.rect().topRight() + QtCore.QPointF(0, -constants.TITLE_BLOCK_HEIGHT)
+        return top_right
 
 
     def turn_off_scrollbar(self):
@@ -167,13 +191,12 @@ class RuleGraphicsView(QGraphicsView):
         self.add_resize_elements()
 
     def resizeEvent(self, event):
+        """Automatically updates TitleBlock and ResizeBorders in case of ResizEvent
+        """
+
         if self.title_block is not None:
 
-            rec = self.title_block.rect()
-            bar_height = rec.height()
-            width = self.size().width()
-            rec.setWidth(width)
-            self.title_block.setRect(rec)
+            self.title_block.setWidth(self.size().width())
 
             gpw: QGraphicsProxyWidget = self.graphicsProxyWidget()
             gpw.setMinimumHeight(0)
@@ -182,13 +205,10 @@ class RuleGraphicsView(QGraphicsView):
             for el in self.movable_elements:
                 if isinstance(el, ResizeBorder):
                     if el.orientation == ResizeBorder.TOP or el.orientation == ResizeBorder.BOTTOM:
-                        rect = el.rect()
-                        rect.setWidth(self.width())
-                        el.setRect(rect)
+                        el.setWidth(self.width())
+
                     if el.orientation == ResizeBorder.LEFT or el.orientation == ResizeBorder.RIGHT:
-                        rect = el.rect()
-                        rect.setHeight(self.height() + self.title_block.rect().height())
-                        el.setRect(rect)
+                        el.setHeight(self.height()+constants.TITLE_BLOCK_HEIGHT)
 
     def add_resize_elements(self):
 
@@ -201,7 +221,7 @@ class RuleGraphicsView(QGraphicsView):
             self.resize_elements.append(border)
 
         color = QtGui.QColor("black")
-        color.setAlpha(0)  # Turn Invisible
+        #color.setAlpha(0)  # Turn Invisible
         pen = QtGui.QPen()
         pen.setColor(color)
 
@@ -211,15 +231,11 @@ class RuleGraphicsView(QGraphicsView):
 
     def resize_top(self, y_dif):
         proxy: QGraphicsProxyWidget = self.graphicsProxyWidget()
-        proxy.setMinimumHeight(0)
         new_height = proxy.size().height() - y_dif
 
         min_items = min(item.y() for item in self.items())
 
-        if min_items < 0 and y_dif > 0:
-            pass
-
-        elif new_height > constants.MIN_RECT_SIZE:
+        if not (min_items < 0 and y_dif > 0) and new_height > constants.MIN_RECT_SIZE:
             for el in self.movable_elements:
                 if not isinstance(el, (ResizeEdge, ResizeBorder)):
                     el.moveBy(0, y_dif)
@@ -227,7 +243,6 @@ class RuleGraphicsView(QGraphicsView):
                 elif isinstance(el, ResizeEdge):
                     if el.orientation == ResizeEdge.TOP_RIGHT or el.orientation == ResizeEdge.TOP_LEFT:
                         el.moveBy(0, y_dif)
-
 
                 elif isinstance(el, ResizeBorder):
                     if not el.orientation == ResizeBorder.BOTTOM:
@@ -244,7 +259,6 @@ class RuleGraphicsView(QGraphicsView):
 
     def resize_bottom(self, y_dif):
         proxy = self.graphicsProxyWidget()
-        proxy.setMinimumHeight(0)
         new_height = proxy.size().height() + y_dif
 
         max_y = []
@@ -277,7 +291,6 @@ class RuleGraphicsView(QGraphicsView):
 
     def resize_left(self, x_dif):
         proxy: QtWidgets.QGraphicsProxyWidget = self.graphicsProxyWidget()
-        proxy.setMinimumWidth(0)
         new_width = proxy.size().width() - x_dif
 
         min_items = min(item.x() for item in self.items())
@@ -309,7 +322,6 @@ class RuleGraphicsView(QGraphicsView):
 
     def resize_right(self, x_dif):
         proxy: QtWidgets.QGraphicsProxyWidget = self.graphicsProxyWidget()
-        proxy.setMinimumWidth(0)
 
         new_width = proxy.size().width() + x_dif
 
@@ -364,27 +376,6 @@ class RuleGraphicsView(QGraphicsView):
                     el.setZValue(max_z + 1)
                 elif isinstance(el, ResizeEdge):
                     el.setZValue(max_z + 2)
-
-    def get_bottom_left(self):
-        gpw: QGraphicsProxyWidget = self.graphicsProxyWidget()
-        bottom_left = gpw.scenePos() + gpw.rect().bottomLeft()
-        return bottom_left
-
-    def get_bottom_right(self):
-        gpw: QGraphicsProxyWidget = self.graphicsProxyWidget()
-        bottom_right = gpw.scenePos() + gpw.rect().bottomRight()
-        return bottom_right
-
-    def get_top_left(self):
-        gpw: QGraphicsProxyWidget = self.graphicsProxyWidget()
-
-        top_left = gpw.scenePos() + QtCore.QPointF(0, -constants.TITLE_BLOCK_HEIGHT)
-        return top_left
-
-    def get_top_right(self):
-        gpw: QGraphicsProxyWidget = self.graphicsProxyWidget()
-        top_right = gpw.scenePos() + gpw.rect().topRight() + QtCore.QPointF(0, -constants.TITLE_BLOCK_HEIGHT)
-        return top_right
 
     def wheelEvent(self, event: QtGui.QWheelEvent) -> None:
         ui.graphics_view.wheelEvent(event)
@@ -570,16 +561,16 @@ class ResizeEdge(QtWidgets.QGraphicsRectItem):
             raise ValueError("orientation not allowed")
 
         if self.orientation == self.TOP_LEFT:
-            position = graphics_view.get_top_left()
+            position = graphics_view.top_left
 
         elif self.orientation == self.TOP_RIGHT:
-            position = graphics_view.get_top_right()
+            position = graphics_view.top_right
 
         elif self.orientation == self.BOTTOM_LEFT:
-            position = graphics_view.get_bottom_left()
+            position = graphics_view.bottom_left
 
         elif self.orientation == self.BOTTOM_RIGHT:
-            position = graphics_view.get_bottom_right()
+            position = graphics_view.bottom_right
 
         self.graphical_view = graphics_view
 
@@ -673,13 +664,13 @@ class ResizeBorder(QtWidgets.QGraphicsRectItem):
     def get_pos(self) -> QtCore.QPointF:
         position = None
         if self.orientation == self.TOP or self.orientation == self.LEFT:
-            position = self.graphics_view.get_top_left()
+            position = self.graphics_view.top_left
 
         elif self.orientation == self.BOTTOM:
-            position = self.graphics_view.get_bottom_left()
+            position = self.graphics_view.bottom_left
 
         elif self.orientation == self.RIGHT:
-            position = self.graphics_view.get_top_right()
+            position = self.graphics_view.top_right
 
         if self.orientation == self.TOP or self.orientation == self.BOTTOM:
             position.setY(position.y() - self.width / 2)
@@ -739,6 +730,15 @@ class ResizeBorder(QtWidgets.QGraphicsRectItem):
         application.instance().restoreOverrideCursor()
         pass
 
+    def setWidth(self,width):
+        rect = self.rect()
+        rect.setWidth(width)
+        self.setRect(rect)
+
+    def setHeight(self,height):
+        rect = self.rect()
+        rect.setHeight(height)
+        self.setRect(rect)
 
 class TitleBlock(QtWidgets.QGraphicsRectItem):
     def __init__(self, graphics_view: Union[TemplateRulesGraphicsView, TemplateRuleGraphicsView]):
@@ -790,6 +790,10 @@ class TitleBlock(QtWidgets.QGraphicsRectItem):
 
         pass
 
+    def setWidth(self,width):
+        rect = self.rect()
+        rect.setWidth(width)
+        self.setRect(rect)
 
 class Attribute(QtWidgets.QLabel):
 
@@ -1181,14 +1185,14 @@ class UiMainWindow(object):
         self.tree_widget.itemClicked.connect(self.on_tree_clicked)
 
     def import_mvd(self):
-        file_path = QtWidgets.QFileDialog.getOpenFileName(caption="mvdXML Datei", filter="mvdXML (*xml);;All files (*.*)",
-                                              selectedFilter="mvdXML (*xml)")[0]
+        #file_path = QtWidgets.QFileDialog.getOpenFileName(caption="mvdXML Datei", filter="mvdXML (*xml);;All files (*.*)",
+        #                                      selectedFilter="mvdXML (*xml)")[0]
 
         # # file_path = "../Examples/RelAssociatesMaterial.xml"
         #
         # file_path = "../Examples/Prüfregeln.mvdxml"
         #
-        #file_path = "../Examples/IFC4precast_V1.01.mvdxml"
+        file_path = "../Examples/IFC4precast_V1.01.mvdxml"
 
         self.mvd = MvdXml(file=file_path, validation=False)
 
