@@ -967,7 +967,6 @@ class EntityRepresentation(QFrame):
         return "[EntityRepresentation: {}]".format(self.title)
 
     def resizeEvent(self, event: QtGui.QResizeEvent) -> None:
-        # self.update_title(self.title)
         pass
 
     def add_attribute(self, data):
