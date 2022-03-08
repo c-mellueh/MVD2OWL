@@ -62,7 +62,7 @@ class RuleGraphicsView(QGraphicsView):
         self.title_block: TitleBlock = None
 
     @property
-    def data(self):
+    def data(self) -> Union[TemplateRule,TemplateRules]:
         """
         Return Referenced Ontology Element
         :return:
