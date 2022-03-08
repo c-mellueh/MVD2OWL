@@ -21,14 +21,23 @@ LAYOUT_SPACING = 2
 MIN_RECT_SIZE = 100
 
 #Colors
-ELSE_BORDER_COLOR = (140, 140, 140) #Grey
-ELSE_INFILL_COLOR = (235, 235, 235)
 
-OR_BORDER_COLOR = (0,10,160)    #Blue
-OR_INFILL_COLOR = (217,220,255)
+FRAME_COLOR_DICT = {
+    "AND" : (0, 110, 0),            #Green
+    "NAND": (160,0,0),              #Red
+    "OR": (0, 10, 160),             #Blue
+    "NOR": (160,0,0),               #Red
+    "XOR": (130,0,140),             #Violet
+    "NXOR": (160,0,0),              #Red
+    "ELSE": (140, 140, 140),        #Grey
+}
 
-AND_BORDER_COLOR = (0, 110, 0) #Green
-AND_INFILL_COLOR = (217, 255, 217)
-
-NOR_BORDER_COLOR = (160,0,0)    #Red
-NOR_INFILL_COLOR = (255, 217, 217)
+INFILL_COLOR_DICT = {
+    "AND" : (217, 255, 217),
+    "NAND": (255, 217, 217),
+    "OR": (217,220,255),
+    "NOR": (255, 217, 217),
+    "XOR": (255,217,255),
+    "NXOR": (255, 217, 217),
+    "ELSE": (235, 235, 235),
+}

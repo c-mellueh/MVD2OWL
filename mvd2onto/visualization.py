@@ -46,8 +46,8 @@ class RuleGraphicsView(QGraphicsView):
         self.turn_off_scrollbar()
         self.color = "grey"
         self.setFrameStyle(QFrame.Box)
-        self.border_color = constants.ELSE_BORDER_COLOR
-        self.infill_color = constants.ELSE_INFILL_COLOR
+        self.frame_color = constants.FRAME_COLOR_DICT["ELSE"]
+        self.infill_color = constants.INFILL_COLOR_DICT["ELSE"]
 
         # lists
         self.title = "Empty"
@@ -61,7 +61,7 @@ class RuleGraphicsView(QGraphicsView):
         # Brush
         brush = QtGui.QBrush()
         brush.setStyle(QtCore.Qt.BrushStyle.SolidPattern)
-        brush.setColor(QtGui.QColor(self.border_color[0], self.border_color[1], self.border_color[2]))
+        brush.setColor(QtGui.QColor(self.frame_color[0], self.frame_color[1], self.frame_color[2]))
 
         self.title_block.setBrush(brush)
 
@@ -335,7 +335,7 @@ class TemplateRuleGraphicsView(RuleGraphicsView):
                                 self.sceneRect().height() + constants.BORDER)
         self.setSceneRect(new_rec)
         self.title = constants.TEMPLATE_RULE_TITLE
-        self.update_style(self.border_color, self.infill_color)
+        self.update_style(self.frame_color, self.infill_color)
 
     def import_visuals(self, data: TemplateRule):
 
@@ -461,8 +461,8 @@ class TemplateRulesGraphicsView(RuleGraphicsView):
         super().__init__(data)
         self.setObjectName(str(data))
         self.operator = self.data.has_for_operator
-        self.border_color, self.infill_color = self.get_color(self.operator)
-        self.update_style(self.border_color, self.infill_color)
+        self.frame_color, self.infill_color = self.get_color(self.operator)
+        self.update_style(self.frame_color, self.infill_color)
 
         if self.operator is None:
             self.title = "TemplateRules"
@@ -475,20 +475,20 @@ class TemplateRulesGraphicsView(RuleGraphicsView):
         ui.graphics_view.wheelEvent(event)
         pass
 
-    def get_color(self, text):
-        if text == "or":
-            border_color = constants.OR_BORDER_COLOR
-            infill_color = constants.OR_INFILL_COLOR
-        elif text == "and":
-            border_color = constants.AND_BORDER_COLOR
-            infill_color = constants.AND_INFILL_COLOR
-        elif text == "nor":
-            border_color = constants.NOR_BORDER_COLOR
-            infill_color = constants.NOR_INFILL_COLOR
-        else:
-            border_color = constants.ELSE_BORDER_COLOR
-            infill_color = constants.ELSE_INFILL_COLOR
-        return border_color, infill_color
+    def get_color(self, text:str):
+
+        if text is None:
+            text = ""
+        text = text.upper()
+
+        frame_color = constants.FRAME_COLOR_DICT.get(text)
+        infill_color = constants.INFILL_COLOR_DICT.get(text)
+
+        if frame_color is None:
+            frame_color = constants.FRAME_COLOR_DICT["ELSE"]
+            infill_color = constants.INFILL_COLOR_DICT["ELSE"]
+
+        return frame_color, infill_color
 
 
 class ResizeEdge(QtWidgets.QGraphicsRectItem):
@@ -570,7 +570,6 @@ class ResizeEdge(QtWidgets.QGraphicsRectItem):
             gv.resize_bottom(y_dif)
             gv.resize_right(x_dif)
 
-        # gv.resize_scene(x_dif,y_dif)
         gv.scene().update()
         gv.update()
 
@@ -959,7 +958,7 @@ class EntityRepresentation(QFrame):
                            border-width: 1px; 
                            border-style: solid;
                            border-radius:10px;
-                           background-color:{}""".format(constants.ELSE_INFILL_COLOR)
+                           background-color:{}""".format(constants.INFILL_COLOR_DICT["ELSE"])
 
         self.setStyleSheet(style)
 
@@ -1134,7 +1133,7 @@ class UiMainWindow(object):
         #
         # file_path = "../Examples/Prüfregeln.mvdxml"
         #
-        # file_path = "../Examples/IFC4precast_V1.01.mvdxml"
+        file_path = "../Examples/IFC4precast_V1.01.mvdxml"
 
         self.mvd = MvdXml(file=file_path, validation=False)
 
