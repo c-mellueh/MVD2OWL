@@ -48,10 +48,9 @@ class RuleGraphicsView(QGraphicsView):
 
     def __init__(self, data: Union[TemplateRule, TemplateRules]):
         super().__init__()
-        scene = QGraphicsScene()
-        self.setScene(scene)
         self._data = data
-        self.parent_scene: QGraphicsScene = None
+        self.setScene(QtWidgets.QGraphicsScene())
+
         self.turn_off_scrollbar()
         self.setFrameStyle(QFrame.Box)
         self.frame_color = constants.FRAME_COLOR_DICT["ELSE"]
@@ -85,6 +84,22 @@ class RuleGraphicsView(QGraphicsView):
         else:
             raise ValueError(f"Data needs to be a TemplateRules or TemplateRule \n Data is {value.__class__.__name__}")
 
+    @property
+    def parent_scene(self) -> QtWidgets.QGraphicsScene:
+        """
+        Returns Scene in which the View is embedded
+        :return:
+        :rtype:
+        """
+
+        gpw:QGraphicsProxyWidget = self.graphicsProxyWidget()
+        return gpw.scene()
+
+    @parent_scene.setter
+    def parent_scene(self,value:QtWidgets.QGraphicsScene):
+        gpw: QGraphicsProxyWidget = self.graphicsProxyWidget()
+        value.addWidget(gpw)
+        pass
 
     def add_title_block(self):
         self.title_block = TitleBlock(self)
