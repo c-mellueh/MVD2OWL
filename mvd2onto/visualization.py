@@ -553,6 +553,7 @@ class TemplateRulesGraphicsView(RuleGraphicsView):
 
 
 class ResizeEdge(QtWidgets.QGraphicsRectItem):
+
     TOP_LEFT = 7
     TOP_RIGHT = 4
     BOTTOM_LEFT = 8
