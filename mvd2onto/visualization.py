@@ -486,7 +486,7 @@ class TemplateRulesGraphicsView(RuleGraphicsView):
 
         super().__init__(data)
         self.setObjectName(str(data))
-        self.operator = self._data.has_for_operator
+        self.operator = self.data.has_for_operator
         self.frame_color, self.infill_color = self.get_color(self.operator)
         self.update_style(self.frame_color, self.infill_color)
 
