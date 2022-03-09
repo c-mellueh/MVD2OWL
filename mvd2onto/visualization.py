@@ -130,7 +130,6 @@ class RuleGraphicsView(QGraphicsView):
         brush = QtGui.QBrush()
         brush.setStyle(QtCore.Qt.BrushStyle.SolidPattern)
         brush.setColor(QtGui.QColor(self.frame_color[0], self.frame_color[1], self.frame_color[2]))
-
         self.title_block.setBrush(brush)
 
         self.parent_scene.addItem(self.title_block)
@@ -206,7 +205,7 @@ class RuleGraphicsView(QGraphicsView):
 
         if self.title_block is not None:
 
-            self.title_block.setWidth(self.size().width())
+            self.title_block.width= self.size().width()
 
             gpw: QGraphicsProxyWidget = self.graphicsProxyWidget()
             gpw.setMinimumHeight(0)
@@ -215,10 +214,10 @@ class RuleGraphicsView(QGraphicsView):
             for el in self.movable_elements:
                 if isinstance(el, ResizeBorder):
                     if el.orientation == ResizeBorder.TOP or el.orientation == ResizeBorder.BOTTOM:
-                        el.setWidth(self.width())
+                        el.width = self.width()
 
                     if el.orientation == ResizeBorder.LEFT or el.orientation == ResizeBorder.RIGHT:
-                        el.setHeight(self.height()+constants.TITLE_BLOCK_HEIGHT)
+                        el.height = self.height() + constants.TITLE_BLOCK_HEIGHT
 
     def add_resize_elements(self):
 
@@ -564,46 +563,51 @@ class ResizeEdge(QtWidgets.QGraphicsRectItem):
     def __init__(self, graphics_view: RuleGraphicsView, orientation: int, orientation_2: int = 0):
 
         self.orientation = orientation + orientation_2
+        self.graphics_view = graphics_view
+
         if self.orientation not in self.POSSIBLE_ORIENTATIONS:
             raise ValueError("orientation not allowed")
 
-        if self.orientation == self.TOP_LEFT:
-            position = graphics_view.top_left
-
-        elif self.orientation == self.TOP_RIGHT:
-            position = graphics_view.top_right
-
-        elif self.orientation == self.BOTTOM_LEFT:
-            position = graphics_view.bottom_left
-
-        elif self.orientation == self.BOTTOM_RIGHT:
-            position = graphics_view.bottom_right
-
-        self.graphical_view = graphics_view
-
-        movement = QPoint(constants.RESIZE_BORDER_WIDTH / 2, constants.RESIZE_BORDER_WIDTH / 2)
-
-        position = position - movement
-        super().__init__(position.x(), position.y(), constants.RESIZE_BORDER_WIDTH, constants.RESIZE_BORDER_WIDTH)
+        super().__init__(self.position.x(), self.position.y(), constants.RESIZE_BORDER_WIDTH, constants.RESIZE_BORDER_WIDTH)
         self.setAcceptHoverEvents(True)
 
         self.setZValue(10)
         graphics_view.parent_scene.addItem(self)
 
+    @property
+    def position(self):
+        if self.orientation == self.TOP_LEFT:
+            position = self.graphics_view.top_left
+
+        elif self.orientation == self.TOP_RIGHT:
+            position = self.graphics_view.top_right
+
+        elif self.orientation == self.BOTTOM_LEFT:
+            position = self.graphics_view.bottom_left
+
+        elif self.orientation == self.BOTTOM_RIGHT:
+            position = self.graphics_view.bottom_right
+
+        movement = QPoint(constants.RESIZE_BORDER_WIDTH / 2, constants.RESIZE_BORDER_WIDTH / 2)
+
+        position = position - movement
+
+        return position
+
     def hoverEnterEvent(self, event):
 
-        if self.orientation == self.TOP_LEFT or self.orientation == self.BOTTOM_RIGHT:
+        if self.orientation in {self.TOP_LEFT, self.BOTTOM_RIGHT}:
             application.instance().setOverrideCursor(QtCore.Qt.SizeFDiagCursor)
-        elif self.orientation == self.TOP_RIGHT or self.orientation == self.BOTTOM_LEFT:
+        elif self.orientation in {self.TOP_RIGHT, self.BOTTOM_LEFT}:
             application.instance().setOverrideCursor(QtCore.Qt.SizeBDiagCursor)
 
     def hoverLeaveEvent(self, event):
         application.instance().restoreOverrideCursor()
 
     def mousePressEvent(self, event: QtWidgets.QGraphicsSceneMouseEvent) -> None:
-        if self.orientation == self.TOP_LEFT or self.orientation == self.BOTTOM_RIGHT:
+        if self.orientation in { self.TOP_LEFT, self.BOTTOM_RIGHT}:
             application.instance().setOverrideCursor(QtCore.Qt.SizeFDiagCursor)
-        elif self.orientation == self.TOP_RIGHT or self.orientation == self.BOTTOM_LEFT:
+        elif self.orientation in{ self.TOP_RIGHT, self.BOTTOM_LEFT}:
             application.instance().setOverrideCursor(QtCore.Qt.SizeBDiagCursor)
 
     def mouseMoveEvent(self, event: QtWidgets.QGraphicsSceneMouseEvent) -> None:
@@ -613,8 +617,7 @@ class ResizeEdge(QtWidgets.QGraphicsRectItem):
         x_dif = updated_cursor_position.x() - orig_cursor_position.x()
         y_dif = updated_cursor_position.y() - orig_cursor_position.y()
 
-        gv = self.graphical_view
-        # self.scene().update()
+        gv = self.graphics_view
 
         if self.orientation == self.TOP_LEFT:
             gv.resize_left(x_dif)
@@ -654,22 +657,44 @@ class ResizeBorder(QtWidgets.QGraphicsRectItem):
         if self.orientation not in self.POSSIBLE_ORIENTATIONS:
             raise ValueError("orientation not allowed")
 
-        self.width = constants.RESIZE_BORDER_WIDTH
+        width = constants.RESIZE_BORDER_WIDTH
         self.graphics_view = graphics_view
         position = self.get_pos()
 
         if self.orientation == self.TOP or self.orientation == self.BOTTOM:
-            super().__init__(position.x(), position.y(), self.graphics_view.width(), self.width)
+            super().__init__(position.x(), position.y(), self.graphics_view.width(), width)
 
         elif self.orientation == self.LEFT or self.orientation == self.RIGHT:
-            super().__init__(position.x(), position.y(), self.width,
+            super().__init__(position.x(), position.y(), width,
                              self.graphics_view.height() + self.graphics_view.title_block.rect().height())
 
         self.setAcceptHoverEvents(True)
         self.graphics_view.parent_scene.addItem(self)
 
+    @property
+    def width(self):
+        return self.rect().width()
+
+    @width.setter
+    def width(self, width):
+        rect = self.rect()
+        rect.setWidth(width)
+        self.setRect(rect)
+
+    @property
+    def height(self):
+        return self.rect().height()
+
+    @height.setter
+    def height(self, height):
+        rect = self.rect()
+        rect.setHeight(height)
+        self.setRect(rect)
+
     def get_pos(self) -> QtCore.QPointF:
         position = None
+        width = constants.RESIZE_BORDER_WIDTH
+
         if self.orientation == self.TOP or self.orientation == self.LEFT:
             position = self.graphics_view.top_left
 
@@ -680,10 +705,10 @@ class ResizeBorder(QtWidgets.QGraphicsRectItem):
             position = self.graphics_view.top_right
 
         if self.orientation == self.TOP or self.orientation == self.BOTTOM:
-            position.setY(position.y() - self.width / 2)
+            position.setY(position.y() - width / 2)
 
         elif self.orientation == self.LEFT or self.orientation == self.RIGHT:
-            position.setX(position.x() - self.width / 2)
+            position.setX(position.x() - width / 2)
 
         return position
 
@@ -737,16 +762,6 @@ class ResizeBorder(QtWidgets.QGraphicsRectItem):
         application.instance().restoreOverrideCursor()
         pass
 
-    def setWidth(self,width):
-        rect = self.rect()
-        rect.setWidth(width)
-        self.setRect(rect)
-
-    def setHeight(self,height):
-        rect = self.rect()
-        rect.setHeight(height)
-        self.setRect(rect)
-
 class TitleBlock(QtWidgets.QGraphicsRectItem):
     def __init__(self, graphics_view: RuleGraphicsView):
         super().__init__(0, 0, graphics_view.width(), constants.TITLE_BLOCK_HEIGHT)
@@ -760,6 +775,28 @@ class TitleBlock(QtWidgets.QGraphicsRectItem):
             self.text_item = QtWidgets.QGraphicsTextItem(graphics_view.title.upper())
 
         graphics_view.parent_scene.addItem(self.text_item)
+        self.format_text_item()
+    pass
+
+    @property
+    def text(self)->str:
+        return self.text_item.toPlainText()
+
+    @text.setter
+    def text(self,value:str):
+        self.text_item.setPlainText(value)
+
+    @property
+    def width(self)->float:
+        return self.rect().width()
+
+    @width.setter
+    def width(self,width:float):
+        rect = self.rect()
+        rect.setWidth(width)
+        self.setRect(rect)
+
+    def format_text_item(self):
         self.text_item.setPos(0, 0)
         self.text_item.setDefaultTextColor("white")
 
@@ -768,16 +805,6 @@ class TitleBlock(QtWidgets.QGraphicsRectItem):
 
         self.text_item.setFont(font)
         self.text_item.setZValue(1)
-
-    pass
-
-    @property
-    def text(self):
-        return self.text_item.toPlainText()
-
-    @text.setter
-    def text(self,value):
-        self.text_item.setPlainText(value)
 
     def hoverEnterEvent(self, event):
         application.instance().setOverrideCursor(QtCore.Qt.OpenHandCursor)
@@ -804,10 +831,7 @@ class TitleBlock(QtWidgets.QGraphicsRectItem):
 
         pass
 
-    def setWidth(self,width):
-        rect = self.rect()
-        rect.setWidth(width)
-        self.setRect(rect)
+
 
 class Attribute(QtWidgets.QLabel):
 
@@ -1069,7 +1093,7 @@ class EntityRepresentation(QFrame):
 
 
     def update_line(self):
-        geo = self.horizontal_line.geometry()
+        geo:QtCore.QRect= self.horizontal_line.geometry()
         geo.setWidth(self.graphicsProxyWidget().rect().width())
         geo.setX(0)
         self.horizontal_line.setGeometry(geo)
