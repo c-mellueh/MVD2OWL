@@ -5,8 +5,9 @@ from typing import Union
 from PySide6 import QtCore, QtGui, QtWidgets
 from PySide6.QtWidgets import *
 from PySide6.QtCore import QPointF, QPoint
-from random import random
 import constants
+
+debug_bool = False
 
 
 class MainView(QGraphicsView):
@@ -230,7 +231,9 @@ class RuleGraphicsView(QGraphicsView):
             self.resize_elements.append(border)
 
         color = QtGui.QColor("black")
-        #color.setAlpha(0)  # Turn Invisible
+
+        if not debug_bool:
+            color.setAlpha(0)  # Turn Invisible
         pen = QtGui.QPen()
         pen.setColor(color)
 
@@ -1223,14 +1226,18 @@ class UiMainWindow(object):
         self.tree_widget.itemClicked.connect(self.on_tree_clicked)
 
     def import_mvd(self):
-        #file_path = QtWidgets.QFileDialog.getOpenFileName(caption="mvdXML Datei", filter="mvdXML (*xml);;All files (*.*)",
-        #                                      selectedFilter="mvdXML (*xml)")[0]
 
-        # # file_path = "../Examples/RelAssociatesMaterial.xml"
-        #
-        # file_path = "../Examples/Prüfregeln.mvdxml"
-        #
-        file_path = "../Examples/IFC4precast_V1.01.mvdxml"
+
+
+        if  debug_bool:
+            file_path = "../Examples/IFC4precast_V1.01.mvdxml"
+            # # file_path = "../Examples/RelAssociatesMaterial.xml"
+            #
+            # file_path = "../Examples/Prüfregeln.mvdxml"
+            #
+        else:
+            file_path = QtWidgets.QFileDialog.getOpenFileName(caption="mvdXML Datei", filter="mvdXML (*xml);;All files (*.*)",
+                                                 selectedFilter="mvdXML (*xml)")[0]
 
         self.mvd = MvdXml(file=file_path, validation=False)
 
@@ -1307,9 +1314,17 @@ class UiMainWindow(object):
         wid.setMinimumHeight(graphics_view.sceneRect().height())
 
 
-def main():
+def main(mode = "normal"):
     global application
     global ui
+    global debug_bool
+
+    if mode in {"debug","DEBUG"}:
+        debug_bool = True
+        print("DEBUG ACTIVE")
+    else:
+        debug_bool = False
+
     application = QtWidgets.QApplication(sys.argv)
     window = QtWidgets.QMainWindow()
     ui = UiMainWindow()
@@ -1319,4 +1334,4 @@ def main():
 
 
 if __name__ == "__main__":
-    exit(main())
+    exit(main(mode = "DEBUG"))
