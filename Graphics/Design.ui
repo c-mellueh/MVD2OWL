@@ -110,14 +110,24 @@
    </property>
    <widget class="QMenu" name="menutest">
     <property name="title">
-     <string>test</string>
+     <string>File</string>
     </property>
-    <addaction name="separator"/>
-    <addaction name="separator"/>
+    <addaction name="actionOpen_mvdXML"/>
+    <addaction name="actionSave_mvdOWL"/>
    </widget>
    <addaction name="menutest"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
+  <action name="actionSave_mvdOWL">
+   <property name="text">
+    <string>Save mvdOWL</string>
+   </property>
+  </action>
+  <action name="actionOpen_mvdXML">
+   <property name="text">
+    <string>Open mvdXML</string>
+   </property>
+  </action>
  </widget>
  <resources/>
  <connections/>
