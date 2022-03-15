@@ -1,6 +1,6 @@
 import time
 
-from core import *
+from core import MvdXml,ConceptRoot,ConceptTemplate,TemplateRules,TemplateRule,EntityRule,AttributeRule,get_ontology,sys,reset_onto
 from typing import Union
 from PySide6 import QtCore, QtGui, QtWidgets
 from PySide6.QtWidgets import *
@@ -1197,35 +1197,59 @@ class UiMainWindow(object):
         self.add_menu_bar(main_window)
 
     def add_menu_bar(self,main_window):
-        self.actionSave_mvdOWL = QtGui.QAction("save", main_window)
-        self.actionOpen_mvdXML = QtGui.QAction("open", main_window)
+        self.actionSave_mvdOWL = QtGui.QAction("Save as mvdOWL", main_window)
+        self.actionOpen_mvdXML = QtGui.QAction("open mvdXML", main_window)
 
         self.actionOpen_mvdXML.triggered.connect(self.import_mvd)
+        self.actionSave_mvdOWL.triggered.connect(self.save_mvd)
 
         self.menubar = main_window.menuBar()
         self.file_menu = self.menubar.addMenu("&File")
         self.file_menu.addAction(self.actionOpen_mvdXML)
-        # self.file_menu.addAction(self.actionSave_mvdOWL)
+        self.file_menu.addAction(self.actionSave_mvdOWL)
 
-        self.file_menu.menuAction().triggered.connect(self.test)
-        # print(self.file_menu.act)
-        print(self.file_menu.actions())
 
-        self.statusbar = QtWidgets.QStatusBar(main_window)
-        self.statusbar.setObjectName("statusbar")
-        main_window.setStatusBar(self.statusbar)
+        # self.statusbar = QtWidgets.QStatusBar(main_window)
+        # self.statusbar.setObjectName("statusbar")
+        # main_window.setStatusBar(self.statusbar)
 
 
     def initialize(self):
-        self.import_mvd()
         self.main_window.show()
         self.tree_widget.setColumnCount(1)
         self.scene_dict = {}
         self.add_scene()
 
+        if debug_bool:
+            file_path = "../Examples/IFC4precast_V1.01.mvdxml"
+            # file_path = "../Examples/RelAssociatesMaterial.xml"
+            # file_path = "../Examples/Prüfregeln.mvdxml"
+            self.mvd = MvdXml(file=file_path, validation=False)
+            self.fill_tree()
+
+
+    def import_mvd(self):
+
+        if MvdXml.instances() != []:
+            reset_onto()
+
+        file_path  = QtWidgets.QFileDialog.getOpenFileName(caption="mvdXML Datei", filter="mvdXML (*xml);;All files (*.*)", selectedFilter="mvdXML (*xml)")[0]
+        self.mvd = MvdXml(file=file_path, validation=False)
+        self.fill_tree()
+
+    def save_mvd(self):
+        filename,filter  = QtWidgets.QFileDialog.getSaveFileName(caption="mvdOWL Datei", filter="mvdOWL (*.mvdOWL);;All files (*.*)", selectedFilter="mvdOWL (*.mvdOWL)")
+        self.mvd.save_as_rdf(filename)
+
+
+    def fill_tree(self):
+        self.scene_dict = {}
+        self.add_scene()
+
+        self.tree_widget.clear()
+
         for concept_root in ConceptRoot.instances():
             name = concept_root.has_for_name
-
             if name == "":
                 name = constants.UNDEFINED_ROOT_NAME
 
@@ -1238,25 +1262,6 @@ class UiMainWindow(object):
                 child.konzept = concept
 
         self.tree_widget.itemClicked.connect(self.on_tree_clicked)
-
-    def test(self):
-        print("HIER")
-
-    def import_mvd(self):
-
-
-
-        if  debug_bool:
-            file_path = "../Examples/IFC4precast_V1.01.mvdxml"
-            # # file_path = "../Examples/RelAssociatesMaterial.xml"
-            #
-            # file_path = "../Examples/Prüfregeln.mvdxml"
-            #
-        else:
-            file_path = QtWidgets.QFileDialog.getOpenFileName(caption="mvdXML Datei", filter="mvdXML (*xml);;All files (*.*)",
-                                                 selectedFilter="mvdXML (*xml)")[0]
-
-        self.mvd = MvdXml(file=file_path, validation=False)
 
     def add_scene(self, item: QtWidgets.QTreeWidgetItem = None):
 

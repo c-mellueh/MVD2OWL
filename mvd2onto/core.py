@@ -38,7 +38,6 @@ Misc variables:
 '''
 
 onto = get_ontology("http:/mvdxml/onto.owl")
-
 """
 Masterclass because all Elements share the ability to import subitemes
 
@@ -56,6 +55,10 @@ import_elements(self, xml_object: etree._Element, _class, prop, name: str) -> No
 
 """
 
+def reset_onto():
+    global onto
+    onto.destroy()
+    onto = get_ontology("http:/mvdxml/onto.owl")
 
 def import_sub_elements(self, xml_object: etree._Element, _class, prop, name: str) -> None:
     """
@@ -206,7 +209,11 @@ with onto:
     class MvdXml(Thing):
         """counterpart of 'MvdXml' (first Level of MVDxml)"""
 
+
+
         def __init__(self, file: str, validation=False, doc: str = None) -> None:
+
+
 
             """
                Initial Startup of class (comparable to __init__)
@@ -265,6 +272,8 @@ with onto:
 
             return xml_object
 
+        def save_as_rdf(self,filepath,format="rdfxml"):
+            onto.save(filepath,format)
 
     class ConceptTemplate(Thing):
         """ Counterpart of 'ConceptTemplate' in MVDxml"""
