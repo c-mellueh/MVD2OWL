@@ -20,7 +20,7 @@ Misc variables:
 
 ########## Relationships ##########
 
-owlready2.JAVA_EXE = "C:\Program Files (x86)\Common Files\Oracle\Java\javapath\java.exe"
+#owlready2.JAVA_EXE = "C:\Program Files (x86)\Common Files\Oracle\Java\javapath\java.exe"
 
 
 def main():
