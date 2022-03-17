@@ -1,6 +1,6 @@
 import owlready2
 
-from mvd2onto.core import *
+from mvd2OWL.core import *
 '''
 This File is for Testing the conversion from MVD to Onthology
 

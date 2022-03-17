@@ -1,3 +1,3 @@
-from mvd2onto import visualization
+from mvd2OWL import visualization
 
 visualization.main()

@@ -1195,7 +1195,7 @@ class UiMainWindow(object):
 
     def retranslate_ui(self, main_window):
         _translate = QtCore.QCoreApplication.translate
-        main_window.setWindowTitle(_translate("MainWindow", "MVD2Onto"))
+        main_window.setWindowTitle(_translate("MainWindow", constants.TITLE_BAR_TEXT))
 
         path = f"{pathlib.Path(__file__).parent.parent.resolve()}/Graphics/icon.png"
 
@@ -1206,7 +1206,7 @@ class UiMainWindow(object):
         self.add_menu_bar(main_window)
 
     def add_menu_bar(self,main_window):
-        self.actionSave_mvdOWL = QtGui.QAction("Save as mvdOWL", main_window)
+        self.actionSave_mvdOWL = QtGui.QAction("Save mvdOWL", main_window)
         self.actionOpen_mvdXML = QtGui.QAction("open mvdXML", main_window)
 
         self.actionOpen_mvdXML.triggered.connect(self.import_mvd)
