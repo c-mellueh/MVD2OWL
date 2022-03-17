@@ -1139,6 +1139,8 @@ class UiMainWindow(object):
 
         # Tree Widget
         self.tree_widget = QtWidgets.QTreeWidget(self.central_widget)
+        self.tree_widget.setFrameStyle(constants.WIDGET_FRAME_STYLE)
+        self.tree_widget.setLineWidth(constants.WIDGET_LINE_WIDTH)
 
         # Set Size Policy for TreeWidget
         size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
@@ -1174,6 +1176,9 @@ class UiMainWindow(object):
         self.vertical_layout.addWidget(self.type)
 
         self.graphics_view = MainView()
+        self.graphics_view.setFrameStyle(constants.WIDGET_FRAME_STYLE)
+        self.graphics_view.setLineWidth(constants.WIDGET_LINE_WIDTH)
+
         size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         size_policy.setHorizontalStretch(3)
         size_policy.setVerticalStretch(1)
