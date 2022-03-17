@@ -1,11 +1,11 @@
 import time
 
-from core import MvdXml,ConceptRoot,ConceptTemplate,TemplateRules,TemplateRule,EntityRule,AttributeRule,get_ontology,sys,reset_onto
+from .core import MvdXml,ConceptRoot,ConceptTemplate,TemplateRules,TemplateRule,EntityRule,AttributeRule,get_ontology,sys,reset_onto
 from typing import Union
 from PySide6 import QtCore, QtGui, QtWidgets
 from PySide6.QtWidgets import *
 from PySide6.QtCore import QPointF, QPoint
-import constants
+from . import constants
 
 debug_bool = False
 

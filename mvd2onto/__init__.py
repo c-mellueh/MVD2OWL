@@ -13,7 +13,3 @@ Misc variables:
 
     None
 '''
-
-if __name__ == "__main__":
-    import visualization
-    exit(visualization.main())
