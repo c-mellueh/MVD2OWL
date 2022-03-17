@@ -1,11 +1,12 @@
-import time
-
+from sys import exit
+from owlready2 import pellet
 from .core import MvdXml,ConceptRoot,ConceptTemplate,TemplateRules,TemplateRule,EntityRule,AttributeRule,get_ontology,sys,reset_onto
 from typing import Union
 from PySide6 import QtCore, QtGui, QtWidgets
 from PySide6.QtWidgets import *
 from PySide6.QtCore import QPointF, QPoint
 from . import constants
+import pathlib
 
 debug_bool = False
 
@@ -175,7 +176,7 @@ class RuleGraphicsView(QGraphicsView):
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
 
-    def update_style(self, border_color:tuple[int], infill_color:tuple[int]):
+    def update_style(self, border_color, infill_color):
 
         self.setLineWidth(2)
         style = "border: 2px solid rgb{}; " \
@@ -889,7 +890,7 @@ class Connection:
             movement = QPointF(width, height) / 2
             self.label.setPos(self.center - movement)
 
-    def get_pos(self) -> list[QPointF]:
+    def get_pos(self) -> list:
         rectangle_right = self.right_proxy.windowFrameGeometry()
         attribute = self.attribute
         if isinstance(attribute, DragBox):
@@ -1053,12 +1054,12 @@ class EntityRepresentation(QFrame):
         self.setLineWidth(2)
         self.setFrameStyle(QFrame.Raised)
 
-        style = """subcontrol-origin:margin; 
-                           subcontrol-position: top center; 
-                           padding-left: 0px; 
-                           padding-right: 0px; 
-                           border-color: black; 
-                           border-width: 1px; 
+        style = """subcontrol-origin:margin;
+                           subcontrol-position: top center;
+                           padding-left: 0px;
+                           padding-right: 0px;
+                           border-color: black;
+                           border-width: 1px;
                            border-style: solid;
                            border-radius:10px;
                            background-color:{}""".format(constants.INFILL_COLOR_DICT["ELSE"])
@@ -1196,8 +1197,11 @@ class UiMainWindow(object):
         _translate = QtCore.QCoreApplication.translate
         main_window.setWindowTitle(_translate("MainWindow", "MVD2Onto"))
 
-        icon_path = "../Graphics/icon.ico"
-        main_window.setWindowIcon(QtGui.QIcon(icon_path))
+        path = f"{pathlib.Path(__file__).parent.parent.resolve()}/Graphics/icon.png"
+
+        icon = QtGui.QIcon(path)
+        print(path)
+        main_window.setWindowIcon(icon)
         self.initialize()
         self.add_menu_bar(main_window)
 

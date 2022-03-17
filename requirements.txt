@@ -1,4 +1,4 @@
-setuptools~=60.5.0
-pyside6~=6.2.2.1
-lxml~=4.7.1
-owlready2~=0.35
+pyside6
+lxml
+owlready2
+pyinstaller
